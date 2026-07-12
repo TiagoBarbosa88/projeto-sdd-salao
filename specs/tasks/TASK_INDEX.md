@@ -8,3 +8,9 @@
 | 005 | 2 | Auth JWT | DONE |
 | 006 | 2 | Multi-tenant context | DONE |
 | 007 | 2 | Frontend auth | DONE |
+| 008 | 3 | Services CRUD | DONE |
+| 009 | 3 | Appointments | DONE |
+| 010 | 3 | Dashboard | DONE |
+| 011 | 3 | Services UI | DONE |
+| 012 | 3 | Appointments UI | DONE |
+| 013 | 3 | Dashboard UI | DONE |

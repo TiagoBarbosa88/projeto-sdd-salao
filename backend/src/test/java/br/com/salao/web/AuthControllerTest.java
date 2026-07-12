@@ -1,6 +1,8 @@
 package br.com.salao.web;
 
 import br.com.salao.domain.entity.Role;
+import br.com.salao.domain.repository.AppointmentRepository;
+import br.com.salao.domain.repository.SalonServiceRepository;
 import br.com.salao.domain.repository.TenantRepository;
 import br.com.salao.domain.repository.TenantUserRepository;
 import br.com.salao.domain.repository.UserRepository;
@@ -39,6 +41,12 @@ class AuthControllerTest {
     private UserRepository userRepository;
 
     @Autowired
+    private AppointmentRepository appointmentRepository;
+
+    @Autowired
+    private SalonServiceRepository salonServiceRepository;
+
+    @Autowired
     private TenantRepository tenantRepository;
 
     @Autowired
@@ -46,6 +54,8 @@ class AuthControllerTest {
 
     @BeforeEach
     void cleanDatabase() {
+        appointmentRepository.deleteAll();
+        salonServiceRepository.deleteAll();
         tenantUserRepository.deleteAll();
         userRepository.deleteAll();
         tenantRepository.deleteAll();

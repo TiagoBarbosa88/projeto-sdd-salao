@@ -1,0 +1,94 @@
+package br.com.salao.service;
+
+import br.com.salao.domain.entity.SalonService;
+import br.com.salao.domain.entity.Tenant;
+import br.com.salao.domain.repository.SalonServiceRepository;
+import br.com.salao.web.dto.CreateServiceRequest;
+import br.com.salao.web.dto.ServiceResponse;
+import br.com.salao.web.dto.UpdateServiceRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
+
+@Service
+public class ServiceCatalogService {
+
+    private final SalonServiceRepository salonServiceRepository;
+    private final TenantResolver tenantResolver;
+
+    public ServiceCatalogService(SalonServiceRepository salonServiceRepository, TenantResolver tenantResolver) {
+        this.salonServiceRepository = salonServiceRepository;
+        this.tenantResolver = tenantResolver;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ServiceResponse> listServices() {
+        Tenant tenant = tenantResolver.requireCurrentTenant();
+        return salonServiceRepository.findByTenantIdOrderByNameAsc(tenant.getId()).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ServiceResponse getService(UUID publicId) {
+        SalonService service = findServiceForTenant(publicId);
+        return toResponse(service);
+    }
+
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
+    public ServiceResponse createService(CreateServiceRequest request) {
+        Tenant tenant = tenantResolver.requireCurrentTenant();
+
+        SalonService service = new SalonService();
+        service.setTenantId(tenant.getId());
+        service.setName(request.name());
+        service.setDescription(request.description());
+        service.setDurationMinutes(request.durationMinutes());
+        service.setPrice(request.price());
+        service.setActive(true);
+
+        return toResponse(salonServiceRepository.save(service));
+    }
+
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
+    public ServiceResponse updateService(UUID publicId, UpdateServiceRequest request) {
+        SalonService service = findServiceForTenant(publicId);
+        service.setName(request.name());
+        service.setDescription(request.description());
+        service.setDurationMinutes(request.durationMinutes());
+        service.setPrice(request.price());
+        service.setActive(request.active());
+
+        return toResponse(salonServiceRepository.save(service));
+    }
+
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deactivateService(UUID publicId) {
+        SalonService service = findServiceForTenant(publicId);
+        service.setActive(false);
+        salonServiceRepository.save(service);
+    }
+
+    private SalonService findServiceForTenant(UUID publicId) {
+        Tenant tenant = tenantResolver.requireCurrentTenant();
+        return salonServiceRepository.findByPublicIdAndTenantId(publicId, tenant.getId())
+                .orElseThrow(ResourceNotFoundException::new);
+    }
+
+    private ServiceResponse toResponse(SalonService service) {
+        return new ServiceResponse(
+                service.getPublicId(),
+                service.getName(),
+                service.getDescription(),
+                service.getDurationMinutes(),
+                service.getPrice(),
+                service.isActive()
+        );
+    }
+}

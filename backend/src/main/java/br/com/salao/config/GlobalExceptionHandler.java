@@ -3,6 +3,7 @@ package br.com.salao.config;
 import br.com.salao.web.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -32,6 +33,36 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInvalidCredentials() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse("INVALID_CREDENTIALS", "Credenciais invalidas"));
+    }
+
+    @ExceptionHandler(br.com.salao.service.ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("NOT_FOUND", "Recurso nao encontrado"));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleSpringAccessDenied() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse("ACCESS_DENIED", "Acesso negado"));
+    }
+
+    @ExceptionHandler(br.com.salao.service.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse("ACCESS_DENIED", "Acesso negado"));
+    }
+
+    @ExceptionHandler(br.com.salao.service.AppointmentConflictException.class)
+    public ResponseEntity<ErrorResponse> handleAppointmentConflict() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse("APPOINTMENT_CONFLICT", "Conflito de agenda"));
+    }
+
+    @ExceptionHandler(br.com.salao.service.InactiveServiceException.class)
+    public ResponseEntity<ErrorResponse> handleInactiveService() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse("INACTIVE_SERVICE", "Servico inativo"));
     }
 
     @ExceptionHandler(Exception.class)

@@ -120,7 +120,162 @@ paths:
         '403':
           description: Acesso negado
 
+  /services:
+    get:
+      tags: [Services]
+      summary: Lista serviços do tenant
+      responses:
+        '200':
+          description: Lista de serviços
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceResponse'
+    post:
+      tags: [Services]
+      summary: Cria serviço (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceRequest'
+      responses:
+        '201':
+          description: Serviço criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceResponse'
+        '403':
+          description: Acesso negado
+
+  /services/{publicId}:
+    get:
+      tags: [Services]
+      summary: Obtém serviço por publicId
+      parameters:
+        - $ref: '#/components/parameters/PublicId'
+      responses:
+        '200':
+          description: Serviço encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceResponse'
+        '404':
+          description: Serviço não encontrado
+    put:
+      tags: [Services]
+      summary: Atualiza serviço (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/PublicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateServiceRequest'
+      responses:
+        '200':
+          description: Serviço atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceResponse'
+        '403':
+          description: Acesso negado
+        '404':
+          description: Serviço não encontrado
+    delete:
+      tags: [Services]
+      summary: Desativa serviço (ADMIN, soft delete)
+      parameters:
+        - $ref: '#/components/parameters/PublicId'
+      responses:
+        '204':
+          description: Serviço desativado
+        '403':
+          description: Acesso negado
+        '404':
+          description: Serviço não encontrado
+
+  /appointments:
+    get:
+      tags: [Appointments]
+      summary: Lista agendamentos (filtrado por role)
+      responses:
+        '200':
+          description: Lista de agendamentos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppointmentResponse'
+    post:
+      tags: [Appointments]
+      summary: Cria agendamento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAppointmentRequest'
+      responses:
+        '201':
+          description: Agendamento criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+        '400':
+          description: Serviço inativo
+        '409':
+          description: Conflito de agenda
+
+  /appointments/{publicId}/cancel:
+    patch:
+      tags: [Appointments]
+      summary: Cancela agendamento
+      parameters:
+        - $ref: '#/components/parameters/PublicId'
+      responses:
+        '200':
+          description: Agendamento cancelado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+        '403':
+          description: Acesso negado
+        '404':
+          description: Agendamento não encontrado
+
+  /dashboard/summary:
+    get:
+      tags: [Dashboard]
+      summary: Resumo operacional do dia (UTC)
+      responses:
+        '200':
+          description: Métricas do dia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummaryResponse'
+
 components:
+  parameters:
+    PublicId:
+      name: publicId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
   schemas:
     RegisterRequest:
       type: object
@@ -209,6 +364,119 @@ components:
         role:
           type: string
           enum: [ADMIN, PROFESSIONAL, CLIENT]
+
+    ServiceResponse:
+      type: object
+      required: [publicId, name, durationMinutes, price, active]
+      properties:
+        publicId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+        price:
+          type: number
+          format: decimal
+        active:
+          type: boolean
+
+    CreateServiceRequest:
+      type: object
+      required: [name, durationMinutes, price]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+          minimum: 1
+        price:
+          type: number
+          format: decimal
+          minimum: 0
+
+    UpdateServiceRequest:
+      type: object
+      required: [name, durationMinutes, price, active]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+          minimum: 1
+        price:
+          type: number
+          format: decimal
+          minimum: 0
+        active:
+          type: boolean
+
+    CreateAppointmentRequest:
+      type: object
+      required: [servicePublicId, professionalPublicId, startAt]
+      properties:
+        servicePublicId:
+          type: string
+          format: uuid
+        professionalPublicId:
+          type: string
+          format: uuid
+        clientPublicId:
+          type: string
+          format: uuid
+          description: Obrigatório para ADMIN/PROFESSIONAL; ignorado para CLIENT
+        startAt:
+          type: string
+          format: date-time
+
+    AppointmentResponse:
+      type: object
+      required: [publicId, service, professional, client, startAt, endAt, status, createdAt]
+      properties:
+        publicId:
+          type: string
+          format: uuid
+        service:
+          $ref: '#/components/schemas/UuidRef'
+        professional:
+          $ref: '#/components/schemas/UuidRef'
+        client:
+          $ref: '#/components/schemas/UuidRef'
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [SCHEDULED, CONFIRMED, CANCELLED, COMPLETED]
+        createdAt:
+          type: string
+          format: date-time
+
+    DashboardSummaryResponse:
+      type: object
+      required: [appointmentsToday, estimatedRevenue, occupancyRate]
+      properties:
+        appointmentsToday:
+          type: integer
+          format: int64
+        estimatedRevenue:
+          type: number
+          format: decimal
+        occupancyRate:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
 
     ErrorResponse:
       type: object
