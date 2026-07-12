@@ -22,10 +22,194 @@ tags:
   - name: Dashboard
     description: Métricas operacionais
 
-paths: {}
+paths:
+  /health:
+    get:
+      tags: [Auth]
+      summary: Health check da API
+      security: []
+      responses:
+        '200':
+          description: API operacional
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service]
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                  service:
+                    type: string
+                    example: salao-api
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Registra salão e usuário admin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Salão e admin criados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Dados invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email ou slug ja cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Autentica usuário e retorna JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login bem-sucedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Credenciais invalidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Retorna usuário autenticado, tenant e role
+      responses:
+        '200':
+          description: Perfil do usuário autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '401':
+          description: Token ausente ou invalido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Acesso negado
 
 components:
   schemas:
+    RegisterRequest:
+      type: object
+      required: [salonName, slug, name, email, password]
+      properties:
+        salonName:
+          type: string
+          example: Studio Bella
+        slug:
+          type: string
+          example: studio-bella
+        name:
+          type: string
+          example: Maria Admin
+        email:
+          type: string
+          format: email
+          example: admin@studio.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: senha1234
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@studio.com
+        password:
+          type: string
+          format: password
+          example: senha1234
+
+    AuthResponse:
+      type: object
+      required: [token, user, tenant, role]
+      properties:
+        token:
+          type: string
+          description: JWT Bearer token
+        user:
+          $ref: '#/components/schemas/UserSummary'
+        tenant:
+          $ref: '#/components/schemas/TenantSummary'
+        role:
+          type: string
+          enum: [ADMIN, PROFESSIONAL, CLIENT]
+
+    UserSummary:
+      type: object
+      required: [publicId, email, name]
+      properties:
+        publicId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+
+    TenantSummary:
+      type: object
+      required: [publicId, name, slug]
+      properties:
+        publicId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+
+    MeResponse:
+      type: object
+      required: [user, tenant, role]
+      properties:
+        user:
+          $ref: '#/components/schemas/UserSummary'
+        tenant:
+          $ref: '#/components/schemas/TenantSummary'
+        role:
+          type: string
+          enum: [ADMIN, PROFESSIONAL, CLIENT]
+
     ErrorResponse:
       type: object
       required:

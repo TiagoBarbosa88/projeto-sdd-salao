@@ -5,4 +5,6 @@
 | 002 | 1 | Infra Docker | DONE |
 | 003 | 1 | Backend scaffold | DONE |
 | 004 | 1 | Frontend scaffold | DONE |
-| 005+ | 2 | Auth JWT | PLANNED |
+| 005 | 2 | Auth JWT | DONE |
+| 006 | 2 | Multi-tenant context | DONE |
+| 007 | 2 | Frontend auth | DONE |

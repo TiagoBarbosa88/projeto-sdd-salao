@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
+import { AuthService } from '../core/services/auth.service';
 
 @Component({
   selector: 'app-shell',
@@ -13,6 +14,13 @@ import { RouterOutlet } from '@angular/router';
             <p class="text-xs uppercase tracking-widest text-violet-400">Salao SaaS</p>
             <h1 class="text-lg font-semibold text-white">Painel base</h1>
           </div>
+          <button
+            type="button"
+            (click)="logout()"
+            class="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
+          >
+            Sair
+          </button>
         </div>
       </header>
       <main class="mx-auto max-w-6xl px-6 py-8">
@@ -21,4 +29,12 @@ import { RouterOutlet } from '@angular/router';
     </div>
   `,
 })
-export class ShellComponent {}
+export class ShellComponent {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
+  logout(): void {
+    this.auth.logout();
+    void this.router.navigateByUrl('/login');
+  }
+}
