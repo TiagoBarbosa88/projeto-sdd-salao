@@ -111,13 +111,15 @@ type DayScheduleRow = {
                         class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
                       />
                     </div>
-                    <div>
-                      <label class="mb-1 block text-sm text-slate-300">Link publico</label>
-                      <input
-                        [value]="salonSettings()?.slug ?? ''"
-                        disabled
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-4 py-2.5 text-slate-400"
-                      />
+                    <div class="md:col-span-2 rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+                      <p class="text-sm font-medium text-slate-300">Pagina publica</p>
+                      <p class="mt-2 text-xs leading-relaxed text-slate-500">
+                        Ao publicar na Vercel, seus clientes acessam pelo dominio que voce configurar
+                        (ex:
+                        <span class="text-slate-400">meusalao.vercel.app</span>).
+                        O identificador interno do salao e
+                        <span class="text-slate-400">{{ salonSettings()?.slug }}</span>.
+                      </p>
                     </div>
                     <div class="md:col-span-2">
                       <label class="mb-1 block text-sm text-slate-300">Descricao</label>
@@ -245,12 +247,15 @@ type DayScheduleRow = {
                       />
                     </div>
                     <div class="md:col-span-2">
-                      <label class="mb-1 block text-sm text-slate-300">Google Maps (como chegar)</label>
+                      <label class="mb-1 block text-sm text-slate-300">Google Maps</label>
                       <input
                         formControlName="googleMapsUrl"
                         placeholder="https://maps.google.com/..."
                         class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
                       />
+                      <p class="mt-1 text-xs text-slate-500">
+                        Exibe o mapa na pagina publica com o titulo "Onde fica nosso endereco".
+                      </p>
                     </div>
                   </div>
 

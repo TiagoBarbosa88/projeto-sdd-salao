@@ -1,4 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
@@ -12,12 +13,16 @@ import {
   PublicService,
   PublicTenant,
 } from '../../core/services/public-salon.service';
-import { scrollToSection } from '../../core/utils/scroll.util';
+import {
+  buildGoogleMapsEmbedUrl,
+  buildGoogleMapsOpenUrl,
+} from '../../core/utils/maps.util';
 import {
   formatPhoneDisplay,
   isValidBrazilianPhone,
   normalizePhoneValue,
 } from '../../core/utils/phone.util';
+import { scrollToSection } from '../../core/utils/scroll.util';
 import {
   resolveServiceImageUrl,
   serviceGenderLabel,
@@ -562,6 +567,39 @@ type BookingConfirmation = {
             }
           </section>
 
+          @if (tenant()!.googleMapsUrl && mapsEmbedUrl()) {
+            <section
+              id="endereco"
+              class="page-section scroll-mt-24 border-t border-slate-800/60 py-12 md:py-16"
+            >
+              <h2 class="text-2xl font-semibold text-white md:text-3xl">Onde fica nosso endereco</h2>
+              <p class="mt-2 text-sm text-slate-400">Veja a regiao e trace a rota ate o salao.</p>
+
+              <div class="mt-6 overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/40">
+                <a
+                  [href]="mapsOpenUrl()"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="group block"
+                  aria-label="Abrir localizacao no Google Maps"
+                >
+                  <iframe
+                    [src]="mapsEmbedUrl()"
+                    title="Mapa do salao"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    class="pointer-events-none h-56 w-full border-0 md:h-80"
+                  ></iframe>
+                  <p
+                    class="border-t border-slate-800/80 bg-slate-900/60 px-4 py-3 text-center text-sm font-medium text-violet-300 transition group-hover:text-violet-200"
+                  >
+                    Ver regiao no Google Maps
+                  </p>
+                </a>
+              </div>
+            </section>
+          }
+
           <footer
             id="contato"
             class="page-section border-t border-slate-800/60 py-12 pb-20 md:py-16 md:pb-24"
@@ -595,9 +633,14 @@ type BookingConfirmation = {
                           [href]="tenant()!.instagramUrl"
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white"
+                          aria-label="Instagram"
+                          class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-violet-600 hover:text-white"
                         >
-                          Instagram
+                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path
+                              d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4A5.8 5.8 0 0 1 16.2 22H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4H7.8m8.65 1.5a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"
+                            />
+                          </svg>
                         </a>
                       }
                       @if (tenant()!.facebookUrl) {
@@ -605,9 +648,14 @@ type BookingConfirmation = {
                           [href]="tenant()!.facebookUrl"
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white"
+                          aria-label="Facebook"
+                          class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-violet-600 hover:text-white"
                         >
-                          Facebook
+                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path
+                              d="M22 12a10 10 0 1 0-11.5 9.9v-7H8v-3h2.5V9.5A3.5 3.5 0 0 1 14 6h3v3h-2a1 1 0 0 0-1 1V12H17l-.5 3h-2.5v7A10 10 0 0 0 22 12"
+                            />
+                          </svg>
                         </a>
                       }
                       @if (tenant()!.tiktokUrl) {
@@ -615,9 +663,14 @@ type BookingConfirmation = {
                           [href]="tenant()!.tiktokUrl"
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white"
+                          aria-label="TikTok"
+                          class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-violet-600 hover:text-white"
                         >
-                          TikTok
+                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path
+                              d="M16.6 5.82s.51.5 0 0A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.1 2.96-5.05 6.41 1.03 3.2 4.66 4.76 7.74 3.04 1.65-.89 2.76-2.66 2.76-4.58V6.9c2 .12 3.86 1.27 4.7 2.82l2.44-.9z"
+                            />
+                          </svg>
                         </a>
                       }
                       @if (tenant()!.websiteUrl) {
@@ -625,9 +678,14 @@ type BookingConfirmation = {
                           [href]="tenant()!.websiteUrl"
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white"
+                          aria-label="Site"
+                          class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-violet-600 hover:text-white"
                         >
-                          Site
+                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path
+                              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93m6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39"
+                            />
+                          </svg>
                         </a>
                       }
                     </div>
@@ -635,7 +693,7 @@ type BookingConfirmation = {
                 </div>
               </div>
 
-              <div id="endereco" class="scroll-mt-24">
+              <div [attr.id]="tenant()!.googleMapsUrl ? null : 'endereco'" class="scroll-mt-24">
                 <h2 class="text-xl font-semibold text-white md:text-2xl">Endereco</h2>
                 <p class="mt-1 text-sm text-slate-400">Venha nos visitar.</p>
 
@@ -644,17 +702,6 @@ type BookingConfirmation = {
                     <p class="text-base leading-relaxed text-slate-300">{{ tenant()!.address }}</p>
                   } @else {
                     <p class="text-sm text-slate-500">Endereco nao informado.</p>
-                  }
-
-                  @if (tenant()!.googleMapsUrl) {
-                    <a
-                      [href]="tenant()!.googleMapsUrl"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="mt-4 inline-flex rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-violet-500"
-                    >
-                      Como chegar
-                    </a>
                   }
                 </div>
               </div>
@@ -671,6 +718,7 @@ export class PublicSalonComponent implements OnInit {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   private readonly fb = inject(FormBuilder);
+  private readonly sanitizer = inject(DomSanitizer);
 
   protected readonly weekdayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
 
@@ -747,6 +795,23 @@ export class PublicSalonComponent implements OnInit {
   protected readonly activeTabServices = computed(() => {
     const tab = this.activeGenderTab();
     return this.services().filter((service) => serviceGroupGender(service.gender) === tab);
+  });
+
+  protected readonly mapsEmbedUrl = computed((): SafeResourceUrl | null => {
+    const tenant = this.tenant();
+    if (!tenant?.googleMapsUrl) {
+      return null;
+    }
+    const url = buildGoogleMapsEmbedUrl(tenant.googleMapsUrl, tenant.address);
+    return url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : null;
+  });
+
+  protected readonly mapsOpenUrl = computed((): string => {
+    const tenant = this.tenant();
+    if (!tenant) {
+      return '#';
+    }
+    return buildGoogleMapsOpenUrl(tenant.googleMapsUrl, tenant.address) ?? '#';
   });
 
   ngOnInit(): void {
