@@ -16,6 +16,8 @@ import {
 import {
   buildGoogleMapsEmbedUrl,
   buildGoogleMapsOpenUrl,
+  buildOsmStaticMapUrl,
+  extractMapCoordinates,
 } from '../../core/utils/maps.util';
 import {
   formatPhoneDisplay,
@@ -567,7 +569,7 @@ type BookingConfirmation = {
             }
           </section>
 
-          @if (tenant()!.googleMapsUrl && mapsEmbedUrl()) {
+          @if (tenant()!.googleMapsUrl && (mapsPreviewImageUrl() || mapsEmbedUrl())) {
             <section
               id="endereco"
               class="page-section scroll-mt-24 border-t border-slate-800/60 py-12 md:py-16"
@@ -576,26 +578,42 @@ type BookingConfirmation = {
               <p class="mt-2 text-sm text-slate-400">Veja a regiao e trace a rota ate o salao.</p>
 
               <div class="mt-6 overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/40">
-                <a
-                  [href]="mapsOpenUrl()"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="group block"
-                  aria-label="Abrir localizacao no Google Maps"
-                >
+                @if (mapsPreviewImageUrl()) {
+                  <a
+                    [href]="mapsOpenUrl()"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="group block"
+                    aria-label="Abrir localizacao no Google Maps"
+                  >
+                    <img
+                      [src]="mapsPreviewImageUrl()!"
+                      alt="Mapa do salao"
+                      class="h-56 w-full object-cover md:h-80"
+                    />
+                    <p
+                      class="border-t border-slate-800/80 bg-slate-900/60 px-4 py-3 text-center text-sm font-medium text-violet-300 transition group-hover:text-violet-200"
+                    >
+                      Ver regiao no Google Maps
+                    </p>
+                  </a>
+                } @else if (mapsEmbedUrl()) {
                   <iframe
                     [src]="mapsEmbedUrl()"
                     title="Mapa do salao"
-                    loading="lazy"
+                    loading="eager"
                     referrerpolicy="no-referrer-when-downgrade"
-                    class="pointer-events-none h-56 w-full border-0 md:h-80"
+                    class="h-56 w-full border-0 md:h-80"
                   ></iframe>
-                  <p
-                    class="border-t border-slate-800/80 bg-slate-900/60 px-4 py-3 text-center text-sm font-medium text-violet-300 transition group-hover:text-violet-200"
+                  <a
+                    [href]="mapsOpenUrl()"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="block border-t border-slate-800/80 bg-slate-900/60 px-4 py-3 text-center text-sm font-medium text-violet-300 transition hover:text-violet-200"
                   >
                     Ver regiao no Google Maps
-                  </p>
-                </a>
+                  </a>
+                }
               </div>
             </section>
           }
@@ -610,31 +628,31 @@ type BookingConfirmation = {
                 <p class="mt-1 text-sm text-slate-400">Fale conosco pelo WhatsApp ou redes sociais.</p>
 
                 <div class="mt-4 rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5 md:p-6">
-                  @if (tenant()!.whatsapp) {
-                    <p class="text-sm text-slate-300">
-                      <span class="font-medium text-white">WhatsApp:</span>
-                      <a
-                        [href]="whatsappLink()"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="ml-1 text-violet-300 transition hover:text-violet-200"
-                      >
-                        {{ formatPhoneDisplay(tenant()!.whatsapp!) }}
-                      </a>
-                    </p>
-                  } @else {
-                    <p class="text-sm text-slate-500">WhatsApp nao informado.</p>
-                  }
-
-                  @if (hasSocialLinks()) {
-                    <div class="mt-4 flex flex-wrap gap-3">
+                  @if (hasContactLinks()) {
+                    <div class="flex flex-wrap gap-3">
+                      @if (tenant()!.whatsapp) {
+                        <a
+                          [href]="whatsappLink()"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          [title]="'WhatsApp: ' + formatPhoneDisplay(tenant()!.whatsapp!)"
+                          aria-label="WhatsApp"
+                          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] text-white transition hover:opacity-90"
+                        >
+                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path
+                              d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.435 9.884-9.881 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"
+                            />
+                          </svg>
+                        </a>
+                      }
                       @if (tenant()!.instagramUrl) {
                         <a
                           [href]="tenant()!.instagramUrl"
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="Instagram"
-                          class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-violet-600 hover:text-white"
+                          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] text-white transition hover:opacity-90"
                         >
                           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path
@@ -649,7 +667,7 @@ type BookingConfirmation = {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="Facebook"
-                          class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-violet-600 hover:text-white"
+                          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#1877F2] text-white transition hover:opacity-90"
                         >
                           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path
@@ -664,11 +682,26 @@ type BookingConfirmation = {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="TikTok"
-                          class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-violet-600 hover:text-white"
+                          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-black text-white transition hover:opacity-90"
                         >
                           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path
                               d="M16.6 5.82s.51.5 0 0A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.1 2.96-5.05 6.41 1.03 3.2 4.66 4.76 7.74 3.04 1.65-.89 2.76-2.66 2.76-4.58V6.9c2 .12 3.86 1.27 4.7 2.82l2.44-.9z"
+                            />
+                          </svg>
+                        </a>
+                      }
+                      @if (tenant()!.youtubeUrl) {
+                        <a
+                          [href]="tenant()!.youtubeUrl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="YouTube"
+                          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#FF0000] text-white transition hover:opacity-90"
+                        >
+                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path
+                              d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8M9.75 15.02V8.98L15.5 12l-5.75 3.02z"
                             />
                           </svg>
                         </a>
@@ -679,16 +712,17 @@ type BookingConfirmation = {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="Site"
-                          class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-violet-600 hover:text-white"
+                          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-slate-600 text-white transition hover:opacity-90"
                         >
-                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path
-                              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93m6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39"
-                            />
+                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                           </svg>
                         </a>
                       }
                     </div>
+                  } @else {
+                    <p class="text-sm text-slate-500">Nenhum contato informado.</p>
                   }
                 </div>
               </div>
@@ -806,6 +840,18 @@ export class PublicSalonComponent implements OnInit {
     return url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : null;
   });
 
+  protected readonly mapsPreviewImageUrl = computed((): string | null => {
+    const tenant = this.tenant();
+    if (!tenant?.googleMapsUrl) {
+      return null;
+    }
+    const coords = extractMapCoordinates(tenant.googleMapsUrl, tenant.address);
+    if (!coords) {
+      return null;
+    }
+    return buildOsmStaticMapUrl(coords.lat, coords.lng);
+  });
+
   protected readonly mapsOpenUrl = computed((): string => {
     const tenant = this.tenant();
     if (!tenant) {
@@ -871,13 +917,15 @@ export class PublicSalonComponent implements OnInit {
     return order.indexOf(this.step()) > order.indexOf(step);
   }
 
-  protected hasSocialLinks(): boolean {
+  protected hasContactLinks(): boolean {
     const tenant = this.tenant();
     if (!tenant) return false;
     return !!(
+      tenant.whatsapp ||
       tenant.instagramUrl ||
       tenant.facebookUrl ||
       tenant.tiktokUrl ||
+      tenant.youtubeUrl ||
       tenant.websiteUrl
     );
   }

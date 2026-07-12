@@ -206,7 +206,7 @@ type DayScheduleRow = {
             <section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
               <h2 class="text-xl font-semibold text-white">Redes e presenca online</h2>
               <p class="mt-1 text-sm text-slate-400">
-                Links exibidos no rodape da pagina publica e usados para melhorar a visibilidade local.
+                Links exibidos como icones no rodape da pagina publica. Cores oficiais de cada rede.
               </p>
 
               @if (salonLoading()) {
@@ -243,6 +243,14 @@ type DayScheduleRow = {
                       <input
                         formControlName="websiteUrl"
                         placeholder="https://seusalao.com.br"
+                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                      />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">YouTube</label>
+                      <input
+                        formControlName="youtubeUrl"
+                        placeholder="https://youtube.com/@seusalao"
                         class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
                       />
                     </div>
@@ -717,6 +725,7 @@ export class SettingsComponent {
     facebookUrl: [''],
     tiktokUrl: [''],
     websiteUrl: [''],
+    youtubeUrl: [''],
     googleMapsUrl: [''],
   });
 
@@ -1118,6 +1127,7 @@ export class SettingsComponent {
           facebookUrl: salon.facebookUrl ?? '',
           tiktokUrl: salon.tiktokUrl ?? '',
           websiteUrl: salon.websiteUrl ?? '',
+          youtubeUrl: salon.youtubeUrl ?? '',
           googleMapsUrl: salon.googleMapsUrl ?? '',
         });
         this.logoPreview.set(salon.logoUrl ?? null);
@@ -1249,6 +1259,7 @@ export class SettingsComponent {
       facebookUrl: social.facebookUrl || undefined,
       tiktokUrl: social.tiktokUrl || undefined,
       websiteUrl: social.websiteUrl || undefined,
+      youtubeUrl: social.youtubeUrl || undefined,
       googleMapsUrl: social.googleMapsUrl || undefined,
     };
   }

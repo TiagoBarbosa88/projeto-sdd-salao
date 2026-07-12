@@ -50,6 +50,7 @@ public class SalonSettingsService {
         tenant.setFacebookUrl(request.facebookUrl());
         tenant.setTiktokUrl(request.tiktokUrl());
         tenant.setWebsiteUrl(request.websiteUrl());
+        tenant.setYoutubeUrl(request.youtubeUrl());
         tenant.setGoogleMapsUrl(request.googleMapsUrl());
         syncSeoMetadata(tenant);
         return toSalonResponse(tenantRepository.save(tenant));
@@ -141,6 +142,7 @@ public class SalonSettingsService {
                 tenant.getFacebookUrl(),
                 tenant.getTiktokUrl(),
                 tenant.getWebsiteUrl(),
+                tenant.getYoutubeUrl(),
                 tenant.getGoogleMapsUrl(),
                 tenant.getSeoTitle(),
                 tenant.getSeoDescription(),

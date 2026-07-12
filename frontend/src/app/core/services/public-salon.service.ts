@@ -16,6 +16,7 @@ export interface PublicTenant {
   facebookUrl?: string;
   tiktokUrl?: string;
   websiteUrl?: string;
+  youtubeUrl?: string;
   googleMapsUrl?: string;
   seoTitle?: string;
   seoDescription?: string;

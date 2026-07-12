@@ -72,6 +72,7 @@ public class PublicTenantService {
                 tenant.getFacebookUrl(),
                 tenant.getTiktokUrl(),
                 tenant.getWebsiteUrl(),
+                tenant.getYoutubeUrl(),
                 tenant.getGoogleMapsUrl(),
                 tenant.getSeoTitle(),
                 tenant.getSeoDescription(),

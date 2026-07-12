@@ -15,6 +15,7 @@ export interface SalonSettings {
   facebookUrl?: string;
   tiktokUrl?: string;
   websiteUrl?: string;
+  youtubeUrl?: string;
   googleMapsUrl?: string;
   seoTitle?: string;
   seoDescription?: string;
@@ -32,6 +33,7 @@ export interface UpdateSalonSettings {
   facebookUrl?: string;
   tiktokUrl?: string;
   websiteUrl?: string;
+  youtubeUrl?: string;
   googleMapsUrl?: string;
 }
 

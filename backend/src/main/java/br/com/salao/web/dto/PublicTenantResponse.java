@@ -15,6 +15,7 @@ public record PublicTenantResponse(
         String facebookUrl,
         String tiktokUrl,
         String websiteUrl,
+        String youtubeUrl,
         String googleMapsUrl,
         String seoTitle,
         String seoDescription,

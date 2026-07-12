@@ -71,6 +71,9 @@ public class Tenant {
     @Column(name = "website_url", length = 500)
     private String websiteUrl;
 
+    @Column(name = "youtube_url", length = 500)
+    private String youtubeUrl;
+
     @Column(name = "google_maps_url", length = 500)
     private String googleMapsUrl;
 
@@ -214,6 +217,14 @@ public class Tenant {
 
     public void setWebsiteUrl(String websiteUrl) {
         this.websiteUrl = websiteUrl;
+    }
+
+    public String getYoutubeUrl() {
+        return youtubeUrl;
+    }
+
+    public void setYoutubeUrl(String youtubeUrl) {
+        this.youtubeUrl = youtubeUrl;
     }
 
     public String getGoogleMapsUrl() {

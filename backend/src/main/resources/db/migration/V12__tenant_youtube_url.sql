@@ -1,0 +1,1 @@
+ALTER TABLE tenant ADD COLUMN youtube_url VARCHAR(500);

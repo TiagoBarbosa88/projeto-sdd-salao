@@ -11,6 +11,7 @@ public record UpdateSalonSettingsRequest(
         String facebookUrl,
         String tiktokUrl,
         String websiteUrl,
+        String youtubeUrl,
         String googleMapsUrl
 ) {
 }
