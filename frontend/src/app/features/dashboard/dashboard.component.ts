@@ -7,8 +7,8 @@ import { DashboardService, DashboardSummary } from '../../core/services/dashboar
   template: `
     <div class="space-y-6">
       <div>
-        <h2 class="text-xl font-semibold text-white">Dashboard</h2>
-        <p class="mt-1 text-sm text-slate-400">Metricas operacionais do dia.</p>
+        <h2 class="text-xl font-semibold text-white">Financeiro</h2>
+        <p class="mt-1 text-sm text-slate-400">Metricas financeiras e operacionais do dia.</p>
       </div>
 
       @if (loading()) {
@@ -56,7 +56,7 @@ export class DashboardComponent {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Nao foi possivel carregar o dashboard.');
+        this.error.set('Nao foi possivel carregar o financeiro.');
         this.loading.set(false);
       },
     });
