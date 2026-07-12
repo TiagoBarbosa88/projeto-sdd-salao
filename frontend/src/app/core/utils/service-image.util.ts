@@ -35,6 +35,7 @@ const FEMININE_KEYWORDS = [
   'acabamento',
   'nuca',
   'laterais',
+  'sobrancelha',
 ];
 
 const IMAGE_BY_KEY: Record<string, string> = {
@@ -42,11 +43,12 @@ const IMAGE_BY_KEY: Record<string, string> = {
   'corte + escova': '/images/services/corte-escova.jpg',
   'corte escova': '/images/services/corte-escova.jpg',
   'corte feminino': '/images/services/corte-feminino.jpg',
-  feminino: '/images/services/corte-feminino.jpg',
   escova: '/images/services/escova.jpg',
   hidrat: '/images/services/hidratacao.jpg',
   progressiva: '/images/services/progressiva-masculina.jpg',
-  sobrancelha: '/images/services/sobrancelha.jpg',
+  'sobrancelha masculina': '/images/services/sobrancelha-masculina.jpg',
+  'sobrancelha feminina': '/images/services/sobrancelha-feminina.jpg',
+  sobrancelha: '/images/services/sobrancelha-feminina.jpg',
   barba: '/images/services/barba.jpg',
   'corte + barba': '/images/services/corte-barba.jpg',
   'corte barba': '/images/services/corte-barba.jpg',
@@ -62,6 +64,7 @@ const IMAGE_BY_KEY: Record<string, string> = {
   maquiagem: '/images/services/maquiagem.svg',
   masculino: '/images/services/corte-tradicional.jpg',
   navalha: '/images/services/barba.jpg',
+  feminino: '/images/services/corte-feminino.jpg',
   corte: '/images/services/corte-feminino.jpg',
 };
 
@@ -90,18 +93,46 @@ export function resolveServiceGender(name: string, description?: string): Servic
   return 'feminino';
 }
 
-export function resolveServiceImage(name: string, description?: string): string {
-  const text = `${name} ${description ?? ''}`.toLowerCase();
+function matchImageKey(text: string): string | null {
+  const normalized = text.toLowerCase();
   const sortedKeys = Object.keys(IMAGE_BY_KEY).sort((a, b) => b.length - a.length);
   for (const keyword of sortedKeys) {
-    if (text.includes(keyword)) {
+    if (normalized.includes(keyword)) {
       return IMAGE_BY_KEY[keyword];
     }
   }
+  return null;
+}
+
+export function resolveServiceImage(name: string, description?: string): string {
+  const nameMatch = matchImageKey(name);
+  if (nameMatch) {
+    if (name.toLowerCase().includes('sobrancelha')) {
+      return resolveSobrancelhaImage(name, description);
+    }
+    return nameMatch;
+  }
+
+  const fullTextMatch = matchImageKey(`${name} ${description ?? ''}`);
+  if (fullTextMatch) {
+    if (`${name} ${description ?? ''}`.toLowerCase().includes('sobrancelha')) {
+      return resolveSobrancelhaImage(name, description);
+    }
+    return fullTextMatch;
+  }
+
   const gender = resolveServiceGender(name, description);
   return gender === 'masculino'
     ? '/images/services/corte-tradicional.jpg'
     : '/images/services/corte-feminino.jpg';
+}
+
+function resolveSobrancelhaImage(name: string, description?: string): string {
+  const text = `${name} ${description ?? ''}`.toLowerCase();
+  if (text.includes('masculin')) {
+    return '/images/services/sobrancelha-masculina.jpg';
+  }
+  return '/images/services/sobrancelha-feminina.jpg';
 }
 
 export function serviceGenderLabel(gender: ServiceGender): string {

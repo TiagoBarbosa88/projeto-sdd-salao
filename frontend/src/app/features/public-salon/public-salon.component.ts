@@ -196,43 +196,41 @@ type StepItem = { id: BookingStep; label: string; number: number };
                     </p>
                   }
 
-                  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                  <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                     @for (service of activeTabServices(); track service.publicId) {
                       <button
                         type="button"
                         (click)="selectService(service)"
-                        class="group flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:border-violet-400/50 hover:shadow-lg hover:shadow-violet-950/20"
+                        class="group flex flex-col overflow-hidden rounded-lg border border-slate-800/80 bg-slate-900/60 text-left transition hover:-translate-y-0.5 hover:border-violet-500/40 hover:shadow-md hover:shadow-violet-950/30"
                       >
-                        <div class="relative aspect-[4/5] overflow-hidden bg-slate-100">
+                        <div class="relative aspect-[4/5] overflow-hidden bg-slate-950">
                           <img
                             [src]="serviceImage(service)"
                             [alt]="service.name"
-                            class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+                            class="h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.03]"
                           />
-                          <div
-                            class="absolute inset-x-0 bottom-0 bg-black/90 px-2 py-1.5"
-                          >
+                          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent px-2 pb-1.5 pt-6">
                             <h3
-                              class="truncate text-[10px] font-bold uppercase tracking-wide text-white sm:text-[11px]"
+                              class="truncate text-[9px] font-bold uppercase tracking-wide text-white sm:text-[10px]"
                             >
                               {{ service.name }}
                             </h3>
                           </div>
                         </div>
-                        <div class="flex flex-1 flex-col p-2.5">
+                        <div class="flex flex-1 flex-col px-2 py-1.5">
                           @if (service.description) {
-                            <p class="line-clamp-2 flex-1 text-[10px] leading-snug text-slate-600 sm:text-[11px]">
+                            <p class="line-clamp-2 flex-1 text-[9px] leading-snug text-slate-400 sm:text-[10px]">
                               {{ service.description }}
                             </p>
                           }
                           <div
-                            class="mt-2 flex items-center justify-between gap-1 border-t border-slate-100 pt-2 text-[10px] sm:text-xs"
+                            class="mt-1.5 flex items-center justify-between gap-1 text-[9px] sm:text-[10px]"
                           >
                             <span class="text-slate-500">{{ service.durationMinutes }} min</span>
                             <span
-                              class="font-bold"
-                              [class.text-sky-600]="serviceGender(service) === 'masculino'"
-                              [class.text-fuchsia-600]="serviceGender(service) === 'feminino'"
+                              class="font-semibold"
+                              [class.text-sky-400]="serviceGender(service) === 'masculino'"
+                              [class.text-fuchsia-400]="serviceGender(service) === 'feminino'"
                             >
                               {{ formatCurrency(service.price) }}
                             </span>
