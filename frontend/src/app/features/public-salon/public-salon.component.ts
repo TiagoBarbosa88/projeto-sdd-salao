@@ -1,4 +1,5 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
@@ -46,7 +47,9 @@ type CalendarDay = {
 
 type StepItem = { id: BookingStep; label: string; number: number };
 
-type NavSection = { id: string; label: string };
+type NavSection = { id: string; label: string; mobileLabel: string; icon: PublicNavIcon };
+
+type PublicNavIcon = 'home' | 'services' | 'calendar' | 'map' | 'contact';
 
 type BookingConfirmation = {
   guestName: string;
@@ -62,9 +65,9 @@ type BookingConfirmation = {
 @Component({
   selector: 'app-public-salon',
   standalone: true,
-  imports: [ReactiveFormsModule, PhoneMaskDirective],
+  imports: [ReactiveFormsModule, PhoneMaskDirective, NgTemplateOutlet],
   template: `
-    <div class="app-view min-h-screen bg-gradient-to-b from-slate-950 via-slate-950 to-violet-950/20 pb-[4.75rem] text-slate-100 md:pb-0">
+    <div class="app-view min-h-screen bg-gradient-to-b from-slate-950 via-slate-950 to-violet-950/20 pb-[4.5rem] text-slate-100 md:pb-0">
       <header
         class="sticky top-0 z-50 border-b border-slate-800/50 bg-slate-950/85 backdrop-blur-xl transition-shadow duration-300"
       >
@@ -766,30 +769,65 @@ type BookingConfirmation = {
 
       @if (tenant()) {
         <nav
-          class="fixed inset-x-0 bottom-0 z-50 border-t border-slate-800/80 bg-slate-950/95 backdrop-blur-xl md:hidden"
-          aria-label="Navegacao mobile"
+          class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-800/80 bg-slate-950/95 backdrop-blur-xl md:hidden"
+          aria-label="Navegacao principal"
         >
-          <div
-            class="mx-auto flex max-w-6xl items-stretch justify-around px-1 pt-1.5 pb-[max(0.625rem,env(safe-area-inset-bottom))]"
-          >
+          <div class="flex items-stretch justify-around px-1 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
             @for (item of navSections; track item.id) {
               <button
                 type="button"
                 (click)="scrollTo(item.id)"
-                class="flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-slate-500 transition hover:bg-slate-800/50 hover:text-violet-300"
+                class="flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-slate-500 transition hover:text-slate-300"
+                [class.font-medium]="activeSection() === item.id"
+                [class.text-violet-300]="activeSection() === item.id"
               >
-                <span class="w-full truncate text-center text-[10px] font-medium leading-tight">{{
-                  mobileNavLabel(item)
-                }}</span>
+                <span
+                  class="flex h-6 w-6 items-center justify-center [&_.nav-icon]:h-[1.35rem] [&_.nav-icon]:w-[1.35rem]"
+                >
+                  <ng-container [ngTemplateOutlet]="navIcon" [ngTemplateOutletContext]="{ icon: item.icon }" />
+                </span>
+                <span class="w-full truncate text-center text-[10px] leading-tight">{{ item.mobileLabel }}</span>
               </button>
             }
           </div>
         </nav>
       }
     </div>
+
+    <ng-template #navIcon let-icon="icon">
+      @switch (icon) {
+        @case ('home') {
+          <svg class="nav-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+          </svg>
+        }
+        @case ('services') {
+          <svg class="nav-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" />
+          </svg>
+        }
+        @case ('calendar') {
+          <svg class="nav-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+          </svg>
+        }
+        @case ('map') {
+          <svg class="nav-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+          </svg>
+        }
+        @case ('contact') {
+          <svg class="nav-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+          </svg>
+        }
+      }
+    </ng-template>
   `,
 })
-export class PublicSalonComponent implements OnInit {
+export class PublicSalonComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly publicSalon = inject(PublicSalonService);
   private readonly title = inject(Title);
@@ -802,12 +840,14 @@ export class PublicSalonComponent implements OnInit {
   protected readonly genderTabs: ServiceGender[] = ['feminino', 'masculino'];
 
   protected readonly navSections: NavSection[] = [
-    { id: 'inicio', label: 'Quem somos' },
-    { id: 'servicos', label: 'Servicos' },
-    { id: 'agenda', label: 'Agenda' },
-    { id: 'endereco', label: 'Endereco' },
-    { id: 'contato', label: 'Contato' },
+    { id: 'inicio', label: 'Quem somos', mobileLabel: 'Inicio', icon: 'home' },
+    { id: 'servicos', label: 'Servicos', mobileLabel: 'Servicos', icon: 'services' },
+    { id: 'agenda', label: 'Agenda', mobileLabel: 'Agenda', icon: 'calendar' },
+    { id: 'endereco', label: 'Endereco', mobileLabel: 'Mapa', icon: 'map' },
+    { id: 'contato', label: 'Contato', mobileLabel: 'Contato', icon: 'contact' },
   ];
+
+  protected readonly activeSection = signal('inicio');
 
   protected readonly bookingSteps: StepItem[] = [
     { id: 'service', label: 'Servico', number: 1 },
@@ -852,6 +892,7 @@ export class PublicSalonComponent implements OnInit {
   });
 
   private slug = '';
+  private sectionObserver?: IntersectionObserver;
 
   protected readonly calendarDays = computed(() => this.buildCalendarDays());
   protected readonly monthLabel = computed(() =>
@@ -921,6 +962,7 @@ export class PublicSalonComponent implements OnInit {
         this.syncGenderTab(services);
         this.applySeo(tenant);
         this.loading.set(false);
+        queueMicrotask(() => this.setupSectionObserver());
       },
       error: () => {
         this.error.set('Salao nao encontrado ou indisponivel.');
@@ -935,7 +977,12 @@ export class PublicSalonComponent implements OnInit {
 
   protected formatPhoneDisplay = formatPhoneDisplay;
 
+  ngOnDestroy(): void {
+    this.sectionObserver?.disconnect();
+  }
+
   protected scrollTo(sectionId: string): void {
+    this.activeSection.set(sectionId);
     scrollToSection(sectionId);
   }
 
@@ -989,23 +1036,6 @@ export class PublicSalonComponent implements OnInit {
   protected whatsappLinkTitle(): string {
     const salonName = this.tenant()?.name?.trim() || 'Salao';
     return `Fale com ${salonName} no WhatsApp`;
-  }
-
-  protected mobileNavLabel(item: NavSection): string {
-    switch (item.id) {
-      case 'inicio':
-        return 'Inicio';
-      case 'servicos':
-        return 'Servicos';
-      case 'agenda':
-        return 'Agenda';
-      case 'endereco':
-        return 'Mapa';
-      case 'contato':
-        return 'Contato';
-      default:
-        return item.label;
-    }
   }
 
   protected businessHoursLines(): string[] {
@@ -1252,5 +1282,41 @@ export class PublicSalonComponent implements OnInit {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private setupSectionObserver(): void {
+    this.sectionObserver?.disconnect();
+
+    const visibleSections = this.navSections
+      .map((section) => {
+        const element = document.getElementById(section.id);
+        return element ? { id: section.id, element } : null;
+      })
+      .filter((section): section is { id: string; element: HTMLElement } => section !== null);
+
+    if (visibleSections.length === 0) {
+      return;
+    }
+
+    this.sectionObserver = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+        if (visible.length > 0) {
+          this.activeSection.set(visible[0].target.id);
+        }
+      },
+      {
+        root: null,
+        rootMargin: '-40% 0px -45% 0px',
+        threshold: [0, 0.15, 0.35, 0.55],
+      }
+    );
+
+    for (const section of visibleSections) {
+      this.sectionObserver.observe(section.element);
+    }
   }
 }
