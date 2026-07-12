@@ -158,6 +158,8 @@ type CalendarDay = {
                   id="startAt"
                   type="datetime-local"
                   formControlName="startAt"
+                  [min]="startAtInputMin()"
+                  [max]="startAtInputMax()"
                   class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
                 />
               </div>
@@ -243,9 +245,14 @@ type CalendarDay = {
               <p class="text-sm font-medium text-violet-300">{{ periodLabel() }}</p>
             </div>
             <div class="text-right">
-              <p class="text-lg font-semibold text-white">{{ filteredAppointments().length }}</p>
+              <p class="text-lg font-semibold text-white">{{ periodSummary().inPeriod }}</p>
               <p class="text-[10px] text-slate-500">
-                {{ filteredAppointments().length === 1 ? 'agendamento' : 'agendamentos' }}
+                {{ periodSummary().inPeriod === 1 ? 'agendamento' : 'agendamentos' }}
+                @if (periodSummary().outOfPeriod > 0) {
+                  <span class="text-amber-400/80">
+                    · {{ periodSummary().outOfPeriod }} fora
+                  </span>
+                }
               </p>
             </div>
           </div>
@@ -378,8 +385,13 @@ type CalendarDay = {
                 }
               </h3>
               <p class="mt-2 max-w-sm text-sm text-slate-400">
-                Nenhum agendamento em {{ periodLabel() }}. Os dias com ponto roxo no calendario
-                indicam horarios ocupados.
+                Nenhum agendamento em {{ periodLabel() }}.
+                @if (sameDayDifferentYearAppointments().length > 0) {
+                  Ha {{ sameDayDifferentYearAppointments().length }} agendamento(s) no mesmo dia e mes em
+                  outro ano — veja abaixo.
+                } @else {
+                  Os dias com ponto roxo no calendario indicam horarios ocupados.
+                }
               </p>
               <button
                 type="button"
@@ -398,10 +410,10 @@ type CalendarDay = {
                         <button
                           type="button"
                           (click)="goToAppointmentDate(appointment.startAt)"
-                          class="flex w-full items-center justify-between rounded-lg border border-slate-800 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500/40 hover:bg-slate-900"
+                          class="flex w-full flex-col items-start gap-0.5 rounded-lg border border-slate-800 px-3 py-2 text-left text-sm transition hover:border-violet-500/40 hover:bg-slate-900 sm:flex-row sm:items-center sm:justify-between"
                         >
-                          <span>{{ formatDateTime(appointment.startAt) }}</span>
-                          <span class="text-violet-400">Ver &rarr;</span>
+                          <span class="text-slate-300">{{ formatDateTime(appointment.startAt) }}</span>
+                          <span class="text-xs text-violet-400">Ir para {{ formatPeriodYear(appointment.startAt) }} &rarr;</span>
                         </button>
                       </li>
                     }
@@ -581,6 +593,38 @@ export class HomeComponent {
       .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
   });
 
+  protected readonly periodSummary = computed(() => {
+    const inPeriod = this.filteredAppointments().length;
+    const total = this.appointments().length;
+    return {
+      inPeriod,
+      outOfPeriod: total - inPeriod,
+      total,
+    };
+  });
+
+  protected readonly sameDayDifferentYearAppointments = computed(() => {
+    const reference = this.referenceDate();
+    const month = reference.getMonth();
+    const day = reference.getDate();
+    const year = reference.getFullYear();
+
+    return this.appointments().filter((item) => {
+      const date = new Date(item.startAt);
+      return date.getMonth() === month && date.getDate() === day && date.getFullYear() !== year;
+    });
+  });
+
+  protected readonly startAtInputMin = computed(() => {
+    const year = this.referenceDate().getFullYear();
+    return `${year}-01-01T00:00`;
+  });
+
+  protected readonly startAtInputMax = computed(() => {
+    const year = this.referenceDate().getFullYear();
+    return `${year}-12-31T23:59`;
+  });
+
   protected readonly periodLabel = computed(() => {
     const { start, end } = this.getPeriodRange(this.referenceDate(), this.viewMode());
     const formatter = new Intl.DateTimeFormat('pt-BR', {
@@ -752,8 +796,15 @@ export class HomeComponent {
   }
 
   protected goToAppointmentDate(isoDate: string): void {
-    this.referenceDate.set(this.startOfDay(new Date(isoDate)));
+    const date = new Date(isoDate);
+    this.referenceDate.set(
+      this.startOfDay(new Date(date.getFullYear(), date.getMonth(), date.getDate())),
+    );
     this.viewMode.set('day');
+  }
+
+  protected formatPeriodYear(value: string): string {
+    return String(new Date(value).getFullYear());
   }
 
   protected formatDateTime(value: string): string {
@@ -1013,8 +1064,10 @@ export class HomeComponent {
     const now = new Date();
 
     if (candidate.getTime() <= now.getTime()) {
-      candidate.setDate(candidate.getDate() + 1);
-      candidate.setHours(9, 0, 0, 0);
+      const nextDay = new Date(reference);
+      nextDay.setDate(nextDay.getDate() + 1);
+      nextDay.setHours(9, 0, 0, 0);
+      return this.toDateTimeLocalValue(nextDay);
     }
 
     return this.toDateTimeLocalValue(candidate);
