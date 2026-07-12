@@ -1,0 +1,7 @@
+---
+description: Backend Java Spring
+globs: backend/**
+alwaysApply: false
+---
+
+Java 21, DTOs, UUID publico, Flyway. Testes: bash scripts/mvn-java21.sh test

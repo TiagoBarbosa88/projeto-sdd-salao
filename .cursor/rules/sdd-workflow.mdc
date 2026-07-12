@@ -1,0 +1,6 @@
+---
+description: SDD workflow - uma task por vez
+alwaysApply: true
+---
+
+Leia START_HERE.md. Execute uma task TODO, teste, commit automatico, pare.

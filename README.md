@@ -13,3 +13,10 @@ Fluxo obrigatório:
 9. Executar somente a próxima task pendente.
 
 Nunca implemente funcionalidades fora da task atual.
+
+## Fase 1 (concluida)
+
+- Docker PostgreSQL: `bash scripts/infra-health.sh`
+- Backend: `bash scripts/mvn-java21.sh spring-boot:run`
+- Frontend: `cd frontend && npm start`
+- Testes: `bash scripts/test-all.sh`

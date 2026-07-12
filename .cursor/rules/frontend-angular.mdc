@@ -1,0 +1,7 @@
+---
+description: Frontend Angular
+globs: frontend/**
+alwaysApply: false
+---
+
+Angular 20, Tailwind. Testes: npm test -- --watch=false --browsers=ChromeHeadless

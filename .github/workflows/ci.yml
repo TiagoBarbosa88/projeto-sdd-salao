@@ -1,7 +1,20 @@
 name: CI
-on: [push]
+on: [push, pull_request]
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate docs
+        run: bash scripts/validate-docs.sh
+      - name: Backend tests
+        run: bash scripts/mvn-java21.sh test
+      - name: Frontend tests
+        run: cd frontend && npm ci && npm test -- --watch=false --browsers=ChromeHeadless
