@@ -8,7 +8,7 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [ReactiveFormsModule],
   template: `
-    <div class="flex min-h-screen items-center justify-center px-6">
+    <div class="app-view flex min-h-screen items-center justify-center px-6">
       <div class="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-8 shadow-xl">
         <p class="text-xs uppercase tracking-widest text-violet-400">Salao SaaS</p>
         <h1 class="mt-2 text-2xl font-semibold text-white">Entrar</h1>

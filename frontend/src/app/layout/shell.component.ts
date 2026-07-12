@@ -141,7 +141,7 @@ interface NavItem {
           </div>
         </div>
 
-        <main class="px-4 py-4 md:px-8 md:py-8">
+        <main class="app-view px-4 py-4 md:px-8 md:py-8">
           <router-outlet />
         </main>
       </div>

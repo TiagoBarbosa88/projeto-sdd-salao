@@ -1,5 +1,40 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .app-view,
+  .page-section {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 body {
   @apply bg-slate-950 text-slate-100 min-h-screen;
+}
+
+.app-view {
+  animation: app-fade-in 0.4s ease-out both;
+}
+
+.page-section {
+  scroll-margin-top: 5.5rem;
+}
+
+@keyframes app-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
