@@ -75,7 +75,7 @@ public class TeamService {
     }
 
     @Transactional(readOnly = true)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
     public List<ProfessionalResponse> listAllProfessionalProfiles() {
         Tenant tenant = tenantResolver.requireCurrentTenant();
         return professionalProfileRepository.findAllByTenantId(tenant.getId()).stream()
@@ -106,7 +106,11 @@ public class TeamService {
         TenantUser tenantUser = new TenantUser();
         tenantUser.setTenant(tenant);
         tenantUser.setUser(user);
-        tenantUser.setRole(Role.PROFESSIONAL);
+        Role assignedRole = request.role() != null ? request.role() : Role.LEITOR;
+        if (assignedRole == Role.CLIENT) {
+            throw new InvalidScheduleException();
+        }
+        tenantUser.setRole(assignedRole);
         tenantUser = tenantUserRepository.save(tenantUser);
 
         ProfessionalProfile profile = new ProfessionalProfile();

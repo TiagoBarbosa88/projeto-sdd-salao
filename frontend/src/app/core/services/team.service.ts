@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-export type TeamRole = 'ADMIN' | 'PROFESSIONAL' | 'CLIENT';
+export type TeamRole = 'ADMIN' | 'EDITOR' | 'LEITOR' | 'PROFESSIONAL' | 'CLIENT';
 
 export interface TeamMember {
   publicId: string;
@@ -29,6 +29,7 @@ export interface CreateTeamMember {
   password: string;
   phone?: string;
   bookable: boolean;
+  role?: TeamRole;
 }
 
 export interface UpdateTeamMember {

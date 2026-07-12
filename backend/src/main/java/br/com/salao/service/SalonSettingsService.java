@@ -63,7 +63,7 @@ public class SalonSettingsService {
     }
 
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
     public SchedulingSettingsResponse updateSchedulingSettings(UpdateSchedulingSettingsRequest request) {
         validateSchedulingSettings(request);
         TenantSchedulingSettings settings = requireSchedulingSettings();

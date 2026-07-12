@@ -224,12 +224,36 @@ import {
       }
 
       @if (isAdmin() && showForm()) {
-        <section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
-          <h3 class="text-lg font-semibold text-white">
-            {{ editingId() ? 'Editar servico' : 'Novo servico' }}
-          </h3>
+        <div
+          class="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-4 backdrop-blur-sm sm:items-center"
+          (click)="cancelForm()"
+          role="presentation"
+        >
+          <div
+            class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl shadow-black/40"
+            role="dialog"
+            aria-modal="true"
+            [attr.aria-labelledby]="editingId() ? 'edit-service-title' : 'new-service-title'"
+            (click)="$event.stopPropagation()"
+          >
+            <div class="flex items-start justify-between gap-4 border-b border-slate-800 px-5 py-4">
+              <h3
+                [id]="editingId() ? 'edit-service-title' : 'new-service-title'"
+                class="text-lg font-semibold text-white"
+              >
+                {{ editingId() ? 'Editar servico' : 'Novo servico' }}
+              </h3>
+              <button
+                type="button"
+                (click)="cancelForm()"
+                class="rounded-lg border border-slate-700 px-2 py-1 text-sm text-slate-400 transition hover:text-white"
+                aria-label="Fechar"
+              >
+                &times;
+              </button>
+            </div>
 
-          <form class="mt-6 space-y-4" [formGroup]="form" (ngSubmit)="onSubmit()">
+            <form class="space-y-4 px-5 py-4" [formGroup]="form" (ngSubmit)="onSubmit()">
             <div class="grid gap-4 sm:grid-cols-2">
               <div class="sm:col-span-2">
                 <label for="name" class="mb-1 block text-sm text-slate-300">Nome</label>
@@ -347,7 +371,7 @@ import {
               <p class="text-sm text-rose-400">{{ formError() }}</p>
             }
 
-            <div class="flex gap-3">
+            <div class="flex gap-3 border-t border-slate-800 pt-4">
               <button
                 type="submit"
                 [disabled]="form.invalid || saving()"
@@ -364,7 +388,8 @@ import {
               </button>
             </div>
           </form>
-        </section>
+          </div>
+        </div>
       }
     </div>
   `,

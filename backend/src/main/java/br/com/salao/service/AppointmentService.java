@@ -65,8 +65,8 @@ public class AppointmentService {
                 .orElseThrow(ResourceNotFoundException::new);
 
         List<Appointment> appointments = switch (principal.getRole()) {
-            case ADMIN -> appointmentRepository.findAllByTenantIdWithDetails(tenant.getId());
-            case PROFESSIONAL -> appointmentRepository.findByTenantIdAndProfessionalIdWithDetails(
+            case ADMIN, EDITOR -> appointmentRepository.findAllByTenantIdWithDetails(tenant.getId());
+            case PROFESSIONAL, LEITOR -> appointmentRepository.findByTenantIdAndProfessionalIdWithDetails(
                     tenant.getId(), currentUser.getId());
             case CLIENT -> appointmentRepository.findByTenantIdAndClientIdWithDetails(
                     tenant.getId(), currentUser.getId());
@@ -192,9 +192,9 @@ public class AppointmentService {
 
     private void validateCreatePermission(AuthenticatedUser principal, User professional, User client) {
         switch (principal.getRole()) {
-            case ADMIN -> {
+            case ADMIN, EDITOR -> {
             }
-            case PROFESSIONAL -> {
+            case PROFESSIONAL, LEITOR -> {
                 if (!professional.getPublicId().equals(principal.getUserPublicId())) {
                     throw new AccessDeniedException();
                 }
@@ -209,7 +209,12 @@ public class AppointmentService {
 
     private void validateCancelPermission(AuthenticatedUser principal, Appointment appointment, User currentUser) {
         switch (principal.getRole()) {
-            case ADMIN, PROFESSIONAL -> {
+            case ADMIN, EDITOR -> {
+            }
+            case PROFESSIONAL, LEITOR -> {
+                if (!appointment.getProfessional().getPublicId().equals(currentUser.getPublicId())) {
+                    throw new AccessDeniedException();
+                }
             }
             case CLIENT -> {
                 if (appointment.getClient() == null

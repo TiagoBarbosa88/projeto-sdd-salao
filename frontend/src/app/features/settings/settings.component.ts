@@ -28,7 +28,7 @@ import {
   normalizePhoneValue,
   optionalPhoneValidator,
 } from '../../core/utils/phone.util';
-import { roleLabel } from '../../core/utils/team.util';
+import { roleLabel, canManageSalon, canManageSchedulingSettings, canManageAllSchedules, canAccessAgendaSettings } from '../../core/utils/team.util';
 
 type SettingsTab = 'personalization' | 'social' | 'funcionamento' | 'professionals' | 'agenda' | 'account';
 
@@ -110,16 +110,6 @@ type DayScheduleRow = {
                         formControlName="name"
                         class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
                       />
-                    </div>
-                    <div class="md:col-span-2 rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-                      <p class="text-sm font-medium text-slate-300">Pagina publica</p>
-                      <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                        Ao publicar na Vercel, seus clientes acessam pelo dominio que voce configurar
-                        (ex:
-                        <span class="text-slate-400">meusalao.vercel.app</span>).
-                        O identificador interno do salao e
-                        <span class="text-slate-400">{{ salonSettings()?.slug }}</span>.
-                      </p>
                     </div>
                     <div class="md:col-span-2">
                       <label class="mb-1 block text-sm text-slate-300">Descricao</label>
@@ -279,7 +269,7 @@ type DayScheduleRow = {
             </section>
           }
 
-          @if (activeTab() === 'funcionamento' && isAdmin()) {
+          @if (activeTab() === 'funcionamento' && canManageScheduling()) {
             <section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
               <h2 class="text-xl font-semibold text-white">Horario de funcionamento</h2>
               <p class="mt-1 text-sm text-slate-400">
@@ -333,51 +323,12 @@ type DayScheduleRow = {
                 </div>
                 <button
                   type="button"
-                  (click)="toggleMemberForm()"
+                  (click)="openCreateMemberModal()"
                   class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500"
                 >
-                  {{ showMemberForm() ? 'Cancelar' : 'Novo profissional' }}
+                  Novo profissional
                 </button>
               </div>
-
-              @if (showMemberForm()) {
-                <form class="mt-6 space-y-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4" [formGroup]="memberForm" (ngSubmit)="createMember()">
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label class="mb-1 block text-sm text-slate-300">Nome</label>
-                      <input formControlName="name" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
-                    </div>
-                    <div>
-                      <label class="mb-1 block text-sm text-slate-300">Email</label>
-                      <input type="email" formControlName="email" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
-                    </div>
-                    <div>
-                      <label class="mb-1 block text-sm text-slate-300">Senha inicial</label>
-                      <input type="password" formControlName="password" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
-                    </div>
-                    <div>
-                      <label class="mb-1 block text-sm text-slate-300">Telefone</label>
-                      <input
-                        formControlName="phone"
-                        appPhoneMask
-                        type="tel"
-                        inputmode="tel"
-                        autocomplete="tel"
-                        maxlength="15"
-                        placeholder="(11) 99999-9999"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                      />
-                    </div>
-                  </div>
-                  <label class="flex items-center gap-2 text-sm text-slate-300">
-                    <input type="checkbox" formControlName="bookable" class="rounded border-slate-700 bg-slate-950 text-violet-600" />
-                    Aceita agendamentos
-                  </label>
-                  <button type="submit" [disabled]="memberForm.invalid || memberSaving()" class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50">
-                    {{ memberSaving() ? 'Criando...' : 'Criar profissional' }}
-                  </button>
-                </form>
-              }
 
               @if (professionalsLoading()) {
                 <p class="mt-6 text-slate-400">Carregando profissionais...</p>
@@ -387,62 +338,6 @@ type DayScheduleRow = {
                 <div class="mt-6 space-y-3">
                   @for (pro of professionals(); track pro.publicId) {
                     <article class="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
-                      @if (editingMemberId() === pro.publicId) {
-                        <form class="space-y-4" [formGroup]="editMemberForm" (ngSubmit)="saveEditMember()">
-                          <div class="grid gap-4 sm:grid-cols-2">
-                            <div>
-                              <label class="mb-1 block text-sm text-slate-300">Nome</label>
-                              <input formControlName="name" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
-                            </div>
-                            <div>
-                              <label class="mb-1 block text-sm text-slate-300">Telefone</label>
-                              <input
-                                formControlName="phone"
-                                appPhoneMask
-                                type="tel"
-                                inputmode="tel"
-                                maxlength="15"
-                                placeholder="(11) 99999-9999"
-                                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                              />
-                            </div>
-                            <div>
-                              <label class="mb-1 block text-sm text-slate-300">Funcao</label>
-                              <select formControlName="role" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500">
-                                @for (option of roleOptions; track option.value) {
-                                  <option [value]="option.value">{{ option.label }}</option>
-                                }
-                              </select>
-                            </div>
-                            <div>
-                              <label class="mb-1 block text-sm text-slate-300">Nova senha (opcional)</label>
-                              <input type="password" formControlName="password" placeholder="Minimo 8 caracteres" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
-                            </div>
-                          </div>
-                          <div class="flex flex-wrap gap-4">
-                            <label class="flex items-center gap-2 text-sm text-slate-300">
-                              <input type="checkbox" formControlName="bookable" class="rounded border-slate-700 bg-slate-950 text-violet-600" />
-                              Aceita agendamentos
-                            </label>
-                            <label class="flex items-center gap-2 text-sm text-slate-300">
-                              <input type="checkbox" formControlName="active" class="rounded border-slate-700 bg-slate-950 text-violet-600" />
-                              Perfil ativo
-                            </label>
-                            <label class="flex items-center gap-2 text-sm text-slate-300">
-                              <input type="checkbox" formControlName="loginActive" class="rounded border-slate-700 bg-slate-950 text-violet-600" />
-                              Acesso ao sistema
-                            </label>
-                          </div>
-                          <div class="flex flex-wrap gap-2">
-                            <button type="submit" [disabled]="editMemberForm.invalid || editMemberSaving()" class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50">
-                              {{ editMemberSaving() ? 'Salvando...' : 'Salvar alteracoes' }}
-                            </button>
-                            <button type="button" (click)="cancelEditMember()" class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:text-white">
-                              Cancelar
-                            </button>
-                          </div>
-                        </form>
-                      } @else {
                         <div class="flex flex-wrap items-start justify-between gap-3">
                           <div>
                             <h3 class="font-medium text-white">{{ pro.name }}</h3>
@@ -467,7 +362,6 @@ type DayScheduleRow = {
                             Editar
                           </button>
                         </div>
-                      }
                     </article>
                   }
                 </div>
@@ -475,11 +369,18 @@ type DayScheduleRow = {
             </section>
           }
 
-          @if (activeTab() === 'agenda' && isAdmin()) {
+          @if (activeTab() === 'agenda' && canAccessAgenda()) {
             <section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
               <h2 class="text-xl font-semibold text-white">Agenda do profissional</h2>
-              <p class="mt-1 text-sm text-slate-400">Horarios semanais, pausa e bloqueios.</p>
+              <p class="mt-1 text-sm text-slate-400">
+                @if (canManageAllAgenda()) {
+                  Horarios semanais, pausa e bloqueios.
+                } @else {
+                  Gerencie seus horarios, pausa e bloqueios.
+                }
+              </p>
 
+              @if (canManageAllAgenda()) {
               <div class="mt-6">
                 <label class="mb-1 block text-sm text-slate-300">Profissional</label>
                 <select
@@ -493,6 +394,7 @@ type DayScheduleRow = {
                   }
                 </select>
               </div>
+              }
 
               @if (selectedProfessionalId()) {
                 @if (scheduleLoading()) {
@@ -636,7 +538,18 @@ type DayScheduleRow = {
                 </dl>
 
                 <div class="mt-8">
-                  <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Equipe do salao</h3>
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Equipe do salao</h3>
+                    @if (isAdmin()) {
+                      <button
+                        type="button"
+                        (click)="openCreateMemberModal()"
+                        class="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500"
+                      >
+                        Novo membro
+                      </button>
+                    }
+                  </div>
                   @if (teamMembersLoading()) {
                     <p class="mt-3 text-sm text-slate-400">Carregando equipe...</p>
                   } @else if (teamMembers().length === 0) {
@@ -649,11 +562,22 @@ type DayScheduleRow = {
                             <p class="font-medium text-white">{{ member.name }}</p>
                             <p class="text-xs text-slate-400">{{ member.email }}</p>
                           </div>
-                          <div class="flex flex-wrap items-center gap-2 text-xs">
-                            <span class="rounded-full bg-slate-800 px-2 py-1 text-slate-300">{{ roleLabel(member.role) }}</span>
-                            <span class="rounded-full px-2 py-1" [class.bg-sky-500/15]="member.loginActive" [class.text-sky-300]="member.loginActive" [class.bg-rose-500/15]="!member.loginActive" [class.text-rose-300]="!member.loginActive">
-                              {{ member.loginActive ? 'Com acesso' : 'Sem acesso' }}
-                            </span>
+                          <div class="flex flex-wrap items-center gap-2">
+                            <div class="flex flex-wrap gap-2 text-xs">
+                              <span class="rounded-full bg-slate-800 px-2 py-1 text-slate-300">{{ roleLabel(member.role) }}</span>
+                              <span class="rounded-full px-2 py-1" [class.bg-sky-500/15]="member.loginActive" [class.text-sky-300]="member.loginActive" [class.bg-rose-500/15]="!member.loginActive" [class.text-rose-300]="!member.loginActive">
+                                {{ member.loginActive ? 'Com acesso' : 'Sem acesso' }}
+                              </span>
+                            </div>
+                            @if (isAdmin() && canEditTeamMember(member)) {
+                              <button
+                                type="button"
+                                (click)="startEditMemberFromAccount(member.publicId)"
+                                class="rounded-lg border border-slate-700 px-3 py-1 text-xs text-slate-300 transition hover:border-violet-500 hover:text-white"
+                              >
+                                Editar
+                              </button>
+                            }
                           </div>
                         </div>
                       }
@@ -678,6 +602,155 @@ type DayScheduleRow = {
           }
         </div>
       </div>
+
+      @if (memberModalOpen()) {
+        <div
+          class="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-4 backdrop-blur-sm sm:items-center"
+          (click)="closeMemberModal()"
+          role="presentation"
+        >
+          <div
+            class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl shadow-black/40"
+            role="dialog"
+            aria-modal="true"
+            [attr.aria-labelledby]="editingMemberId() ? 'edit-member-title' : 'new-member-title'"
+            (click)="$event.stopPropagation()"
+          >
+            <div class="flex items-start justify-between gap-4 border-b border-slate-800 px-5 py-4">
+              <h3
+                [id]="editingMemberId() ? 'edit-member-title' : 'new-member-title'"
+                class="text-lg font-semibold text-white"
+              >
+                {{ editingMemberId() ? 'Editar membro' : 'Novo membro da equipe' }}
+              </h3>
+              <button
+                type="button"
+                (click)="closeMemberModal()"
+                class="rounded-lg border border-slate-700 px-2 py-1 text-sm text-slate-400 transition hover:text-white"
+                aria-label="Fechar"
+              >
+                &times;
+              </button>
+            </div>
+
+            @if (editingMemberId()) {
+              <form class="space-y-4 px-5 py-4" [formGroup]="editMemberForm" (ngSubmit)="saveEditMember()">
+                <div class="grid gap-4 sm:grid-cols-2">
+                  <div class="sm:col-span-2">
+                    <label class="mb-1 block text-sm text-slate-300">Nome</label>
+                    <input formControlName="name" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm text-slate-300">Telefone</label>
+                    <input
+                      formControlName="phone"
+                      appPhoneMask
+                      type="tel"
+                      inputmode="tel"
+                      maxlength="15"
+                      placeholder="(11) 99999-9999"
+                      class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                    />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm text-slate-300">Funcao</label>
+                    <select formControlName="role" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500">
+                      @for (option of roleOptions; track option.value) {
+                        <option [value]="option.value">{{ option.label }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label class="mb-1 block text-sm text-slate-300">Nova senha (opcional)</label>
+                    <input type="password" formControlName="password" placeholder="Minimo 8 caracteres" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-4">
+                  <label class="flex items-center gap-2 text-sm text-slate-300">
+                    <input type="checkbox" formControlName="bookable" class="rounded border-slate-700 bg-slate-950 text-violet-600" />
+                    Aceita agendamentos
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-slate-300">
+                    <input type="checkbox" formControlName="active" class="rounded border-slate-700 bg-slate-950 text-violet-600" />
+                    Perfil ativo
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-slate-300">
+                    <input type="checkbox" formControlName="loginActive" class="rounded border-slate-700 bg-slate-950 text-violet-600" />
+                    Acesso ao sistema
+                  </label>
+                </div>
+                @if (memberFormError()) {
+                  <p class="text-sm text-rose-400">{{ memberFormError() }}</p>
+                }
+                <div class="flex gap-3 border-t border-slate-800 pt-4">
+                  <button type="submit" [disabled]="editMemberForm.invalid || editMemberSaving()" class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50">
+                    {{ editMemberSaving() ? 'Salvando...' : 'Salvar alteracoes' }}
+                  </button>
+                  <button type="button" (click)="closeMemberModal()" class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:text-white">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            } @else {
+              <form class="space-y-4 px-5 py-4" [formGroup]="memberForm" (ngSubmit)="createMember()">
+                <div class="grid gap-4 sm:grid-cols-2">
+                  <div class="sm:col-span-2">
+                    <label class="mb-1 block text-sm text-slate-300">Nome</label>
+                    <input formControlName="name" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm text-slate-300">Email</label>
+                    <input type="email" formControlName="email" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm text-slate-300">Senha inicial</label>
+                    <input type="password" formControlName="password" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm text-slate-300">Telefone</label>
+                    <input
+                      formControlName="phone"
+                      appPhoneMask
+                      type="tel"
+                      inputmode="tel"
+                      autocomplete="tel"
+                      maxlength="15"
+                      placeholder="(11) 99999-9999"
+                      class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                    />
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label class="mb-1 block text-sm text-slate-300">Funcao</label>
+                    <select formControlName="role" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500">
+                      @for (option of assignableRoleOptions; track option.value) {
+                        <option [value]="option.value">{{ option.label }}</option>
+                      }
+                    </select>
+                    <p class="mt-1 text-xs text-slate-500">
+                      Editor gerencia agenda de todos; Leitor altera apenas a propria agenda.
+                    </p>
+                  </div>
+                </div>
+                <label class="flex items-center gap-2 text-sm text-slate-300">
+                  <input type="checkbox" formControlName="bookable" class="rounded border-slate-700 bg-slate-950 text-violet-600" />
+                  Aceita agendamentos
+                </label>
+                @if (memberFormError()) {
+                  <p class="text-sm text-rose-400">{{ memberFormError() }}</p>
+                }
+                <div class="flex gap-3 border-t border-slate-800 pt-4">
+                  <button type="submit" [disabled]="memberForm.invalid || memberSaving()" class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50">
+                    {{ memberSaving() ? 'Criando...' : 'Criar membro' }}
+                  </button>
+                  <button type="button" (click)="closeMemberModal()" class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:text-white">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            }
+          </div>
+        </div>
+      }
     </div>
   `,
 })
@@ -705,7 +778,8 @@ export class SettingsComponent {
 
   protected readonly professionals = signal<Professional[]>([]);
   protected readonly professionalsLoading = signal(false);
-  protected readonly showMemberForm = signal(false);
+  protected readonly memberModalOpen = signal(false);
+  protected readonly memberFormError = signal<string | null>(null);
   protected readonly memberSaving = signal(false);
   protected readonly editingMemberId = signal<string | null>(null);
   protected readonly editMemberSaving = signal(false);
@@ -752,12 +826,13 @@ export class SettingsComponent {
     password: ['', [Validators.required, Validators.minLength(8)]],
     phone: ['', (control: AbstractControl) => optionalPhoneValidator(control.value)],
     bookable: [true],
+    role: ['LEITOR' as TeamRole, Validators.required],
   });
 
   protected readonly editMemberForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
     phone: ['', (control: AbstractControl) => optionalPhoneValidator(control.value)],
-    role: ['PROFESSIONAL' as TeamRole, Validators.required],
+    role: ['LEITOR' as TeamRole, Validators.required],
     bookable: [true],
     active: [true],
     loginActive: [true],
@@ -772,7 +847,15 @@ export class SettingsComponent {
 
   protected readonly roleOptions: { value: TeamRole; label: string }[] = [
     { value: 'ADMIN', label: 'Administrador' },
-    { value: 'PROFESSIONAL', label: 'Profissional' },
+    { value: 'EDITOR', label: 'Editor' },
+    { value: 'LEITOR', label: 'Leitor' },
+    { value: 'PROFESSIONAL', label: 'Leitor (legado)' },
+  ];
+
+  protected readonly assignableRoleOptions: { value: TeamRole; label: string }[] = [
+    { value: 'ADMIN', label: 'Administrador' },
+    { value: 'EDITOR', label: 'Editor' },
+    { value: 'LEITOR', label: 'Leitor' },
   ];
 
   protected readonly blockForm = this.fb.nonNullable.group({
@@ -782,11 +865,21 @@ export class SettingsComponent {
     reason: [''],
   });
 
-  protected readonly isAdmin = computed(() => this.profile()?.role === 'ADMIN');
+  protected readonly isAdmin = computed(() => canManageSalon(this.profile()?.role ?? ''));
+  protected readonly canManageScheduling = computed(() =>
+    canManageSchedulingSettings(this.profile()?.role ?? '')
+  );
+  protected readonly canManageAllAgenda = computed(() =>
+    canManageAllSchedules(this.profile()?.role ?? '')
+  );
+  protected readonly canAccessAgenda = computed(() =>
+    canAccessAgendaSettings(this.profile()?.role ?? '')
+  );
 
   protected readonly visibleTabs = computed(() => {
+    const role = this.profile()?.role ?? '';
     const tabs: { id: SettingsTab; label: string }[] = [];
-    if (this.isAdmin()) {
+    if (canManageSalon(role)) {
       tabs.push(
         { id: 'personalization', label: 'Personalizacao' },
         { id: 'social', label: 'Redes' },
@@ -794,6 +887,13 @@ export class SettingsComponent {
         { id: 'professionals', label: 'Profissionais' },
         { id: 'agenda', label: 'Agenda' }
       );
+    } else if (canManageSchedulingSettings(role)) {
+      tabs.push(
+        { id: 'funcionamento', label: 'Funcionamento' },
+        { id: 'agenda', label: 'Agenda' }
+      );
+    } else if (canAccessAgendaSettings(role)) {
+      tabs.push({ id: 'agenda', label: 'Agenda' });
     }
     tabs.push({ id: 'account', label: 'Conta' });
     return tabs;
@@ -808,11 +908,20 @@ export class SettingsComponent {
     this.auth.getMe().subscribe({
       next: (response) => {
         this.profile.set(response);
-        this.activeTab.set(response.role === 'ADMIN' ? 'personalization' : 'account');
-        this.loadTeamMembers();
-        if (response.role === 'ADMIN') {
+        const role = response.role;
+        if (canManageSalon(role)) {
+          this.activeTab.set('personalization');
           this.loadAdminData();
+        } else if (canManageSchedulingSettings(role)) {
+          this.activeTab.set('funcionamento');
+          this.loadEditorData();
+        } else if (canAccessAgendaSettings(role)) {
+          this.activeTab.set('agenda');
+          this.loadStaffAgendaData(response.user.publicId);
+        } else {
+          this.activeTab.set('account');
         }
+        this.loadTeamMembers();
       },
       error: () => this.profileError.set('Nao foi possivel carregar o perfil.'),
     });
@@ -894,26 +1003,60 @@ export class SettingsComponent {
   }
 
   protected toggleMemberForm(): void {
-    this.showMemberForm.update((value) => !value);
+    this.openCreateMemberModal();
+  }
+
+  protected openCreateMemberModal(): void {
+    this.editingMemberId.set(null);
+    this.memberFormError.set(null);
+    this.memberForm.reset({
+      name: '',
+      email: '',
+      password: '',
+      phone: '',
+      bookable: true,
+      role: 'LEITOR',
+    });
+    this.memberModalOpen.set(true);
+  }
+
+  protected closeMemberModal(): void {
+    this.memberModalOpen.set(false);
+    this.editingMemberId.set(null);
+    this.memberFormError.set(null);
+    this.editMemberForm.reset();
+  }
+
+  protected canEditTeamMember(member: TeamMember): boolean {
+    return member.role !== 'CLIENT' && !!this.professionals().find((pro) => pro.publicId === member.publicId);
+  }
+
+  protected startEditMemberFromAccount(publicId: string): void {
+    const pro = this.professionals().find((item) => item.publicId === publicId);
+    if (pro) {
+      this.startEditMember(pro);
+    }
   }
 
   protected createMember(): void {
     if (this.memberForm.invalid || this.memberSaving()) return;
     this.memberSaving.set(true);
+    this.memberFormError.set(null);
     const raw = this.memberForm.getRawValue();
     const payload: CreateTeamMember = {
       ...raw,
       email: raw.email.trim().toLowerCase(),
       phone: normalizePhoneValue(raw.phone),
+      role: raw.role,
     };
     this.teamService.createProfessional(payload).subscribe({
       next: () => {
         this.memberSaving.set(false);
-        this.showMemberForm.set(false);
-        this.memberForm.reset({ bookable: true });
+        this.closeMemberModal();
+        this.memberForm.reset({ bookable: true, role: 'LEITOR' });
         this.loadProfessionals();
         this.loadTeamMembers();
-        this.showBanner('success', 'Profissional criado.');
+        this.showBanner('success', 'Membro criado.');
       },
       error: (err) => {
         this.memberSaving.set(false);
@@ -921,29 +1064,29 @@ export class SettingsComponent {
           err?.error?.message ??
           (err?.error?.code === 'EMAIL_ALREADY_EXISTS'
             ? 'Este email ja esta cadastrado.'
-            : 'Nao foi possivel criar o profissional.');
-        this.showBanner('error', message);
+            : 'Nao foi possivel criar o membro.');
+        this.memberFormError.set(message);
       },
     });
   }
 
   protected startEditMember(pro: Professional): void {
     this.editingMemberId.set(pro.publicId);
-    this.showMemberForm.set(false);
+    this.memberFormError.set(null);
     this.editMemberForm.reset({
       name: pro.name,
       phone: formatPhoneDisplay(pro.phone),
-      role: pro.role,
+      role: pro.role === 'PROFESSIONAL' ? 'LEITOR' : pro.role,
       bookable: pro.bookable,
       active: pro.active,
       loginActive: pro.loginActive,
       password: '',
     });
+    this.memberModalOpen.set(true);
   }
 
   protected cancelEditMember(): void {
-    this.editingMemberId.set(null);
-    this.editMemberForm.reset();
+    this.closeMemberModal();
   }
 
   protected saveEditMember(): void {
@@ -969,14 +1112,14 @@ export class SettingsComponent {
         this.professionals.update((items) =>
           items.map((item) => (item.publicId === updated.publicId ? updated : item))
         );
-        this.editingMemberId.set(null);
+        this.closeMemberModal();
         this.editMemberSaving.set(false);
         this.loadTeamMembers();
-        this.showBanner('success', 'Profissional atualizado.');
+        this.showBanner('success', 'Membro atualizado.');
       },
       error: () => {
         this.editMemberSaving.set(false);
-        this.showBanner('error', 'Nao foi possivel atualizar o profissional.');
+        this.memberFormError.set('Nao foi possivel atualizar o membro.');
       },
     });
   }
@@ -1122,25 +1265,22 @@ export class SettingsComponent {
       scheduling: this.settingsService.getSchedulingSettings(),
     }).subscribe({
       next: ({ salon, scheduling }) => {
-        this.salonSettings.set(salon);
+        this.applySalonSettings(salon, scheduling);
+        this.salonLoading.set(false);
+      },
+      error: () => {
+        this.salonLoading.set(false);
+        this.showBanner('error', 'Nao foi possivel carregar as configuracoes.');
+      },
+    });
+    this.loadProfessionals();
+  }
+
+  private loadEditorData(): void {
+    this.salonLoading.set(true);
+    this.settingsService.getSchedulingSettings().subscribe({
+      next: (scheduling) => {
         this.schedulingSettings.set(scheduling);
-        this.personalizationForm.patchValue({
-          name: salon.name,
-          description: salon.description ?? '',
-          phone: formatPhoneDisplay(salon.phone),
-          whatsapp: formatPhoneDisplay(salon.whatsapp),
-          address: salon.address ?? '',
-          logoUrl: salon.logoUrl ?? '',
-        });
-        this.socialForm.patchValue({
-          instagramUrl: salon.instagramUrl ?? '',
-          facebookUrl: salon.facebookUrl ?? '',
-          tiktokUrl: salon.tiktokUrl ?? '',
-          websiteUrl: salon.websiteUrl ?? '',
-          youtubeUrl: salon.youtubeUrl ?? '',
-          googleMapsUrl: salon.googleMapsUrl ?? '',
-        });
-        this.logoPreview.set(salon.logoUrl ?? null);
         this.schedulingForm.patchValue({
           zoneId: scheduling.zoneId,
           bufferMinutes: scheduling.bufferMinutes,
@@ -1152,10 +1292,44 @@ export class SettingsComponent {
       },
       error: () => {
         this.salonLoading.set(false);
-        this.showBanner('error', 'Nao foi possivel carregar as configuracoes.');
+        this.showBanner('error', 'Nao foi possivel carregar as regras de agenda.');
       },
     });
     this.loadProfessionals();
+  }
+
+  private loadStaffAgendaData(userPublicId: string): void {
+    this.selectedProfessionalId.set(userPublicId);
+    this.loadSchedule(userPublicId);
+  }
+
+  private applySalonSettings(salon: SalonSettings, scheduling: SchedulingSettings): void {
+    this.salonSettings.set(salon);
+    this.schedulingSettings.set(scheduling);
+    this.personalizationForm.patchValue({
+      name: salon.name,
+      description: salon.description ?? '',
+      phone: formatPhoneDisplay(salon.phone),
+      whatsapp: formatPhoneDisplay(salon.whatsapp),
+      address: salon.address ?? '',
+      logoUrl: salon.logoUrl ?? '',
+    });
+    this.socialForm.patchValue({
+      instagramUrl: salon.instagramUrl ?? '',
+      facebookUrl: salon.facebookUrl ?? '',
+      tiktokUrl: salon.tiktokUrl ?? '',
+      websiteUrl: salon.websiteUrl ?? '',
+      youtubeUrl: salon.youtubeUrl ?? '',
+      googleMapsUrl: salon.googleMapsUrl ?? '',
+    });
+    this.logoPreview.set(salon.logoUrl ?? null);
+    this.schedulingForm.patchValue({
+      zoneId: scheduling.zoneId,
+      bufferMinutes: scheduling.bufferMinutes,
+      slotIntervalMinutes: scheduling.slotIntervalMinutes,
+      dayStartTime: scheduling.dayStartTime.slice(0, 5),
+      dayEndTime: scheduling.dayEndTime.slice(0, 5),
+    });
   }
 
   private loadTeamMembers(): void {
@@ -1173,11 +1347,16 @@ export class SettingsComponent {
 
   private loadProfessionals(): void {
     this.professionalsLoading.set(true);
-    this.teamService.listAllProfessionalProfiles().subscribe({
+    const role = this.profile()?.role ?? '';
+    const request = canManageAllSchedules(role)
+      ? this.teamService.listAllProfessionalProfiles()
+      : this.teamService.listBookableProfessionals();
+
+    request.subscribe({
       next: (items) => {
         this.professionals.set(items);
         this.professionalsLoading.set(false);
-        if (!this.selectedProfessionalId() && items.length > 0) {
+        if (canManageAllSchedules(role) && !this.selectedProfessionalId() && items.length > 0) {
           this.selectedProfessionalId.set(items[0].publicId);
           this.loadSchedule(items[0].publicId);
         }

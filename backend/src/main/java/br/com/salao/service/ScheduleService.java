@@ -2,6 +2,7 @@ package br.com.salao.service;
 
 import br.com.salao.domain.entity.ProfessionalBlockedPeriod;
 import br.com.salao.domain.entity.ProfessionalWorkingPeriod;
+import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.entity.Tenant;
 import br.com.salao.domain.entity.TenantUser;
 import br.com.salao.domain.repository.ProfessionalBlockedPeriodRepository;
@@ -12,7 +13,9 @@ import br.com.salao.web.dto.CreateBlockedPeriodRequest;
 import br.com.salao.web.dto.UpdateWorkingHoursRequest;
 import br.com.salao.web.dto.WorkingPeriodEntry;
 import br.com.salao.web.dto.WorkingPeriodResponse;
-import org.springframework.security.access.prepost.PreAuthorize;
+import br.com.salao.security.AuthenticatedUser;
+import br.com.salao.security.RoleAccess;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,8 +52,8 @@ public class ScheduleService {
     }
 
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
     public List<WorkingPeriodResponse> updateWorkingHours(UUID userPublicId, UpdateWorkingHoursRequest request) {
+        requireScheduleWriteAccess(userPublicId);
         TenantUser tenantUser = resolveTenantUser(userPublicId);
         validateWorkingPeriods(request.periods());
 
@@ -82,8 +85,8 @@ public class ScheduleService {
     }
 
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
     public BlockedPeriodResponse createBlockedPeriod(UUID userPublicId, CreateBlockedPeriodRequest request) {
+        requireScheduleWriteAccess(userPublicId);
         if (request.startAt() == null || request.endAt() == null || !request.startAt().isBefore(request.endAt())) {
             throw new InvalidScheduleException();
         }
@@ -99,8 +102,8 @@ public class ScheduleService {
     }
 
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
     public void deleteBlockedPeriod(UUID userPublicId, UUID blockPublicId) {
+        requireScheduleWriteAccess(userPublicId);
         TenantUser tenantUser = resolveTenantUser(userPublicId);
         ProfessionalBlockedPeriod blocked = blockedPeriodRepository
                 .findByPublicIdAndTenantUser_Id(blockPublicId, tenantUser.getId())
@@ -112,6 +115,27 @@ public class ScheduleService {
         Tenant tenant = tenantResolver.requireCurrentTenant();
         return tenantUserRepository.findByTenant_IdAndUser_PublicId(tenant.getId(), userPublicId)
                 .orElseThrow(ResourceNotFoundException::new);
+    }
+
+    private void requireScheduleWriteAccess(UUID userPublicId) {
+        AuthenticatedUser principal = getAuthenticatedUser();
+        Role role = principal.getRole();
+        if (RoleAccess.canManageAllSchedules(role)) {
+            resolveTenantUser(userPublicId);
+            return;
+        }
+        if (RoleAccess.isStaffReader(role) && principal.getUserPublicId().equals(userPublicId)) {
+            return;
+        }
+        throw new AccessDeniedException();
+    }
+
+    private AuthenticatedUser getAuthenticatedUser() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof AuthenticatedUser authenticatedUser)) {
+            throw new AccessDeniedException();
+        }
+        return authenticatedUser;
     }
 
     private void validateWorkingPeriods(List<WorkingPeriodEntry> periods) {

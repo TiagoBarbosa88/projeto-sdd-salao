@@ -272,7 +272,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: [PROFESSIONAL, CLIENT, ADMIN]
+            enum: [ADMIN, EDITOR, LEITOR, PROFESSIONAL, CLIENT]
           description: Filtra por papel; omitir retorna todos os membros do tenant
       responses:
         '200':
@@ -748,7 +748,7 @@ components:
           $ref: '#/components/schemas/TenantSummary'
         role:
           type: string
-          enum: [ADMIN, PROFESSIONAL, CLIENT]
+          enum: [ADMIN, EDITOR, LEITOR, PROFESSIONAL, CLIENT]
 
     UserSummary:
       type: object
@@ -785,7 +785,7 @@ components:
           $ref: '#/components/schemas/TenantSummary'
         role:
           type: string
-          enum: [ADMIN, PROFESSIONAL, CLIENT]
+          enum: [ADMIN, EDITOR, LEITOR, PROFESSIONAL, CLIENT]
 
     ServiceResponse:
       type: object
@@ -938,7 +938,7 @@ components:
           example: Marina
         role:
           type: string
-          enum: [PROFESSIONAL, CLIENT, ADMIN]
+          enum: [ADMIN, EDITOR, LEITOR, PROFESSIONAL, CLIENT]
 
     AuditAction:
       type: string
@@ -1090,6 +1090,10 @@ components:
           type: string
         bookable:
           type: boolean
+        role:
+          type: string
+          enum: [ADMIN, EDITOR, LEITOR, PROFESSIONAL]
+          default: LEITOR
 
     UpdateProfessionalProfileRequest:
       type: object

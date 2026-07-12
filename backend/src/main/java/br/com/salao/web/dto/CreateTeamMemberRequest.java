@@ -1,12 +1,13 @@
 package br.com.salao.web.dto;
 
-import java.util.UUID;
+import br.com.salao.domain.entity.Role;
 
 public record CreateTeamMemberRequest(
         String name,
         String email,
         String password,
         String phone,
-        boolean bookable
+        boolean bookable,
+        Role role
 ) {
 }
