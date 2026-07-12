@@ -700,7 +700,11 @@ export class SettingsComponent {
   protected createMember(): void {
     if (this.memberForm.invalid || this.memberSaving()) return;
     this.memberSaving.set(true);
-    const payload = this.memberForm.getRawValue() as CreateTeamMember;
+    const raw = this.memberForm.getRawValue();
+    const payload: CreateTeamMember = {
+      ...raw,
+      email: raw.email.trim().toLowerCase(),
+    };
     this.teamService.createProfessional(payload).subscribe({
       next: () => {
         this.memberSaving.set(false);
@@ -709,9 +713,14 @@ export class SettingsComponent {
         this.loadProfessionals();
         this.showBanner('success', 'Profissional criado.');
       },
-      error: () => {
+      error: (err) => {
         this.memberSaving.set(false);
-        this.showBanner('error', 'Nao foi possivel criar o profissional.');
+        const message =
+          err?.error?.message ??
+          (err?.error?.code === 'EMAIL_ALREADY_EXISTS'
+            ? 'Este email ja esta cadastrado.'
+            : 'Nao foi possivel criar o profissional.');
+        this.showBanner('error', message);
       },
     });
   }

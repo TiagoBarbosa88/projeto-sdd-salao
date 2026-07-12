@@ -72,7 +72,7 @@ type StepItem = { id: BookingStep; label: string; number: number };
         </div>
       </header>
 
-      <main class="mx-auto max-w-5xl px-6 py-8 md:py-10">
+      <main class="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
         @if (loading()) {
           <p class="text-slate-400">Carregando...</p>
         } @else if (error()) {
@@ -196,45 +196,40 @@ type StepItem = { id: BookingStep; label: string; number: number };
                     </p>
                   }
 
-                  <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  <div
+                    class="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7"
+                  >
                     @for (service of activeTabServices(); track service.publicId) {
                       <button
                         type="button"
                         (click)="selectService(service)"
-                        class="group flex flex-col overflow-hidden rounded-lg border border-slate-800/80 bg-slate-900/60 text-left transition hover:-translate-y-0.5 hover:border-violet-500/40 hover:shadow-md hover:shadow-violet-950/30"
+                        class="group flex flex-col overflow-hidden rounded-md border border-slate-800/80 bg-slate-900/60 text-left transition hover:-translate-y-0.5 hover:border-violet-500/40"
                       >
-                        <div class="relative aspect-[4/5] overflow-hidden bg-slate-950">
+                        <div class="relative aspect-square overflow-hidden bg-slate-950">
                           <img
                             [src]="serviceImage(service)"
                             [alt]="service.name"
                             class="h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.03]"
                           />
-                          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent px-2 pb-1.5 pt-6">
+                          <div
+                            class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/75 to-transparent px-1.5 pb-1 pt-4"
+                          >
                             <h3
-                              class="truncate text-[9px] font-bold uppercase tracking-wide text-white sm:text-[10px]"
+                              class="truncate text-[8px] font-bold uppercase leading-tight tracking-wide text-white sm:text-[9px]"
                             >
                               {{ service.name }}
                             </h3>
                           </div>
                         </div>
-                        <div class="flex flex-1 flex-col px-2 py-1.5">
-                          @if (service.description) {
-                            <p class="line-clamp-2 flex-1 text-[9px] leading-snug text-slate-400 sm:text-[10px]">
-                              {{ service.description }}
-                            </p>
-                          }
-                          <div
-                            class="mt-1.5 flex items-center justify-between gap-1 text-[9px] sm:text-[10px]"
+                        <div class="flex items-center justify-between gap-0.5 px-1.5 py-1 text-[8px] sm:text-[9px]">
+                          <span class="text-slate-500">{{ service.durationMinutes }}m</span>
+                          <span
+                            class="font-semibold"
+                            [class.text-sky-400]="serviceGender(service) === 'masculino'"
+                            [class.text-fuchsia-400]="serviceGender(service) === 'feminino'"
                           >
-                            <span class="text-slate-500">{{ service.durationMinutes }} min</span>
-                            <span
-                              class="font-semibold"
-                              [class.text-sky-400]="serviceGender(service) === 'masculino'"
-                              [class.text-fuchsia-400]="serviceGender(service) === 'feminino'"
-                            >
-                              {{ formatCurrency(service.price) }}
-                            </span>
-                          </div>
+                            {{ formatCurrency(service.price) }}
+                          </span>
                         </div>
                       </button>
                     }
@@ -261,7 +256,10 @@ type StepItem = { id: BookingStep; label: string; number: number };
                 @if (professionalsLoading()) {
                   <p class="text-slate-400">Carregando profissionais...</p>
                 } @else if (professionals().length === 0) {
-                  <p class="text-slate-400">Nenhum profissional disponivel para agendamento.</p>
+                  <p class="mt-3 text-sm text-rose-400">
+                    Nenhum profissional disponivel. Cadastre profissionais em Configuracoes &gt; Profissionais
+                    com a opcao "Aceita agendamentos" marcada.
+                  </p>
                 } @else {
                   <div class="grid gap-3 sm:grid-cols-2">
                     @for (pro of professionals(); track pro.publicId) {

@@ -94,7 +94,7 @@ public class TeamService {
         Tenant tenant = tenantResolver.requireCurrentTenant();
 
         User user = new User();
-        user.setEmail(request.email());
+        user.setEmail(request.email().trim().toLowerCase());
         user.setName(request.name());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user = userRepository.save(user);
