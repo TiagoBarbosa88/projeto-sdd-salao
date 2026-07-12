@@ -25,6 +25,8 @@ tags:
     description: Membros do salão para agendamento
   - name: Audit
     description: Trilha de auditoria de ações críticas
+  - name: Public
+    description: Endpoints públicos sem autenticação
 
 paths:
   /health:
@@ -314,6 +316,50 @@ paths:
         '403':
           description: Acesso negado
 
+  /public/tenants/{slug}:
+    get:
+      tags: [Public]
+      summary: Obtém dados públicos do salão por slug
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Salão encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicTenantResponse'
+        '404':
+          description: Salão não encontrado
+
+  /public/tenants/{slug}/services:
+    get:
+      tags: [Public]
+      summary: Lista serviços ativos do salão (público)
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Serviços ativos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicServiceResponse'
+        '404':
+          description: Salão não encontrado
+
 components:
   parameters:
     PublicId:
@@ -598,6 +644,35 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    PublicTenantResponse:
+      type: object
+      required: [publicId, name, slug]
+      properties:
+        publicId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+
+    PublicServiceResponse:
+      type: object
+      required: [publicId, name, durationMinutes, price]
+      properties:
+        publicId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+        price:
+          type: number
+          format: decimal
 
     UuidRef:
       type: object

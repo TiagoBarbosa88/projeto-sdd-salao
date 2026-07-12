@@ -6,10 +6,15 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { HomeComponent } from './features/home/home.component';
 import { ServicesComponent } from './features/services/services.component';
+import { PublicSalonComponent } from './features/public-salon/public-salon.component';
 import { SettingsComponent } from './features/settings/settings.component';
 import { ShellComponent } from './layout/shell.component';
 
 export const routes: Routes = [
+  {
+    path: 's/:slug',
+    component: PublicSalonComponent,
+  },
   {
     path: 'login',
     component: LoginComponent,

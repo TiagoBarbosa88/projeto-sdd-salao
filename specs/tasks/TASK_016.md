@@ -22,9 +22,9 @@ TASK_015
 
 ## Critérios de aceite
 
-- [ ] GET /public/tenants/{slug} e GET /public/tenants/{slug}/services (sem auth)
-- [ ] Rota frontend pública com title, description e og tags
-- [ ] Testes backend e frontend
+- [x] GET /public/tenants/{slug} e GET /public/tenants/{slug}/services (sem auth)
+- [x] Rota frontend pública com title, description e og tags
+- [x] Testes backend e frontend
 
 ## Testes obrigatórios
 
@@ -38,4 +38,4 @@ feat: adiciona pagina publica com seo por tenant
 
 ## Status
 
-TODO
+DONE
