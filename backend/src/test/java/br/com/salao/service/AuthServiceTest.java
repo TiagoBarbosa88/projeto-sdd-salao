@@ -9,6 +9,7 @@ import br.com.salao.domain.repository.TenantUserRepository;
 import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.security.JwtService;
 import br.com.salao.testsupport.TestDataFactory;
+import br.com.salao.testsupport.TestRepositories;
 import br.com.salao.web.dto.AuthResponse;
 import br.com.salao.web.dto.LoginRequest;
 import br.com.salao.web.dto.RegisterRequest;
@@ -49,9 +50,13 @@ class AuthServiceTest {
     @Autowired
     private AuditLogRepository auditLogRepository;
 
+    @Autowired
+    private TestRepositories testRepositories;
+
     @BeforeEach
     void cleanDatabase() {
         TestDataFactory.resetDatabase(
+                testRepositories,
                 auditLogRepository,
                 appointmentRepository,
                 salonServiceRepository,

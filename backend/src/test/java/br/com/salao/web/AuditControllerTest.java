@@ -13,6 +13,7 @@ import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.security.JwtService;
 import br.com.salao.service.AuditService;
 import br.com.salao.testsupport.TestDataFactory;
+import br.com.salao.testsupport.TestRepositories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,9 @@ class AuditControllerTest {
     private AuditLogRepository auditLogRepository;
 
     @Autowired
+    private TestRepositories testRepositories;
+
+    @Autowired
     private AuditService auditService;
 
     @Autowired
@@ -71,6 +75,7 @@ class AuditControllerTest {
     @BeforeEach
     void setUp() {
         TestDataFactory.resetDatabase(
+                testRepositories,
                 auditLogRepository,
                 appointmentRepository,
                 salonServiceRepository,

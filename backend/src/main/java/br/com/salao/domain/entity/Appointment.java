@@ -39,9 +39,18 @@ public class Appointment {
     @JoinColumn(name = "professional_id", nullable = false)
     private User professional;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "client_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id")
     private User client;
+
+    @Column(name = "guest_name")
+    private String guestName;
+
+    @Column(name = "guest_phone", length = 30)
+    private String guestPhone;
+
+    @Column(name = "buffer_minutes", nullable = false)
+    private int bufferMinutes = 0;
 
     @Column(name = "start_at", nullable = false)
     private OffsetDateTime startAt;
@@ -104,6 +113,30 @@ public class Appointment {
 
     public void setClient(User client) {
         this.client = client;
+    }
+
+    public String getGuestName() {
+        return guestName;
+    }
+
+    public void setGuestName(String guestName) {
+        this.guestName = guestName;
+    }
+
+    public String getGuestPhone() {
+        return guestPhone;
+    }
+
+    public void setGuestPhone(String guestPhone) {
+        this.guestPhone = guestPhone;
+    }
+
+    public int getBufferMinutes() {
+        return bufferMinutes;
+    }
+
+    public void setBufferMinutes(int bufferMinutes) {
+        this.bufferMinutes = bufferMinutes;
     }
 
     public OffsetDateTime getStartAt() {

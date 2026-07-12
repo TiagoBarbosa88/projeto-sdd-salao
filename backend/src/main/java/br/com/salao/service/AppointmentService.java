@@ -6,6 +6,7 @@ import br.com.salao.domain.entity.AuditAction;
 import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.entity.SalonService;
 import br.com.salao.domain.entity.Tenant;
+import br.com.salao.domain.entity.TenantSchedulingSettings;
 import br.com.salao.domain.entity.TenantUser;
 import br.com.salao.domain.entity.User;
 import br.com.salao.domain.repository.AppointmentRepository;
@@ -34,6 +35,8 @@ public class AppointmentService {
     private final UserRepository userRepository;
     private final TenantResolver tenantResolver;
     private final AuditService auditService;
+    private final AvailabilityService availabilityService;
+    private final SalonSettingsService salonSettingsService;
 
     public AppointmentService(
             AppointmentRepository appointmentRepository,
@@ -41,13 +44,17 @@ public class AppointmentService {
             TenantUserRepository tenantUserRepository,
             UserRepository userRepository,
             TenantResolver tenantResolver,
-            AuditService auditService) {
+            AuditService auditService,
+            AvailabilityService availabilityService,
+            SalonSettingsService salonSettingsService) {
         this.appointmentRepository = appointmentRepository;
         this.salonServiceRepository = salonServiceRepository;
         this.tenantUserRepository = tenantUserRepository;
         this.userRepository = userRepository;
         this.tenantResolver = tenantResolver;
         this.auditService = auditService;
+        this.availabilityService = availabilityService;
+        this.salonSettingsService = salonSettingsService;
     }
 
     @Transactional(readOnly = true)
@@ -86,22 +93,17 @@ public class AppointmentService {
 
         validateCreatePermission(principal, professional, client);
 
-        OffsetDateTime endAt = request.startAt().plusMinutes(service.getDurationMinutes());
+        availabilityService.validateSlotAvailable(tenant, professional, service, request.startAt());
 
-        if (appointmentRepository.existsConflict(
-                tenant.getId(),
-                professional.getId(),
-                request.startAt(),
-                endAt,
-                AppointmentStatus.CANCELLED)) {
-            throw new AppointmentConflictException();
-        }
+        TenantSchedulingSettings settings = salonSettingsService.requireSchedulingSettingsForTenant(tenant.getId());
+        OffsetDateTime endAt = request.startAt().plusMinutes(service.getDurationMinutes());
 
         Appointment appointment = new Appointment();
         appointment.setTenantId(tenant.getId());
         appointment.setService(service);
         appointment.setProfessional(professional);
         appointment.setClient(client);
+        appointment.setBufferMinutes(settings.getBufferMinutes());
         appointment.setStartAt(request.startAt());
         appointment.setEndAt(endAt);
         appointment.setStatus(AppointmentStatus.SCHEDULED);
@@ -147,6 +149,9 @@ public class AppointmentService {
     }
 
     private String buildAppointmentAuditMetadata(Appointment appointment) {
+        String clientName = appointment.getClient() != null
+                ? appointment.getClient().getName()
+                : appointment.getGuestName();
         return "{\"service\":\""
                 + escapeJson(appointment.getService().getName())
                 + "\",\"startAt\":\""
@@ -156,7 +161,7 @@ public class AppointmentService {
                 + "\",\"professional\":\""
                 + escapeJson(appointment.getProfessional().getName())
                 + "\",\"client\":\""
-                + escapeJson(appointment.getClient().getName())
+                + escapeJson(clientName != null ? clientName : "")
                 + "\",\"status\":\""
                 + appointment.getStatus()
                 + "\"}";
@@ -207,7 +212,8 @@ public class AppointmentService {
             case ADMIN, PROFESSIONAL -> {
             }
             case CLIENT -> {
-                if (!appointment.getClient().getId().equals(currentUser.getId())) {
+                if (appointment.getClient() == null
+                        || !appointment.getClient().getId().equals(currentUser.getId())) {
                     throw new AccessDeniedException();
                 }
             }
@@ -223,11 +229,16 @@ public class AppointmentService {
     }
 
     private AppointmentResponse toResponse(Appointment appointment) {
+        NamedRef clientRef = appointment.getClient() != null
+                ? new NamedRef(appointment.getClient().getPublicId(), appointment.getClient().getName())
+                : null;
         return new AppointmentResponse(
                 appointment.getPublicId(),
                 new NamedRef(appointment.getService().getPublicId(), appointment.getService().getName()),
                 new NamedRef(appointment.getProfessional().getPublicId(), appointment.getProfessional().getName()),
-                new NamedRef(appointment.getClient().getPublicId(), appointment.getClient().getName()),
+                clientRef,
+                appointment.getGuestName(),
+                appointment.getGuestPhone(),
                 appointment.getStartAt(),
                 appointment.getEndAt(),
                 appointment.getStatus(),

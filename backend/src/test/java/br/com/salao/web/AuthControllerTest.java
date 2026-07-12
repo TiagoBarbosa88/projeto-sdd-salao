@@ -8,6 +8,7 @@ import br.com.salao.domain.repository.TenantRepository;
 import br.com.salao.domain.repository.TenantUserRepository;
 import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.testsupport.TestDataFactory;
+import br.com.salao.testsupport.TestRepositories;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,9 +58,13 @@ class AuthControllerTest {
     @Autowired
     private AuditLogRepository auditLogRepository;
 
+    @Autowired
+    private TestRepositories testRepositories;
+
     @BeforeEach
     void cleanDatabase() {
         TestDataFactory.resetDatabase(
+                testRepositories,
                 auditLogRepository,
                 appointmentRepository,
                 salonServiceRepository,

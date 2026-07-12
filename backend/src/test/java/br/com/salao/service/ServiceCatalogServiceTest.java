@@ -12,6 +12,7 @@ import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.security.AuthenticatedUser;
 import br.com.salao.security.TenantContext;
 import br.com.salao.testsupport.TestDataFactory;
+import br.com.salao.testsupport.TestRepositories;
 import br.com.salao.web.dto.CreateServiceRequest;
 import br.com.salao.web.dto.UpdateServiceRequest;
 import org.junit.jupiter.api.AfterEach;
@@ -55,6 +56,9 @@ class ServiceCatalogServiceTest {
     private AuditLogRepository auditLogRepository;
 
     @Autowired
+    private TestRepositories testRepositories;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     private Tenant tenant;
@@ -63,6 +67,7 @@ class ServiceCatalogServiceTest {
     @BeforeEach
     void setUp() {
         TestDataFactory.resetDatabase(
+                testRepositories,
                 auditLogRepository,
                 appointmentRepository,
                 salonServiceRepository,

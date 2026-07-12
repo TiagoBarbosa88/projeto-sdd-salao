@@ -14,6 +14,7 @@ import br.com.salao.domain.repository.TenantUserRepository;
 import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.security.JwtService;
 import br.com.salao.testsupport.TestDataFactory;
+import br.com.salao.testsupport.TestRepositories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,9 @@ class DashboardControllerTest {
     private AuditLogRepository auditLogRepository;
 
     @Autowired
+    private TestRepositories testRepositories;
+
+    @Autowired
     private JwtService jwtService;
 
     @Autowired
@@ -69,6 +73,7 @@ class DashboardControllerTest {
     @BeforeEach
     void setUp() {
         TestDataFactory.resetDatabase(
+                testRepositories,
                 auditLogRepository,
                 appointmentRepository,
                 salonServiceRepository,

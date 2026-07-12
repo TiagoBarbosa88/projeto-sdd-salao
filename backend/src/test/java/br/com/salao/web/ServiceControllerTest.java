@@ -11,6 +11,7 @@ import br.com.salao.domain.repository.TenantUserRepository;
 import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.security.JwtService;
 import br.com.salao.testsupport.TestDataFactory;
+import br.com.salao.testsupport.TestRepositories;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,6 +65,9 @@ class ServiceControllerTest {
     private AuditLogRepository auditLogRepository;
 
     @Autowired
+    private TestRepositories testRepositories;
+
+    @Autowired
     private JwtService jwtService;
 
     @Autowired
@@ -74,6 +78,7 @@ class ServiceControllerTest {
     @BeforeEach
     void setUp() {
         TestDataFactory.resetDatabase(
+                testRepositories,
                 auditLogRepository,
                 appointmentRepository,
                 salonServiceRepository,

@@ -11,6 +11,7 @@ import br.com.salao.domain.repository.TenantRepository;
 import br.com.salao.domain.repository.TenantUserRepository;
 import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.testsupport.TestDataFactory;
+import br.com.salao.testsupport.TestRepositories;
 import br.com.salao.security.TenantContext;
 import br.com.salao.web.dto.AuditLogResponse;
 import org.junit.jupiter.api.AfterEach;
@@ -39,6 +40,9 @@ class AuditServiceTest {
     private AuditLogRepository auditLogRepository;
 
     @Autowired
+    private TestRepositories testRepositories;
+
+    @Autowired
     private AppointmentRepository appointmentRepository;
 
     @Autowired
@@ -63,6 +67,7 @@ class AuditServiceTest {
     void setUp() {
         SecurityContextHolder.clearContext();
         TestDataFactory.resetDatabase(
+                testRepositories,
                 auditLogRepository,
                 appointmentRepository,
                 salonServiceRepository,

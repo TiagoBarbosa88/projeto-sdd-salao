@@ -4,14 +4,19 @@ import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.entity.SalonService;
 import br.com.salao.domain.entity.Tenant;
 import br.com.salao.domain.entity.User;
+import br.com.salao.domain.entity.TenantUser;
 import br.com.salao.domain.repository.AppointmentRepository;
 import br.com.salao.domain.repository.AuditLogRepository;
+import br.com.salao.domain.repository.ProfessionalProfileRepository;
+import br.com.salao.domain.repository.ProfessionalWorkingPeriodRepository;
 import br.com.salao.domain.repository.SalonServiceRepository;
 import br.com.salao.domain.repository.TenantRepository;
+import br.com.salao.domain.repository.TenantSchedulingSettingsRepository;
 import br.com.salao.domain.repository.TenantUserRepository;
 import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.security.JwtService;
 import br.com.salao.testsupport.TestDataFactory;
+import br.com.salao.testsupport.TestRepositories;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +29,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.UUID;
@@ -64,6 +71,18 @@ class AppointmentControllerTest {
     private AuditLogRepository auditLogRepository;
 
     @Autowired
+    private TestRepositories testRepositories;
+
+    @Autowired
+    private TenantSchedulingSettingsRepository schedulingSettingsRepository;
+
+    @Autowired
+    private ProfessionalProfileRepository professionalProfileRepository;
+
+    @Autowired
+    private ProfessionalWorkingPeriodRepository workingPeriodRepository;
+
+    @Autowired
     private JwtService jwtService;
 
     @Autowired
@@ -75,10 +94,12 @@ class AppointmentControllerTest {
     private User client;
     private SalonService service;
     private String adminToken;
+    private static final ZoneId ZONE = ZoneId.of("America/Sao_Paulo");
 
     @BeforeEach
     void setUp() {
         TestDataFactory.resetDatabase(
+                testRepositories,
                 auditLogRepository,
                 appointmentRepository,
                 salonServiceRepository,
@@ -92,8 +113,15 @@ class AppointmentControllerTest {
         client = TestDataFactory.createUser(userRepository, passwordEncoder, "client@appt.com", "Cliente");
 
         TestDataFactory.linkUser(tenantUserRepository, tenant, admin, Role.ADMIN);
-        TestDataFactory.linkUser(tenantUserRepository, tenant, professional, Role.PROFESSIONAL);
+        TenantUser professionalTenantUser = TestDataFactory.linkUser(tenantUserRepository, tenant, professional, Role.PROFESSIONAL);
         TestDataFactory.linkUser(tenantUserRepository, tenant, client, Role.CLIENT);
+
+        TestDataFactory.seedSchedulingForTenant(
+                schedulingSettingsRepository,
+                professionalProfileRepository,
+                workingPeriodRepository,
+                tenant,
+                professionalTenantUser);
 
         service = new SalonService();
         service.setTenantId(tenant.getId());
@@ -106,9 +134,17 @@ class AppointmentControllerTest {
         adminToken = TestDataFactory.tokenFor(jwtService, admin, tenant, Role.ADMIN);
     }
 
+    private OffsetDateTime weekdayAt(int hour, int minute) {
+        LocalDate date = LocalDate.now(ZONE).plusDays(1);
+        while (date.getDayOfWeek().getValue() > 6) {
+            date = date.plusDays(1);
+        }
+        return date.atTime(hour, minute).atZone(ZONE).toOffsetDateTime();
+    }
+
     @Test
     void adminCanCreateAppointment() throws Exception {
-        OffsetDateTime startAt = OffsetDateTime.now(ZoneOffset.UTC).plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        OffsetDateTime startAt = weekdayAt(10, 0);
 
         Map<String, Object> request = Map.of(
                 "servicePublicId", service.getPublicId().toString(),
@@ -133,7 +169,7 @@ class AppointmentControllerTest {
 
     @Test
     void listAppointmentsReturnsNamedRefs() throws Exception {
-        OffsetDateTime startAt = OffsetDateTime.now(ZoneOffset.UTC).plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        OffsetDateTime startAt = weekdayAt(11, 0);
 
         Map<String, Object> request = Map.of(
                 "servicePublicId", service.getPublicId().toString(),
@@ -158,7 +194,7 @@ class AppointmentControllerTest {
 
     @Test
     void overlappingAppointmentReturnsConflict() throws Exception {
-        OffsetDateTime startAt = OffsetDateTime.now(ZoneOffset.UTC).plusDays(1).withHour(14).withMinute(0).withSecond(0).withNano(0);
+        OffsetDateTime startAt = weekdayAt(14, 0);
 
         Map<String, Object> request = Map.of(
                 "servicePublicId", service.getPublicId().toString(),
@@ -178,7 +214,7 @@ class AppointmentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("APPOINTMENT_CONFLICT"));
+                .andExpect(jsonPath("$.code").value("SLOT_UNAVAILABLE"));
     }
 
     @Test
@@ -186,7 +222,7 @@ class AppointmentControllerTest {
         service.setActive(false);
         salonServiceRepository.save(service);
 
-        OffsetDateTime startAt = OffsetDateTime.now(ZoneOffset.UTC).plusDays(2).withHour(9).withMinute(0).withSecond(0).withNano(0);
+        OffsetDateTime startAt = weekdayAt(9, 0);
 
         Map<String, Object> request = Map.of(
                 "servicePublicId", service.getPublicId().toString(),

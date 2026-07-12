@@ -1,11 +1,15 @@
 package br.com.salao.service;
 
 import br.com.salao.domain.entity.AuditAction;
+import br.com.salao.domain.entity.ProfessionalProfile;
 import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.entity.Tenant;
+import br.com.salao.domain.entity.TenantSchedulingSettings;
 import br.com.salao.domain.entity.TenantUser;
 import br.com.salao.domain.entity.User;
+import br.com.salao.domain.repository.ProfessionalProfileRepository;
 import br.com.salao.domain.repository.TenantRepository;
+import br.com.salao.domain.repository.TenantSchedulingSettingsRepository;
 import br.com.salao.domain.repository.TenantUserRepository;
 import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.security.AuthenticatedUser;
@@ -26,23 +30,32 @@ public class AuthService {
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final TenantUserRepository tenantUserRepository;
+    private final TenantSchedulingSettingsRepository schedulingSettingsRepository;
+    private final ProfessionalProfileRepository professionalProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuditService auditService;
+    private final TeamService teamService;
 
     public AuthService(
             TenantRepository tenantRepository,
             UserRepository userRepository,
             TenantUserRepository tenantUserRepository,
+            TenantSchedulingSettingsRepository schedulingSettingsRepository,
+            ProfessionalProfileRepository professionalProfileRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            AuditService auditService) {
+            AuditService auditService,
+            TeamService teamService) {
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
         this.tenantUserRepository = tenantUserRepository;
+        this.schedulingSettingsRepository = schedulingSettingsRepository;
+        this.professionalProfileRepository = professionalProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.auditService = auditService;
+        this.teamService = teamService;
     }
 
     @Transactional
@@ -59,6 +72,10 @@ public class AuthService {
         tenant.setSlug(request.slug());
         tenant = tenantRepository.save(tenant);
 
+        TenantSchedulingSettings settings = new TenantSchedulingSettings();
+        settings.setTenant(tenant);
+        schedulingSettingsRepository.save(settings);
+
         User user = new User();
         user.setEmail(request.email());
         user.setName(request.name());
@@ -69,7 +86,13 @@ public class AuthService {
         tenantUser.setTenant(tenant);
         tenantUser.setUser(user);
         tenantUser.setRole(Role.ADMIN);
-        tenantUserRepository.save(tenantUser);
+        tenantUser = tenantUserRepository.save(tenantUser);
+
+        ProfessionalProfile profile = new ProfessionalProfile();
+        profile.setTenantUser(tenantUser);
+        profile.setBookable(true);
+        professionalProfileRepository.save(profile);
+        teamService.createDefaultWorkingPeriods(tenantUser);
 
         return buildAuthResponse(user, tenant, Role.ADMIN);
     }

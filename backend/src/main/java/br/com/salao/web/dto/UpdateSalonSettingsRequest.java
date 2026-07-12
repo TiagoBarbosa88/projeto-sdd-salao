@@ -1,11 +1,7 @@
 package br.com.salao.web.dto;
 
-import java.util.UUID;
-
-public record PublicTenantResponse(
-        UUID publicId,
+public record UpdateSalonSettingsRequest(
         String name,
-        String slug,
         String description,
         String phone,
         String whatsapp,

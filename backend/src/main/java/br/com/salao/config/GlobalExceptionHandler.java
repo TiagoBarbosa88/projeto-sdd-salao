@@ -65,6 +65,18 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse("INACTIVE_SERVICE", "Servico inativo"));
     }
 
+    @ExceptionHandler(br.com.salao.service.SlotUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleSlotUnavailable() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse("SLOT_UNAVAILABLE", "Horario indisponivel"));
+    }
+
+    @ExceptionHandler(br.com.salao.service.InvalidScheduleException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidSchedule() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse("INVALID_SCHEDULE", "Configuracao de agenda invalida"));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

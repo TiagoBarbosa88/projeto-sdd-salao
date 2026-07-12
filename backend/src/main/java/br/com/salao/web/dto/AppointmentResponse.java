@@ -10,6 +10,8 @@ public record AppointmentResponse(
         NamedRef service,
         NamedRef professional,
         NamedRef client,
+        String guestName,
+        String guestPhone,
         OffsetDateTime startAt,
         OffsetDateTime endAt,
         AppointmentStatus status,

@@ -4,10 +4,11 @@ import br.com.salao.domain.entity.AppointmentStatus;
 import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.entity.SalonService;
 import br.com.salao.domain.entity.Tenant;
-import br.com.salao.domain.entity.User;
 import br.com.salao.domain.entity.TenantUser;
+import br.com.salao.domain.entity.User;
 import br.com.salao.domain.repository.AppointmentRepository;
 import br.com.salao.domain.repository.AuditLogRepository;
+import br.com.salao.domain.repository.ProfessionalBlockedPeriodRepository;
 import br.com.salao.domain.repository.ProfessionalProfileRepository;
 import br.com.salao.domain.repository.ProfessionalWorkingPeriodRepository;
 import br.com.salao.domain.repository.SalonServiceRepository;
@@ -32,6 +33,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -41,7 +43,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class AppointmentServiceTest {
+class AvailabilityServiceTest {
+
+    @Autowired
+    private AvailabilityService availabilityService;
 
     @Autowired
     private AppointmentService appointmentService;
@@ -85,7 +90,6 @@ class AppointmentServiceTest {
     private User client;
     private SalonService service;
     private TenantUser professionalTenantUser;
-    private static final ZoneId ZONE = ZoneId.of("America/Sao_Paulo");
 
     @BeforeEach
     void setUp() {
@@ -98,10 +102,10 @@ class AppointmentServiceTest {
                 userRepository,
                 tenantRepository);
 
-        tenant = TestDataFactory.createTenant(tenantRepository, "appt-svc-salon");
-        admin = TestDataFactory.createUser(userRepository, passwordEncoder, "admin@apptsvc.com", "Admin");
-        professional = TestDataFactory.createUser(userRepository, passwordEncoder, "pro@apptsvc.com", "Pro");
-        client = TestDataFactory.createUser(userRepository, passwordEncoder, "client@apptsvc.com", "Cliente");
+        tenant = TestDataFactory.createTenant(tenantRepository, "avail-svc-salon");
+        admin = TestDataFactory.createUser(userRepository, passwordEncoder, "admin@avail.com", "Admin");
+        professional = TestDataFactory.createUser(userRepository, passwordEncoder, "pro@avail.com", "Pro");
+        client = TestDataFactory.createUser(userRepository, passwordEncoder, "client@avail.com", "Cliente");
 
         TestDataFactory.linkUser(tenantUserRepository, tenant, admin, Role.ADMIN);
         professionalTenantUser = TestDataFactory.linkUser(tenantUserRepository, tenant, professional, Role.PROFESSIONAL);
@@ -116,9 +120,9 @@ class AppointmentServiceTest {
 
         service = new SalonService();
         service.setTenantId(tenant.getId());
-        service.setName("Coloracao");
-        service.setDurationMinutes(60);
-        service.setPrice(new BigDecimal("120.00"));
+        service.setName("Corte");
+        service.setDurationMinutes(30);
+        service.setPrice(new BigDecimal("50.00"));
         service.setActive(true);
         service = salonServiceRepository.save(service);
     }
@@ -130,105 +134,73 @@ class AppointmentServiceTest {
     }
 
     @Test
-    void rejectsOverlappingAppointmentsForSameProfessional() {
-        authenticateAs(admin, Role.ADMIN);
-        TenantContext.set(tenant.getPublicId());
-
-        OffsetDateTime startAt = weekdayAt(11, 0);
-
-        CreateAppointmentRequest request = new CreateAppointmentRequest(
-                service.getPublicId(),
-                professional.getPublicId(),
-                client.getPublicId(),
-                startAt
-        );
-
-        appointmentService.createAppointment(request);
-
-        assertThatThrownBy(() -> appointmentService.createAppointment(request))
-                .isInstanceOf(SlotUnavailableException.class);
-    }
-
-    @Test
-    void clientSeesOnlyOwnAppointments() {
-        authenticateAs(admin, Role.ADMIN);
-        TenantContext.set(tenant.getPublicId());
-
-        OffsetDateTime startAt = weekdayAt(15, 0);
-        appointmentService.createAppointment(new CreateAppointmentRequest(
-                service.getPublicId(),
-                professional.getPublicId(),
-                client.getPublicId(),
-                startAt
-        ));
-
-        authenticateAs(client, Role.CLIENT);
-        TenantContext.set(tenant.getPublicId());
-
-        assertThat(appointmentService.listAppointments()).hasSize(1);
-
-        User otherClient = TestDataFactory.createUser(userRepository, passwordEncoder, "other@apptsvc.com", "Outro");
-        TestDataFactory.linkUser(tenantUserRepository, tenant, otherClient, Role.CLIENT);
-
-        authenticateAs(otherClient, Role.CLIENT);
-        TenantContext.set(tenant.getPublicId());
-
-        assertThat(appointmentService.listAppointments()).isEmpty();
-    }
-
-    @Test
-    void listAppointmentsReturnsNamedRefs() {
-        authenticateAs(admin, Role.ADMIN);
-        TenantContext.set(tenant.getPublicId());
-
-        OffsetDateTime startAt = weekdayAt(10, 0);
-        appointmentService.createAppointment(new CreateAppointmentRequest(
-                service.getPublicId(),
-                professional.getPublicId(),
-                client.getPublicId(),
-                startAt
-        ));
-
-        var appointments = appointmentService.listAppointments();
-
-        assertThat(appointments).hasSize(1);
-        assertThat(appointments.getFirst().service().name()).isEqualTo("Coloracao");
-        assertThat(appointments.getFirst().professional().name()).isEqualTo("Pro");
-        assertThat(appointments.getFirst().client().name()).isEqualTo("Cliente");
-    }
-
-    @Test
-    void cancelledAppointmentsDoNotBlockNewSlot() {
-        authenticateAs(admin, Role.ADMIN);
-        TenantContext.set(tenant.getPublicId());
-
-        OffsetDateTime startAt = weekdayAt(16, 0);
-
-        var created = appointmentService.createAppointment(new CreateAppointmentRequest(
-                service.getPublicId(),
-                professional.getPublicId(),
-                client.getPublicId(),
-                startAt
-        ));
-
-        appointmentService.cancelAppointment(created.publicId());
-
-        var replacement = appointmentService.createAppointment(new CreateAppointmentRequest(
-                service.getPublicId(),
-                professional.getPublicId(),
-                client.getPublicId(),
-                startAt
-        ));
-
-        assertThat(replacement.status()).isEqualTo(AppointmentStatus.SCHEDULED);
-    }
-
-    private OffsetDateTime weekdayAt(int hour, int minute) {
-        LocalDate date = LocalDate.now(ZONE).plusDays(1);
+    void returnsSlotsWithinWorkingHours() {
+        LocalDate date = LocalDate.now(ZoneId.of("America/Sao_Paulo")).plusDays(1);
         while (date.getDayOfWeek().getValue() > 6) {
             date = date.plusDays(1);
         }
-        return date.atTime(hour, minute).atZone(ZONE).toOffsetDateTime();
+
+        var slots = availabilityService.getAvailableSlotsBySlug(
+                tenant.getSlug(),
+                professional.getPublicId(),
+                service.getPublicId(),
+                date);
+
+        assertThat(slots).isNotEmpty();
+        ZoneId zone = ZoneId.of("America/Sao_Paulo");
+        assertThat(slots.getFirst().startAt().atZoneSameInstant(zone).toLocalTime())
+                .isAfterOrEqualTo(LocalTime.of(9, 0));
+    }
+
+    @Test
+    void bookedSlotIsRemovedFromAvailability() {
+        LocalDate date = LocalDate.now(ZoneId.of("America/Sao_Paulo")).plusDays(2);
+        while (date.getDayOfWeek().getValue() > 6) {
+            date = date.plusDays(1);
+        }
+
+        ZoneId zone = ZoneId.of("America/Sao_Paulo");
+        OffsetDateTime startAt = date.atTime(10, 0).atZone(zone).toOffsetDateTime();
+
+        authenticateAs(admin, Role.ADMIN);
+        TenantContext.set(tenant.getPublicId());
+        appointmentService.createAppointment(new CreateAppointmentRequest(
+                service.getPublicId(),
+                professional.getPublicId(),
+                client.getPublicId(),
+                startAt
+        ));
+
+        var slots = availabilityService.getAvailableSlotsBySlug(
+                tenant.getSlug(),
+                professional.getPublicId(),
+                service.getPublicId(),
+                date);
+
+        assertThat(slots.stream().map(s -> s.startAt().toInstant()))
+                .doesNotContain(startAt.toInstant());
+    }
+
+    @Test
+    void validateSlotAvailableRejectsConflictingTime() {
+        ZoneId zone = ZoneId.of("America/Sao_Paulo");
+        LocalDate date = LocalDate.now(zone).plusDays(3);
+        while (date.getDayOfWeek().getValue() > 6) {
+            date = date.plusDays(1);
+        }
+        OffsetDateTime startAt = date.atTime(14, 0).atZone(zone).toOffsetDateTime();
+
+        authenticateAs(admin, Role.ADMIN);
+        TenantContext.set(tenant.getPublicId());
+        appointmentService.createAppointment(new CreateAppointmentRequest(
+                service.getPublicId(),
+                professional.getPublicId(),
+                client.getPublicId(),
+                startAt
+        ));
+
+        assertThatThrownBy(() -> availabilityService.validateSlotAvailable(tenant, professional, service, startAt))
+                .isInstanceOf(SlotUnavailableException.class);
     }
 
     private void authenticateAs(User user, Role role) {

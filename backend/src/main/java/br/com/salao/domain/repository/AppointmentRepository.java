@@ -17,7 +17,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             SELECT a FROM Appointment a
             JOIN FETCH a.service
             JOIN FETCH a.professional
-            JOIN FETCH a.client
+            LEFT JOIN FETCH a.client
             WHERE a.tenantId = :tenantId
             ORDER BY a.startAt ASC
             """)
@@ -27,7 +27,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             SELECT a FROM Appointment a
             JOIN FETCH a.service
             JOIN FETCH a.professional
-            JOIN FETCH a.client
+            LEFT JOIN FETCH a.client
             WHERE a.tenantId = :tenantId AND a.professional.id = :professionalId
             ORDER BY a.startAt ASC
             """)
@@ -39,7 +39,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             SELECT a FROM Appointment a
             JOIN FETCH a.service
             JOIN FETCH a.professional
-            JOIN FETCH a.client
+            LEFT JOIN FETCH a.client
             WHERE a.tenantId = :tenantId AND a.client.id = :clientId
             ORDER BY a.startAt ASC
             """)
@@ -53,7 +53,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             SELECT a FROM Appointment a
             JOIN FETCH a.service
             JOIN FETCH a.professional
-            JOIN FETCH a.client
+            LEFT JOIN FETCH a.client
             WHERE a.publicId = :publicId AND a.tenantId = :tenantId
             """)
     Optional<Appointment> findByPublicIdAndTenantIdWithDetails(
@@ -73,6 +73,38 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("professionalId") Long professionalId,
             @Param("startAt") OffsetDateTime startAt,
             @Param("endAt") OffsetDateTime endAt,
+            @Param("cancelledStatus") AppointmentStatus cancelledStatus);
+
+    @Query("""
+            SELECT a FROM Appointment a
+            WHERE a.tenantId = :tenantId
+              AND a.professional.id = :professionalId
+              AND a.status <> :cancelledStatus
+              AND a.startAt < :rangeEnd
+              AND a.endAt > :rangeStart
+            """)
+    List<Appointment> findPotentialConflicts(
+            @Param("tenantId") Long tenantId,
+            @Param("professionalId") Long professionalId,
+            @Param("rangeStart") OffsetDateTime rangeStart,
+            @Param("rangeEnd") OffsetDateTime rangeEnd,
+            @Param("cancelledStatus") AppointmentStatus cancelledStatus);
+
+    @Query("""
+            SELECT a FROM Appointment a
+            JOIN FETCH a.service
+            WHERE a.tenantId = :tenantId
+              AND a.professional.id = :professionalId
+              AND a.status <> :cancelledStatus
+              AND a.startAt < :rangeEnd
+              AND a.endAt > :rangeStart
+            ORDER BY a.startAt ASC
+            """)
+    List<Appointment> findActiveByProfessionalAndRange(
+            @Param("tenantId") Long tenantId,
+            @Param("professionalId") Long professionalId,
+            @Param("rangeStart") OffsetDateTime rangeStart,
+            @Param("rangeEnd") OffsetDateTime rangeEnd,
             @Param("cancelledStatus") AppointmentStatus cancelledStatus);
 
     @Query("""
