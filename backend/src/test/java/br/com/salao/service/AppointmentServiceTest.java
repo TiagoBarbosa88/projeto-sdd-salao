@@ -142,6 +142,27 @@ class AppointmentServiceTest {
     }
 
     @Test
+    void listAppointmentsReturnsNamedRefs() {
+        authenticateAs(admin, Role.ADMIN);
+        TenantContext.set(tenant.getPublicId());
+
+        OffsetDateTime startAt = OffsetDateTime.now(ZoneOffset.UTC).plusDays(6).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        appointmentService.createAppointment(new CreateAppointmentRequest(
+                service.getPublicId(),
+                professional.getPublicId(),
+                client.getPublicId(),
+                startAt
+        ));
+
+        var appointments = appointmentService.listAppointments();
+
+        assertThat(appointments).hasSize(1);
+        assertThat(appointments.getFirst().service().name()).isEqualTo("Coloracao");
+        assertThat(appointments.getFirst().professional().name()).isEqualTo("Pro");
+        assertThat(appointments.getFirst().client().name()).isEqualTo("Cliente");
+    }
+
+    @Test
     void cancelledAppointmentsDoNotBlockNewSlot() {
         authenticateAs(admin, Role.ADMIN);
         TenantContext.set(tenant.getPublicId());

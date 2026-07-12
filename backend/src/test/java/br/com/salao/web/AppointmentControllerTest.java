@@ -28,6 +28,7 @@ import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -118,7 +119,35 @@ class AppointmentControllerTest {
                 .andExpect(jsonPath("$.publicId").isNotEmpty())
                 .andExpect(jsonPath("$.status").value("SCHEDULED"))
                 .andExpect(jsonPath("$.service.publicId").value(service.getPublicId().toString()))
+                .andExpect(jsonPath("$.service.name").value("Corte"))
+                .andExpect(jsonPath("$.professional.name").value("Pro"))
+                .andExpect(jsonPath("$.client.name").value("Cliente"))
                 .andExpect(jsonPath("$.id").doesNotExist());
+    }
+
+    @Test
+    void listAppointmentsReturnsNamedRefs() throws Exception {
+        OffsetDateTime startAt = OffsetDateTime.now(ZoneOffset.UTC).plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0);
+
+        Map<String, Object> request = Map.of(
+                "servicePublicId", service.getPublicId().toString(),
+                "professionalPublicId", professional.getPublicId().toString(),
+                "clientPublicId", client.getPublicId().toString(),
+                "startAt", startAt.toString()
+        );
+
+        mockMvc.perform(post("/appointments")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/appointments")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].service.name").value("Corte"))
+                .andExpect(jsonPath("$[0].professional.name").value("Pro"))
+                .andExpect(jsonPath("$[0].client.name").value("Cliente"));
     }
 
     @Test

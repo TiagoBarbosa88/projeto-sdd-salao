@@ -4,15 +4,16 @@ import { Observable } from 'rxjs';
 
 export type AppointmentStatus = 'SCHEDULED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 
-export interface UuidRef {
+export interface NamedRef {
   publicId: string;
+  name: string;
 }
 
 export interface Appointment {
   publicId: string;
-  service: UuidRef;
-  professional: UuidRef;
-  client: UuidRef;
+  service: NamedRef;
+  professional: NamedRef;
+  client: NamedRef;
   startAt: string;
   endAt: string;
   status: AppointmentStatus;

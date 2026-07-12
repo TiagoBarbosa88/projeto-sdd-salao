@@ -7,9 +7,9 @@ import java.util.UUID;
 
 public record AppointmentResponse(
         UUID publicId,
-        UuidRef service,
-        UuidRef professional,
-        UuidRef client,
+        NamedRef service,
+        NamedRef professional,
+        NamedRef client,
         OffsetDateTime startAt,
         OffsetDateTime endAt,
         AppointmentStatus status,

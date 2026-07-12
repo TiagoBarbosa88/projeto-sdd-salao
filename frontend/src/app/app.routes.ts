@@ -17,10 +17,10 @@ export const routes: Routes = [
     component: ShellComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', component: HomeComponent },
-      { path: 'services', component: ServicesComponent },
-      { path: 'appointments', component: AppointmentsComponent },
-      { path: 'dashboard', component: DashboardComponent },
+      { path: '', component: HomeComponent, data: { title: 'Home' } },
+      { path: 'services', component: ServicesComponent, data: { title: 'Servicos' } },
+      { path: 'appointments', component: AppointmentsComponent, data: { title: 'Agenda' } },
+      { path: 'dashboard', component: DashboardComponent, data: { title: 'Dashboard' } },
     ],
   },
 ];

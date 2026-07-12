@@ -21,6 +21,8 @@ tags:
     description: Agendamentos
   - name: Dashboard
     description: Métricas operacionais
+  - name: Team
+    description: Membros do salão para agendamento
 
 paths:
   /health:
@@ -254,6 +256,28 @@ paths:
         '404':
           description: Agendamento não encontrado
 
+  /team/members:
+    get:
+      tags: [Team]
+      summary: Lista membros do tenant para dropdowns de agendamento
+      parameters:
+        - name: role
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PROFESSIONAL, CLIENT, ADMIN]
+          description: Filtra por papel; omitir retorna todos os membros do tenant
+      responses:
+        '200':
+          description: Lista de membros
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamMemberResponse'
+
   /dashboard/summary:
     get:
       tags: [Dashboard]
@@ -444,11 +468,11 @@ components:
           type: string
           format: uuid
         service:
-          $ref: '#/components/schemas/UuidRef'
+          $ref: '#/components/schemas/NamedRef'
         professional:
-          $ref: '#/components/schemas/UuidRef'
+          $ref: '#/components/schemas/NamedRef'
         client:
-          $ref: '#/components/schemas/UuidRef'
+          $ref: '#/components/schemas/NamedRef'
         startAt:
           type: string
           format: date-time
@@ -490,6 +514,34 @@ components:
         message:
           type: string
           example: Campo obrigatório ausente
+    NamedRef:
+      type: object
+      required:
+        - publicId
+        - name
+      properties:
+        publicId:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          example: Corte masculino
+
+    TeamMemberResponse:
+      type: object
+      required: [publicId, name, role]
+      properties:
+        publicId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Marina
+        role:
+          type: string
+          enum: [PROFESSIONAL, CLIENT, ADMIN]
+
     UuidRef:
       type: object
       required:

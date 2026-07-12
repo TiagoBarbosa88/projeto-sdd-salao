@@ -50,6 +50,17 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     Optional<Appointment> findByPublicIdAndTenantId(UUID publicId, Long tenantId);
 
     @Query("""
+            SELECT a FROM Appointment a
+            JOIN FETCH a.service
+            JOIN FETCH a.professional
+            JOIN FETCH a.client
+            WHERE a.publicId = :publicId AND a.tenantId = :tenantId
+            """)
+    Optional<Appointment> findByPublicIdAndTenantIdWithDetails(
+            @Param("publicId") UUID publicId,
+            @Param("tenantId") Long tenantId);
+
+    @Query("""
             SELECT COUNT(a) > 0 FROM Appointment a
             WHERE a.tenantId = :tenantId
               AND a.professional.id = :professionalId

@@ -14,7 +14,7 @@ import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.security.AuthenticatedUser;
 import br.com.salao.web.dto.AppointmentResponse;
 import br.com.salao.web.dto.CreateAppointmentRequest;
-import br.com.salao.web.dto.UuidRef;
+import br.com.salao.web.dto.NamedRef;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -112,7 +112,8 @@ public class AppointmentService {
         User currentUser = userRepository.findByPublicId(principal.getUserPublicId())
                 .orElseThrow(ResourceNotFoundException::new);
 
-        Appointment appointment = appointmentRepository.findByPublicIdAndTenantId(publicId, tenant.getId())
+        Appointment appointment = appointmentRepository
+                .findByPublicIdAndTenantIdWithDetails(publicId, tenant.getId())
                 .orElseThrow(ResourceNotFoundException::new);
 
         validateCancelPermission(principal, appointment, currentUser);
@@ -184,9 +185,9 @@ public class AppointmentService {
     private AppointmentResponse toResponse(Appointment appointment) {
         return new AppointmentResponse(
                 appointment.getPublicId(),
-                new UuidRef(appointment.getService().getPublicId()),
-                new UuidRef(appointment.getProfessional().getPublicId()),
-                new UuidRef(appointment.getClient().getPublicId()),
+                new NamedRef(appointment.getService().getPublicId(), appointment.getService().getName()),
+                new NamedRef(appointment.getProfessional().getPublicId(), appointment.getProfessional().getName()),
+                new NamedRef(appointment.getClient().getPublicId(), appointment.getClient().getName()),
                 appointment.getStartAt(),
                 appointment.getEndAt(),
                 appointment.getStatus(),

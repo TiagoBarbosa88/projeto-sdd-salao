@@ -7,6 +7,7 @@ import {
   AppointmentService,
   AppointmentStatus,
 } from '../../core/services/appointment.service';
+import { TeamMember, TeamService } from '../../core/services/team.service';
 
 @Component({
   selector: 'app-appointments',
@@ -54,20 +55,58 @@ import {
                 </select>
               </div>
 
-              <div>
-                <label for="professionalPublicId" class="mb-1 block text-sm text-slate-300"
-                  >Profissional (publicId)</label
-                >
-                <input
-                  id="professionalPublicId"
-                  type="text"
-                  formControlName="professionalPublicId"
-                  placeholder="UUID do profissional"
-                  class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                />
-              </div>
+              @if (isClient()) {
+                <div>
+                  <label for="professionalPublicId" class="mb-1 block text-sm text-slate-300"
+                    >Profissional</label
+                  >
+                  <select
+                    id="professionalPublicId"
+                    formControlName="professionalPublicId"
+                    class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                  >
+                    <option value="">Selecione...</option>
+                    @for (member of professionals(); track member.publicId) {
+                      <option [value]="member.publicId">{{ member.name }}</option>
+                    }
+                  </select>
+                </div>
+              } @else if (!form.controls.selfAsProfessional.value) {
+                <div>
+                  <label for="professionalPublicId" class="mb-1 block text-sm text-slate-300"
+                    >Profissional</label
+                  >
+                  <select
+                    id="professionalPublicId"
+                    formControlName="professionalPublicId"
+                    class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                  >
+                    <option value="">Selecione...</option>
+                    @for (member of professionals(); track member.publicId) {
+                      <option [value]="member.publicId">{{ member.name }}</option>
+                    }
+                  </select>
+                </div>
+              }
 
-              @if (!isClient()) {
+              @if (isStaff()) {
+                <div class="sm:col-span-2">
+                  <label class="flex items-center gap-2 text-sm text-slate-300">
+                    <input
+                      type="checkbox"
+                      formControlName="selfAsProfessional"
+                      class="rounded border-slate-700 bg-slate-950 text-violet-600 focus:ring-violet-500"
+                    />
+                    Eu sou o profissional
+                  </label>
+                </div>
+
+                @if (form.controls.selfAsProfessional.value && currentUserName()) {
+                  <div class="sm:col-span-2 text-sm text-slate-300">
+                    Profissional: <span class="text-white">{{ currentUserName() }}</span>
+                  </div>
+                }
+
                 <div class="sm:col-span-2">
                   <label class="flex items-center gap-2 text-sm text-slate-300">
                     <input
@@ -75,22 +114,23 @@ import {
                       formControlName="bookForSelf"
                       class="rounded border-slate-700 bg-slate-950 text-violet-600 focus:ring-violet-500"
                     />
-                    Agendar para mim
+                    Agendar para mim (cliente)
                   </label>
                 </div>
 
                 @if (!form.controls.bookForSelf.value) {
                   <div class="sm:col-span-2">
-                    <label for="clientPublicId" class="mb-1 block text-sm text-slate-300"
-                      >Cliente (publicId ou email de referencia)</label
-                    >
-                    <input
+                    <label for="clientPublicId" class="mb-1 block text-sm text-slate-300">Cliente</label>
+                    <select
                       id="clientPublicId"
-                      type="text"
                       formControlName="clientPublicId"
-                      placeholder="UUID do cliente"
                       class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                    />
+                    >
+                      <option value="">Selecione...</option>
+                      @for (member of clients(); track member.publicId) {
+                        <option [value]="member.publicId">{{ member.name }}</option>
+                      }
+                    </select>
                   </div>
                 }
               }
@@ -112,7 +152,7 @@ import {
 
             <button
               type="submit"
-              [disabled]="form.invalid || saving()"
+              [disabled]="!canSubmit() || saving()"
               class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {{ saving() ? 'Agendando...' : 'Agendar' }}
@@ -135,6 +175,8 @@ import {
                 <th class="px-4 py-3">Inicio</th>
                 <th class="px-4 py-3">Fim</th>
                 <th class="px-4 py-3">Servico</th>
+                <th class="px-4 py-3">Profissional</th>
+                <th class="px-4 py-3">Cliente</th>
                 <th class="px-4 py-3">Status</th>
                 <th class="px-4 py-3 text-right">Acoes</th>
               </tr>
@@ -144,9 +186,9 @@ import {
                 <tr class="text-slate-200">
                   <td class="px-4 py-3">{{ formatDateTime(appointment.startAt) }}</td>
                   <td class="px-4 py-3">{{ formatDateTime(appointment.endAt) }}</td>
-                  <td class="px-4 py-3 font-mono text-xs text-slate-400">
-                    {{ appointment.service.publicId }}
-                  </td>
+                  <td class="px-4 py-3">{{ appointment.service?.name ?? '—' }}</td>
+                  <td class="px-4 py-3">{{ appointment.professional?.name ?? '—' }}</td>
+                  <td class="px-4 py-3">{{ appointment.client?.name ?? '—' }}</td>
                   <td class="px-4 py-3">
                     <span
                       class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
@@ -179,11 +221,14 @@ import {
 export class AppointmentsComponent {
   private readonly appointmentApi = inject(AppointmentService);
   private readonly serviceApi = inject(ServiceService);
+  private readonly teamApi = inject(TeamService);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
 
   protected readonly appointments = signal<Appointment[]>([]);
   protected readonly activeServices = signal<SalonService[]>([]);
+  protected readonly professionals = signal<TeamMember[]>([]);
+  protected readonly clients = signal<TeamMember[]>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly showForm = signal(false);
@@ -191,12 +236,15 @@ export class AppointmentsComponent {
   protected readonly formError = signal<string | null>(null);
   protected readonly cancellingId = signal<string | null>(null);
   protected readonly isClient = signal(false);
+  protected readonly isStaff = signal(false);
   protected readonly currentUserPublicId = signal<string | null>(null);
+  protected readonly currentUserName = signal<string | null>(null);
   protected readonly currentRole = signal<string | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
     servicePublicId: ['', Validators.required],
     professionalPublicId: ['', Validators.required],
+    selfAsProfessional: [false],
     bookForSelf: [false],
     clientPublicId: [''],
     startAt: ['', Validators.required],
@@ -205,20 +253,45 @@ export class AppointmentsComponent {
   constructor() {
     this.auth.getMe().subscribe({
       next: (profile) => {
-        this.isClient.set(profile.role === 'CLIENT');
+        const isClient = profile.role === 'CLIENT';
+        const isStaff = profile.role === 'ADMIN' || profile.role === 'PROFESSIONAL';
+
+        this.isClient.set(isClient);
+        this.isStaff.set(isStaff);
         this.currentUserPublicId.set(profile.user.publicId);
+        this.currentUserName.set(profile.user.name);
         this.currentRole.set(profile.role);
 
-        if (profile.role === 'CLIENT') {
+        if (isClient) {
           this.form.controls.bookForSelf.setValue(true);
+        } else if (isStaff) {
+          this.form.controls.selfAsProfessional.setValue(true);
+          if (profile.role === 'ADMIN') {
+            this.form.controls.bookForSelf.setValue(true);
+          }
+          this.applySelfAsProfessional(true, profile.user.publicId);
         }
       },
       error: () => this.error.set('Nao foi possivel carregar o perfil.'),
     });
 
+    this.form.controls.selfAsProfessional.valueChanges.subscribe((enabled) => {
+      this.applySelfAsProfessional(enabled, this.currentUserPublicId());
+    });
+
     this.loadData();
     this.serviceApi.list().subscribe({
       next: (services) => this.activeServices.set(services.filter((s) => s.active)),
+      error: () => {},
+    });
+
+    this.teamApi.getMembers('PROFESSIONAL').subscribe({
+      next: (members) => this.professionals.set(members),
+      error: () => {},
+    });
+
+    this.teamApi.getMembers('CLIENT').subscribe({
+      next: (members) => this.clients.set(members),
       error: () => {},
     });
   }
@@ -255,6 +328,35 @@ export class AppointmentsComponent {
     return classes[status];
   }
 
+  protected canSubmit(): boolean {
+    const raw = this.form.getRawValue();
+
+    if (!raw.servicePublicId || !raw.startAt) {
+      return false;
+    }
+
+    if (this.isClient()) {
+      return !!raw.professionalPublicId;
+    }
+
+    if (raw.selfAsProfessional) {
+      if (!raw.bookForSelf && !raw.clientPublicId) {
+        return false;
+      }
+      return true;
+    }
+
+    if (!raw.professionalPublicId) {
+      return false;
+    }
+
+    if (!raw.bookForSelf && !raw.clientPublicId) {
+      return false;
+    }
+
+    return true;
+  }
+
   protected canCancel(appointment: Appointment): boolean {
     if (appointment.status === 'CANCELLED' || appointment.status === 'COMPLETED') {
       return false;
@@ -273,7 +375,7 @@ export class AppointmentsComponent {
   }
 
   protected onSubmit(): void {
-    if (this.form.invalid || this.saving()) {
+    if (!this.canSubmit() || this.saving()) {
       return;
     }
 
@@ -282,6 +384,9 @@ export class AppointmentsComponent {
 
     const raw = this.form.getRawValue();
     const startAt = this.toOffsetDateTime(raw.startAt);
+    const professionalPublicId = raw.selfAsProfessional
+      ? (this.currentUserPublicId() ?? raw.professionalPublicId)
+      : raw.professionalPublicId;
 
     const request: {
       servicePublicId: string;
@@ -290,7 +395,7 @@ export class AppointmentsComponent {
       startAt: string;
     } = {
       servicePublicId: raw.servicePublicId,
-      professionalPublicId: raw.professionalPublicId,
+      professionalPublicId,
       startAt,
     };
 
@@ -301,7 +406,7 @@ export class AppointmentsComponent {
           request.clientPublicId = userId;
         }
       } else if (raw.clientPublicId) {
-        request.clientPublicId = raw.clientPublicId.trim();
+        request.clientPublicId = raw.clientPublicId;
       }
     }
 
@@ -309,13 +414,7 @@ export class AppointmentsComponent {
       next: () => {
         this.saving.set(false);
         this.showForm.set(false);
-        this.form.reset({
-          servicePublicId: '',
-          professionalPublicId: '',
-          bookForSelf: this.isClient(),
-          clientPublicId: '',
-          startAt: '',
-        });
+        this.resetForm();
         this.loadData();
       },
       error: () => {
@@ -341,6 +440,44 @@ export class AppointmentsComponent {
         this.cancellingId.set(null);
       },
     });
+  }
+
+  private resetForm(): void {
+    const isClient = this.isClient();
+    const isStaff = this.isStaff();
+    const isAdmin = this.currentRole() === 'ADMIN';
+    const userId = this.currentUserPublicId();
+
+    this.form.reset({
+      servicePublicId: '',
+      professionalPublicId: '',
+      selfAsProfessional: isStaff,
+      bookForSelf: isClient || isAdmin,
+      clientPublicId: '',
+      startAt: '',
+    });
+
+    if (isStaff) {
+      this.applySelfAsProfessional(true, userId);
+    } else {
+      this.applySelfAsProfessional(false, userId);
+    }
+  }
+
+  private applySelfAsProfessional(enabled: boolean, publicId: string | null): void {
+    const control = this.form.controls.professionalPublicId;
+
+    if (enabled && publicId) {
+      control.setValue(publicId);
+      control.clearValidators();
+    } else {
+      control.setValidators(Validators.required);
+      if (!enabled) {
+        control.setValue('');
+      }
+    }
+
+    control.updateValueAndValidity();
   }
 
   private loadData(): void {
