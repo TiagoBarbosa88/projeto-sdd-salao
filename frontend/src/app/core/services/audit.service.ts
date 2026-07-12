@@ -26,10 +26,13 @@ export class AuditService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/v1/audit-logs';
 
-  list(action?: AuditAction): Observable<AuditLog[]> {
+  list(action?: AuditAction, date?: string): Observable<AuditLog[]> {
     let params = new HttpParams();
     if (action) {
       params = params.set('action', action);
+    }
+    if (date) {
+      params = params.set('date', date);
     }
     return this.http.get<AuditLog[]>(this.baseUrl, { params });
   }

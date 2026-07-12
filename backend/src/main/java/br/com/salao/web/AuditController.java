@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/audit-logs")
@@ -21,7 +23,9 @@ public class AuditController {
     }
 
     @GetMapping
-    public List<AuditLogResponse> listLogs(@RequestParam(required = false) AuditAction action) {
-        return auditService.listLogs(action);
+    public List<AuditLogResponse> listLogs(
+            @RequestParam(required = false) AuditAction action,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return auditService.listLogs(action, date);
     }
 }

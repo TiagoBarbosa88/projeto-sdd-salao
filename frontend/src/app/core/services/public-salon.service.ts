@@ -11,7 +11,7 @@ export interface PublicTenant {
   phone?: string;
   whatsapp?: string;
   address?: string;
-  businessHours?: string;
+  businessHoursLines?: string[];
   logoUrl?: string;
   instagramUrl?: string;
   facebookUrl?: string;

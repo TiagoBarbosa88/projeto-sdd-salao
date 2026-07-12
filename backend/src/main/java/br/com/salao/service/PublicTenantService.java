@@ -20,14 +20,17 @@ public class PublicTenantService {
     private final TenantRepository tenantRepository;
     private final SalonServiceRepository salonServiceRepository;
     private final ProfessionalProfileRepository professionalProfileRepository;
+    private final PublicBusinessHoursService publicBusinessHoursService;
 
     public PublicTenantService(
             TenantRepository tenantRepository,
             SalonServiceRepository salonServiceRepository,
-            ProfessionalProfileRepository professionalProfileRepository) {
+            ProfessionalProfileRepository professionalProfileRepository,
+            PublicBusinessHoursService publicBusinessHoursService) {
         this.tenantRepository = tenantRepository;
         this.salonServiceRepository = salonServiceRepository;
         this.professionalProfileRepository = professionalProfileRepository;
+        this.publicBusinessHoursService = publicBusinessHoursService;
     }
 
     @Transactional(readOnly = true)
@@ -67,7 +70,7 @@ public class PublicTenantService {
                 tenant.getPhone(),
                 tenant.getWhatsapp(),
                 tenant.getAddress(),
-                tenant.getBusinessHours(),
+                publicBusinessHoursService.buildLines(tenant.getId()),
                 tenant.getLogoUrl(),
                 tenant.getInstagramUrl(),
                 tenant.getFacebookUrl(),

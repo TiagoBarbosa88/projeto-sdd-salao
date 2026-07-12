@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,9 +62,15 @@ public class AuditService {
 
     @Transactional(readOnly = true)
     @PreAuthorize("hasRole('ADMIN')")
-    public List<AuditLogResponse> listLogs(AuditAction action) {
+    public List<AuditLogResponse> listLogs(AuditAction action, LocalDate date) {
         Tenant tenant = tenantResolver.requireCurrentTenant();
-        return auditLogRepository.findByTenantIdAndOptionalAction(tenant.getId(), action).stream()
+        OffsetDateTime from = null;
+        OffsetDateTime to = null;
+        if (date != null) {
+            from = date.atStartOfDay().atOffset(ZoneOffset.UTC);
+            to = date.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC);
+        }
+        return auditLogRepository.findByTenantIdAndFilters(tenant.getId(), action, from, to).stream()
                 .map(this::toResponse)
                 .toList();
     }

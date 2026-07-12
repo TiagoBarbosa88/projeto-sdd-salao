@@ -92,7 +92,7 @@ class AuditServiceTest {
         auditService.record(tenant.getId(), admin.getId(), AuditAction.SERVICE_CREATED, "Service", entityId, "Corte");
 
         setAdminContext();
-        List<AuditLogResponse> logs = auditService.listLogs(null);
+        List<AuditLogResponse> logs = auditService.listLogs(null, null);
 
         assertThat(logs).hasSize(1);
         assertThat(logs.getFirst().action()).isEqualTo(AuditAction.SERVICE_CREATED);
@@ -112,7 +112,7 @@ class AuditServiceTest {
                 null);
 
         setAdminContext();
-        List<AuditLogResponse> logs = auditService.listLogs(AuditAction.LOGIN);
+        List<AuditLogResponse> logs = auditService.listLogs(AuditAction.LOGIN, null);
 
         assertThat(logs).hasSize(1);
         assertThat(logs.getFirst().action()).isEqualTo(AuditAction.LOGIN);

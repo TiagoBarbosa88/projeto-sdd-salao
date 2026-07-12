@@ -627,7 +627,7 @@ type BookingConfirmation = {
                 <h2 class="text-xl font-semibold text-white md:text-2xl">Contato</h2>
                 <p class="mt-1 text-sm text-slate-400">Fale conosco pelo WhatsApp ou redes sociais.</p>
 
-                <div class="mt-4 rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5 md:p-6">
+                <div class="mt-4">
                   @if (hasContactLinks()) {
                     <div class="flex flex-wrap gap-2.5">
                       @if (tenant()!.whatsapp) {
@@ -731,7 +731,7 @@ type BookingConfirmation = {
                 <h2 class="text-xl font-semibold text-white md:text-2xl">Horario de funcionamento</h2>
                 <p class="mt-1 text-sm text-slate-400">Quando estamos abertos.</p>
 
-                <div class="mt-4 rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5 md:p-6">
+                <div class="mt-4">
                   @if (businessHoursLines().length) {
                     <div class="space-y-1.5">
                       @for (line of businessHoursLines(); track line) {
@@ -748,7 +748,7 @@ type BookingConfirmation = {
                 <h2 class="text-xl font-semibold text-white md:text-2xl">Endereco</h2>
                 <p class="mt-1 text-sm text-slate-400">Venha nos visitar.</p>
 
-                <div class="mt-4 rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5 md:p-6">
+                <div class="mt-4">
                   @if (tenant()!.address) {
                     <p class="text-base leading-relaxed text-slate-300">{{ tenant()!.address }}</p>
                   } @else {
@@ -956,14 +956,7 @@ export class PublicSalonComponent implements OnInit {
   }
 
   protected businessHoursLines(): string[] {
-    const text = this.tenant()?.businessHours?.trim();
-    if (!text) {
-      return [];
-    }
-    return text
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
+    return this.tenant()?.businessHoursLines ?? [];
   }
 
   protected selectService(service: PublicService): void {

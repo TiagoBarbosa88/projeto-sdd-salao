@@ -30,7 +30,7 @@ import {
 } from '../../core/utils/phone.util';
 import { roleLabel } from '../../core/utils/team.util';
 
-type SettingsTab = 'personalization' | 'social' | 'professionals' | 'agenda' | 'account';
+type SettingsTab = 'personalization' | 'social' | 'funcionamento' | 'professionals' | 'agenda' | 'account';
 
 const WEEKDAYS: { value: number; label: string }[] = [
   { value: 1, label: 'Segunda' },
@@ -163,18 +163,6 @@ type DayScheduleRow = {
                       />
                     </div>
                     <div class="md:col-span-2">
-                      <label class="mb-1 block text-sm text-slate-300">Horario de funcionamento</label>
-                      <textarea
-                        formControlName="businessHours"
-                        rows="3"
-                        placeholder="Terca a sabado das 10 as 22h.&#10;Domingo das 10 as 14h."
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                      ></textarea>
-                      <p class="mt-1 text-xs text-slate-500">
-                        Exibido no rodape da pagina publica. Uma linha por periodo.
-                      </p>
-                    </div>
-                    <div class="md:col-span-2">
                       <label class="mb-1 block text-sm text-slate-300">Logo do salao</label>
                       <div class="flex flex-wrap items-center gap-4">
                         @if (logoPreview()) {
@@ -285,6 +273,51 @@ type DayScheduleRow = {
                     class="rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
                   >
                     {{ socialSaving() ? 'Salvando...' : 'Salvar redes' }}
+                  </button>
+                </form>
+              }
+            </section>
+          }
+
+          @if (activeTab() === 'funcionamento' && isAdmin()) {
+            <section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+              <h2 class="text-xl font-semibold text-white">Horario de funcionamento</h2>
+              <p class="mt-1 text-sm text-slate-400">
+                Horario publico exibido no rodape da pagina inicial. Para escala semanal por profissional, use a aba Agenda.
+              </p>
+
+              @if (salonLoading()) {
+                <p class="mt-6 text-slate-400">Carregando...</p>
+              } @else if (schedulingSettings()) {
+                <form
+                  class="mt-6 space-y-4"
+                  [formGroup]="schedulingForm"
+                  (ngSubmit)="saveScheduling()"
+                >
+                  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Fuso horario</label>
+                      <input formControlName="zoneId" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Inicio do dia</label>
+                      <input type="time" formControlName="dayStartTime" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Fim do dia</label>
+                      <input type="time" formControlName="dayEndTime" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Pausa entre atendimentos (min)</label>
+                      <input type="number" formControlName="bufferMinutes" min="0" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Intervalo de slots (min)</label>
+                      <input type="number" formControlName="slotIntervalMinutes" min="5" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                    </div>
+                  </div>
+                  <button type="submit" [disabled]="schedulingForm.invalid || schedulingSaving()" class="rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50">
+                    {{ schedulingSaving() ? 'Salvando...' : 'Salvar horario' }}
                   </button>
                 </form>
               }
@@ -580,42 +613,6 @@ type DayScheduleRow = {
                   </div>
                 }
               }
-
-              @if (schedulingSettings()) {
-                <form
-                  class="mt-8 space-y-4 border-t border-slate-800 pt-8"
-                  [formGroup]="schedulingForm"
-                  (ngSubmit)="saveScheduling()"
-                >
-                  <h3 class="text-lg font-semibold text-white">Regras gerais de agenda</h3>
-                  <p class="text-sm text-slate-400">Pausa entre atendimentos e horario publico de slots.</p>
-                  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <div>
-                      <label class="mb-1 block text-sm text-slate-300">Pausa entre atendimentos (min)</label>
-                      <input type="number" formControlName="bufferMinutes" min="0" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
-                    </div>
-                    <div>
-                      <label class="mb-1 block text-sm text-slate-300">Intervalo de slots (min)</label>
-                      <input type="number" formControlName="slotIntervalMinutes" min="5" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
-                    </div>
-                    <div>
-                      <label class="mb-1 block text-sm text-slate-300">Fuso horario</label>
-                      <input formControlName="zoneId" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
-                    </div>
-                    <div>
-                      <label class="mb-1 block text-sm text-slate-300">Inicio do dia</label>
-                      <input type="time" formControlName="dayStartTime" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
-                    </div>
-                    <div>
-                      <label class="mb-1 block text-sm text-slate-300">Fim do dia</label>
-                      <input type="time" formControlName="dayEndTime" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
-                    </div>
-                  </div>
-                  <button type="submit" [disabled]="schedulingForm.invalid || schedulingSaving()" class="rounded-lg border border-violet-500/40 px-4 py-2.5 text-sm font-medium text-violet-300 hover:bg-violet-500/10 disabled:opacity-50">
-                    {{ schedulingSaving() ? 'Salvando...' : 'Salvar regras de agenda' }}
-                  </button>
-                </form>
-              }
             </section>
           }
 
@@ -729,7 +726,6 @@ export class SettingsComponent {
     phone: ['', (control: AbstractControl) => optionalPhoneValidator(control.value)],
     whatsapp: ['', (control: AbstractControl) => optionalPhoneValidator(control.value)],
     address: [''],
-    businessHours: [''],
     logoUrl: [''],
   });
 
@@ -794,6 +790,7 @@ export class SettingsComponent {
       tabs.push(
         { id: 'personalization', label: 'Personalizacao' },
         { id: 'social', label: 'Redes' },
+        { id: 'funcionamento', label: 'Funcionamento' },
         { id: 'professionals', label: 'Profissionais' },
         { id: 'agenda', label: 'Agenda' }
       );
@@ -1133,7 +1130,6 @@ export class SettingsComponent {
           phone: formatPhoneDisplay(salon.phone),
           whatsapp: formatPhoneDisplay(salon.whatsapp),
           address: salon.address ?? '',
-          businessHours: salon.businessHours ?? '',
           logoUrl: salon.logoUrl ?? '',
         });
         this.socialForm.patchValue({
@@ -1268,7 +1264,6 @@ export class SettingsComponent {
       phone: normalizePhoneValue(personalization.phone),
       whatsapp: normalizePhoneValue(personalization.whatsapp),
       address: personalization.address || undefined,
-      businessHours: personalization.businessHours || undefined,
       logoUrl: personalization.logoUrl || undefined,
       instagramUrl: social.instagramUrl || undefined,
       facebookUrl: social.facebookUrl || undefined,

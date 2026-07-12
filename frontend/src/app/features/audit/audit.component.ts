@@ -19,19 +19,40 @@ type AuditDetailRow = {
           <p class="mt-1 text-sm text-slate-400">Historico de acoes criticas do salao.</p>
         </div>
 
-        <div>
-          <label for="actionFilter" class="mb-1 block text-sm text-slate-300">Filtrar por acao</label>
-          <select
-            id="actionFilter"
-            [ngModel]="selectedAction()"
-            (ngModelChange)="onActionFilterChange($event)"
-            class="rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm text-white outline-none focus:border-violet-500"
-          >
-            <option value="">Todas</option>
-            @for (action of actionOptions; track action.value) {
-              <option [value]="action.value">{{ action.label }}</option>
-            }
-          </select>
+        <div class="flex flex-wrap items-end gap-3">
+          <div>
+            <label for="dateFilter" class="mb-1 block text-sm text-slate-300">Dia</label>
+            <input
+              id="dateFilter"
+              type="date"
+              [ngModel]="selectedDate()"
+              (ngModelChange)="onDateFilterChange($event)"
+              class="rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm text-white outline-none focus:border-violet-500"
+            />
+          </div>
+          <div>
+            <label for="actionFilter" class="mb-1 block text-sm text-slate-300">Filtrar por acao</label>
+            <select
+              id="actionFilter"
+              [ngModel]="selectedAction()"
+              (ngModelChange)="onActionFilterChange($event)"
+              class="rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm text-white outline-none focus:border-violet-500"
+            >
+              <option value="">Todas</option>
+              @for (action of actionOptions; track action.value) {
+                <option [value]="action.value">{{ action.label }}</option>
+              }
+            </select>
+          </div>
+          @if (selectedDate()) {
+            <button
+              type="button"
+              (click)="clearDateFilter()"
+              class="rounded-lg border border-slate-700 px-3 py-2.5 text-sm text-slate-300 transition hover:text-white"
+            >
+              Limpar dia
+            </button>
+          }
         </div>
       </div>
 
@@ -47,45 +68,47 @@ type AuditDetailRow = {
         </section>
       } @else {
         <div class="hidden overflow-hidden rounded-xl border border-slate-800 bg-slate-900 md:block">
-          <table class="w-full text-left text-sm">
-            <thead
-              class="border-b border-slate-800 bg-slate-950/50 text-xs uppercase tracking-wider text-slate-400"
-            >
-              <tr>
-                <th class="px-4 py-3">Data</th>
-                <th class="px-4 py-3">Acao</th>
-                <th class="px-4 py-3">Ator</th>
-                <th class="px-4 py-3 text-right">Detalhes</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-800">
-              @for (log of logs(); track log.publicId) {
-                <tr class="text-slate-200">
-                  <td class="px-4 py-3 whitespace-nowrap">{{ formatDateTime(log.createdAt) }}</td>
-                  <td class="px-4 py-3">
-                    <span
-                      class="inline-flex rounded-full bg-violet-500/15 px-2 py-0.5 text-xs font-medium text-violet-300"
-                    >
-                      {{ actionLabel(log.action) }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3">{{ log.actor?.name ?? 'Sistema' }}</td>
-                  <td class="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      (click)="openDetail(log)"
-                      class="rounded-lg border border-slate-700 px-3 py-1 text-xs font-medium text-violet-300 transition hover:border-violet-500 hover:text-violet-200"
-                    >
-                      Ver detalhes
-                    </button>
-                  </td>
+          <div class="max-h-[28rem] overflow-y-auto">
+            <table class="w-full text-left text-sm">
+              <thead
+                class="sticky top-0 z-10 border-b border-slate-800 bg-slate-950/95 text-xs uppercase tracking-wider text-slate-400 backdrop-blur"
+              >
+                <tr>
+                  <th class="px-4 py-3">Data</th>
+                  <th class="px-4 py-3">Acao</th>
+                  <th class="px-4 py-3">Ator</th>
+                  <th class="px-4 py-3 text-right">Detalhes</th>
                 </tr>
-              }
-            </tbody>
-          </table>
+              </thead>
+              <tbody class="divide-y divide-slate-800">
+                @for (log of logs(); track log.publicId) {
+                  <tr class="text-slate-200">
+                    <td class="px-4 py-3 whitespace-nowrap">{{ formatDateTime(log.createdAt) }}</td>
+                    <td class="px-4 py-3">
+                      <span
+                        class="inline-flex rounded-full bg-violet-500/15 px-2 py-0.5 text-xs font-medium text-violet-300"
+                      >
+                        {{ actionLabel(log.action) }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">{{ log.actor?.name ?? 'Sistema' }}</td>
+                    <td class="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        (click)="openDetail(log)"
+                        class="rounded-lg border border-slate-700 px-3 py-1 text-xs font-medium text-violet-300 transition hover:border-violet-500 hover:text-violet-200"
+                      >
+                        Ver detalhes
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div class="space-y-2 md:hidden">
+        <div class="max-h-[28rem] space-y-2 overflow-y-auto md:hidden">
           @for (log of logs(); track log.publicId) {
             <article class="rounded-xl border border-slate-800 bg-slate-900 p-3">
               <div class="flex items-start justify-between gap-2">
@@ -180,6 +203,7 @@ export class AuditComponent {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly selectedAction = signal<AuditAction | ''>('');
+  protected readonly selectedDate = signal('');
   protected readonly selectedLog = signal<AuditLog | null>(null);
 
   protected readonly actionOptions: { value: AuditAction; label: string }[] = [
@@ -211,6 +235,16 @@ export class AuditComponent {
 
   protected onActionFilterChange(value: string): void {
     this.selectedAction.set(value as AuditAction | '');
+    this.loadLogs();
+  }
+
+  protected onDateFilterChange(value: string): void {
+    this.selectedDate.set(value);
+    this.loadLogs();
+  }
+
+  protected clearDateFilter(): void {
+    this.selectedDate.set('');
     this.loadLogs();
   }
 
@@ -299,7 +333,8 @@ export class AuditComponent {
     this.error.set(null);
 
     const action = this.selectedAction() || undefined;
-    this.auditApi.list(action).subscribe({
+    const date = this.selectedDate() || undefined;
+    this.auditApi.list(action, date).subscribe({
       next: (items) => {
         this.logs.set(items);
         this.loading.set(false);
