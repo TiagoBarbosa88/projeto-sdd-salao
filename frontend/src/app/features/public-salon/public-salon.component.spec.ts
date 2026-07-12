@@ -11,7 +11,8 @@ describe('PublicSalonComponent', () => {
   const mockTenant = {
     publicId: '550e8400-e29b-41d4-a716-446655440000',
     name: 'Studio Bella',
-    slug: 'studio-bella',
+    slug: 'salao-marina',
+    description: 'Salao de beleza',
   };
 
   const mockServices = [
@@ -36,7 +37,7 @@ describe('PublicSalonComponent', () => {
           useValue: {
             snapshot: {
               paramMap: {
-                get: (key: string) => (key === 'slug' ? 'studio-bella' : null),
+                get: () => null,
               },
             },
           },
@@ -54,8 +55,8 @@ describe('PublicSalonComponent', () => {
   });
 
   function flushData(): void {
-    httpMock.expectOne('/api/v1/public/tenants/studio-bella').flush(mockTenant);
-    httpMock.expectOne('/api/v1/public/tenants/studio-bella/services').flush(mockServices);
+    httpMock.expectOne('/api/v1/public/tenants/salao-marina').flush(mockTenant);
+    httpMock.expectOne('/api/v1/public/tenants/salao-marina/services').flush(mockServices);
     fixture.detectChanges();
   }
 
@@ -64,11 +65,12 @@ describe('PublicSalonComponent', () => {
     flushData();
   });
 
-  it('should render tenant and services', () => {
+  it('should render tenant and booking step', () => {
     flushData();
 
     const element = fixture.nativeElement as HTMLElement;
     expect(element.textContent).toContain('Studio Bella');
+    expect(element.textContent).toContain('Escolha o servico');
     expect(element.textContent).toContain('Corte');
   });
 });

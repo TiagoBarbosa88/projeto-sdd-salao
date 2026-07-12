@@ -188,10 +188,10 @@ export class ShellComponent implements OnInit {
   protected readonly pageTitle = signal('Home');
   protected readonly tenantName = signal<string | null>(null);
   protected readonly navItems = signal<NavItem[]>([
-    { label: 'Home', route: '/', exact: true, icon: 'home' },
-    { label: 'Servicos', route: '/services', icon: 'services' },
-    { label: 'Financeiro', route: '/financeiro', icon: 'financeiro' },
-    { label: 'Configuracoes', route: '/settings', icon: 'settings' },
+    { label: 'Home', route: '/app', exact: true, icon: 'home' },
+    { label: 'Servicos', route: '/app/services', icon: 'services' },
+    { label: 'Financeiro', route: '/app/financeiro', icon: 'financeiro' },
+    { label: 'Configuracoes', route: '/app/settings', icon: 'settings' },
   ]);
 
   ngOnInit(): void {
@@ -200,16 +200,16 @@ export class ShellComponent implements OnInit {
         this.tenantName.set(profile.tenant.name);
 
         const items: NavItem[] = [
-          { label: 'Home', route: '/', exact: true, icon: 'home' },
-          { label: 'Servicos', route: '/services', icon: 'services' },
-          { label: 'Financeiro', route: '/financeiro', icon: 'financeiro' },
+          { label: 'Home', route: '/app', exact: true, icon: 'home' },
+          { label: 'Servicos', route: '/app/services', icon: 'services' },
+          { label: 'Financeiro', route: '/app/financeiro', icon: 'financeiro' },
         ];
 
         if (profile.role === 'ADMIN') {
-          items.push({ label: 'Auditoria', route: '/audit', icon: 'audit' });
+          items.push({ label: 'Auditoria', route: '/app/audit', icon: 'audit' });
         }
 
-        items.push({ label: 'Configuracoes', route: '/settings', icon: 'settings' });
+        items.push({ label: 'Configuracoes', route: '/app/settings', icon: 'settings' });
         this.navItems.set(items);
       },
       error: () => {},

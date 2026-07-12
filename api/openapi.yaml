@@ -27,6 +27,8 @@ tags:
     description: Trilha de auditoria de ações críticas
   - name: Public
     description: Endpoints públicos sem autenticação
+  - name: Settings
+    description: Configurações do salão, SEO e regras de agenda
 
 paths:
   /health:
@@ -281,6 +283,245 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/TeamMemberResponse'
+    post:
+      tags: [Team]
+      summary: Cria profissional (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTeamMemberRequest'
+      responses:
+        '200':
+          description: Profissional criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalResponse'
+
+  /team/professionals:
+    get:
+      tags: [Team]
+      summary: Lista profissionais agendáveis
+      responses:
+        '200':
+          description: Profissionais bookable
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfessionalResponse'
+
+  /team/profiles:
+    get:
+      tags: [Team]
+      summary: Lista todos os perfis profissionais (ADMIN)
+      responses:
+        '200':
+          description: Perfis do tenant
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfessionalResponse'
+
+  /team/members/{publicId}/profile:
+    put:
+      tags: [Team]
+      summary: Atualiza perfil profissional (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/PublicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfessionalProfileRequest'
+      responses:
+        '200':
+          description: Perfil atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalResponse'
+
+  /team/members/{publicId}/working-hours:
+    get:
+      tags: [Team]
+      summary: Horários semanais do profissional
+      parameters:
+        - $ref: '#/components/parameters/PublicId'
+      responses:
+        '200':
+          description: Períodos de trabalho
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkingPeriodResponse'
+    put:
+      tags: [Team]
+      summary: Atualiza horários semanais (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/PublicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkingHoursRequest'
+      responses:
+        '200':
+          description: Horários salvos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkingPeriodResponse'
+
+  /team/members/{publicId}/blocked-periods:
+    get:
+      tags: [Team]
+      summary: Lista bloqueios e férias
+      parameters:
+        - $ref: '#/components/parameters/PublicId'
+      responses:
+        '200':
+          description: Bloqueios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BlockedPeriodResponse'
+    post:
+      tags: [Team]
+      summary: Cria bloqueio ou férias (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/PublicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBlockedPeriodRequest'
+      responses:
+        '201':
+          description: Bloqueio criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockedPeriodResponse'
+
+  /team/members/{publicId}/blocked-periods/{blockPublicId}:
+    delete:
+      tags: [Team]
+      summary: Remove bloqueio (ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/PublicId'
+        - name: blockPublicId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Bloqueio removido
+
+  /settings/salon:
+    get:
+      tags: [Settings]
+      summary: Dados do salão e SEO
+      responses:
+        '200':
+          description: Configurações do salão
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalonSettingsResponse'
+    put:
+      tags: [Settings]
+      summary: Atualiza salão e SEO (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSalonSettingsRequest'
+      responses:
+        '200':
+          description: Salão atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalonSettingsResponse'
+
+  /settings/scheduling:
+    get:
+      tags: [Settings]
+      summary: Regras globais de agenda
+      responses:
+        '200':
+          description: Regras de scheduling
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchedulingSettingsResponse'
+    put:
+      tags: [Settings]
+      summary: Atualiza regras de agenda (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSchedulingSettingsRequest'
+      responses:
+        '200':
+          description: Regras atualizadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchedulingSettingsResponse'
+
+  /availability/slots:
+    get:
+      tags: [Appointments]
+      summary: Slots livres autenticados
+      parameters:
+        - name: professionalPublicId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: servicePublicId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Horários disponíveis
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailabilitySlotResponse'
 
   /dashboard/summary:
     get:
@@ -359,6 +600,93 @@ paths:
                   $ref: '#/components/schemas/PublicServiceResponse'
         '404':
           description: Salão não encontrado
+
+  /public/tenants/{slug}/professionals:
+    get:
+      tags: [Public]
+      summary: Lista profissionais agendáveis (público)
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Profissionais
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicProfessionalResponse'
+
+  /public/tenants/{slug}/availability/slots:
+    get:
+      tags: [Public]
+      summary: Horários livres para agendamento visitante
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: professionalPublicId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: servicePublicId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Slots disponíveis
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailabilitySlotResponse'
+
+  /public/tenants/{slug}/appointments:
+    post:
+      tags: [Public]
+      summary: Reserva horário como visitante (nome + WhatsApp)
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicGuestBookingRequest'
+      responses:
+        '201':
+          description: Agendamento criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+        '409':
+          description: Horário indisponível
 
 components:
   parameters:
@@ -655,6 +983,221 @@ components:
         name:
           type: string
         slug:
+          type: string
+        description:
+          type: string
+        phone:
+          type: string
+        whatsapp:
+          type: string
+        address:
+          type: string
+        logoUrl:
+          type: string
+        seoTitle:
+          type: string
+        seoDescription:
+          type: string
+        seoImageUrl:
+          type: string
+
+    SalonSettingsResponse:
+      allOf:
+        - $ref: '#/components/schemas/PublicTenantResponse'
+
+    UpdateSalonSettingsRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        phone:
+          type: string
+        whatsapp:
+          type: string
+        address:
+          type: string
+        logoUrl:
+          type: string
+        seoTitle:
+          type: string
+        seoDescription:
+          type: string
+        seoImageUrl:
+          type: string
+
+    SchedulingSettingsResponse:
+      type: object
+      required: [zoneId, bufferMinutes, slotIntervalMinutes, dayStartTime, dayEndTime]
+      properties:
+        zoneId:
+          type: string
+          example: America/Sao_Paulo
+        bufferMinutes:
+          type: integer
+        slotIntervalMinutes:
+          type: integer
+        dayStartTime:
+          type: string
+          example: '09:00'
+        dayEndTime:
+          type: string
+          example: '22:00'
+
+    UpdateSchedulingSettingsRequest:
+      allOf:
+        - $ref: '#/components/schemas/SchedulingSettingsResponse'
+
+    ProfessionalResponse:
+      type: object
+      required: [publicId, name, bookable, active]
+      properties:
+        publicId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        phone:
+          type: string
+        bookable:
+          type: boolean
+        active:
+          type: boolean
+
+    PublicProfessionalResponse:
+      type: object
+      required: [publicId, name]
+      properties:
+        publicId:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    CreateTeamMemberRequest:
+      type: object
+      required: [name, email, password, bookable]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+        bookable:
+          type: boolean
+
+    UpdateProfessionalProfileRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+        bookable:
+          type: boolean
+        active:
+          type: boolean
+
+    WorkingPeriodResponse:
+      type: object
+      required: [publicId, dayOfWeek, startTime, endTime]
+      properties:
+        publicId:
+          type: string
+          format: uuid
+        dayOfWeek:
+          type: integer
+          minimum: 1
+          maximum: 7
+        startTime:
+          type: string
+        endTime:
+          type: string
+
+    UpdateWorkingHoursRequest:
+      type: object
+      required: [periods]
+      properties:
+        periods:
+          type: array
+          items:
+            type: object
+            required: [dayOfWeek, startTime, endTime]
+            properties:
+              dayOfWeek:
+                type: integer
+              startTime:
+                type: string
+              endTime:
+                type: string
+
+    BlockType:
+      type: string
+      enum: [VACATION, BREAK, OTHER]
+
+    BlockedPeriodResponse:
+      type: object
+      required: [publicId, startAt, endAt, blockType]
+      properties:
+        publicId:
+          type: string
+          format: uuid
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+        blockType:
+          $ref: '#/components/schemas/BlockType'
+
+    CreateBlockedPeriodRequest:
+      type: object
+      required: [startAt, endAt]
+      properties:
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+        blockType:
+          $ref: '#/components/schemas/BlockType'
+
+    AvailabilitySlotResponse:
+      type: object
+      required: [startAt, endAt]
+      properties:
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+
+    PublicGuestBookingRequest:
+      type: object
+      required: [servicePublicId, professionalPublicId, startAt, guestName, guestPhone]
+      properties:
+        servicePublicId:
+          type: string
+          format: uuid
+        professionalPublicId:
+          type: string
+          format: uuid
+        startAt:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+        guestPhone:
           type: string
 
     PublicServiceResponse:

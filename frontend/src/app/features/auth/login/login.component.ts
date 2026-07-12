@@ -84,7 +84,7 @@ export class LoginComponent {
     this.auth.login(email, password).subscribe({
       next: () => {
         this.submitting.set(false);
-        void this.router.navigateByUrl('/');
+        void this.router.navigateByUrl('/app');
       },
       error: () => {
         this.error.set('Email ou senha invalidos.');

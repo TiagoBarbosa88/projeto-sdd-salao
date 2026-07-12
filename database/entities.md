@@ -12,6 +12,14 @@ Representa um salão (tenant do sistema multi-tenant).
 | publicId | UUID | Identificador público |
 | name | String | Nome do salão |
 | slug | String | URL amigável (único) |
+| description | String | Descrição pública |
+| phone | String | Telefone de contato |
+| whatsapp | String | WhatsApp do salão |
+| address | String | Endereço |
+| logoUrl | String | URL do logo |
+| seoTitle | String | Título SEO |
+| seoDescription | String | Descrição SEO |
+| seoImageUrl | String | Imagem Open Graph |
 | active | Boolean | Tenant ativo |
 | createdAt | OffsetDateTime | Criação |
 
@@ -66,11 +74,64 @@ Agendamento de serviço.
 | tenantId | Long | FK → Tenant |
 | serviceId | Long | FK → Service |
 | professionalId | Long | FK → User (profissional) |
-| clientId | Long | FK → User (cliente) |
+| clientId | Long | FK → User (cliente, nullable para visitante) |
+| guestName | String | Nome do visitante sem login |
+| guestPhone | String | WhatsApp do visitante |
+| bufferMinutes | Integer | Pausa aplicada após o atendimento |
 | startAt | OffsetDateTime | Início |
 | endAt | OffsetDateTime | Fim |
 | status | Enum | SCHEDULED, CONFIRMED, CANCELLED, COMPLETED |
 | createdAt | OffsetDateTime | Criação |
+
+## TenantSchedulingSettings
+
+Regras globais de agenda por tenant.
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| tenantId | Long | FK → Tenant (unique) |
+| zoneId | String | Fuso horário (ex.: America/Sao_Paulo) |
+| bufferMinutes | Integer | Pausa entre atendimentos |
+| slotIntervalMinutes | Integer | Granularidade dos slots |
+| dayStartTime | Time | Início do expediente público |
+| dayEndTime | Time | Fim do expediente público |
+
+## ProfessionalProfile
+
+Perfil agendável vinculado a TenantUser (ADMIN ou PROFESSIONAL).
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| publicId | UUID | Identificador público |
+| tenantUserId | Long | FK → TenantUser |
+| bookable | Boolean | Aceita agendamentos |
+| phone | String | Contato interno |
+| active | Boolean | Profissional ativo |
+
+## ProfessionalWorkingPeriod
+
+Horário semanal de trabalho (dayOfWeek 1=segunda … 7=domingo).
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| publicId | UUID | Identificador público |
+| tenantUserId | Long | FK → TenantUser |
+| dayOfWeek | Integer | Dia da semana ISO |
+| startTime | Time | Início |
+| endTime | Time | Fim |
+
+## ProfessionalBlockedPeriod
+
+Férias, pausas ou bloqueios pontuais.
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| publicId | UUID | Identificador público |
+| tenantUserId | Long | FK → TenantUser |
+| startAt | OffsetDateTime | Início |
+| endAt | OffsetDateTime | Fim |
+| reason | String | Motivo |
+| blockType | Enum | VACATION, BREAK, OTHER |
 
 ## Relacionamentos
 
@@ -81,6 +142,10 @@ Tenant 1──N Appointment
 Service 1──N Appointment
 User (professional) 1──N Appointment
 User (client) 1──N Appointment
+Tenant 1──1 TenantSchedulingSettings
+TenantUser 1──1 ProfessionalProfile
+TenantUser 1──N ProfessionalWorkingPeriod
+TenantUser 1──N ProfessionalBlockedPeriod
 Tenant 1──N AuditLog
 User (actor) 1──N AuditLog
 ```

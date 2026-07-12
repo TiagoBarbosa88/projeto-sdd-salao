@@ -28,10 +28,13 @@ Agendamentos vinculados a profissional, serviço, cliente e horário. Validaçã
 ### RF05 — Dashboard
 Métricas: agendamentos do dia, receita estimada, taxa de ocupação.
 
-### RF06 — Página pública (futuro)
-URL por tenant para agendamento online com SEO.
+### RF06 — Página pública e agendamento visitante
+URL por tenant (`/` no ambiente local e `/s/:slug`) com SEO configurável. Visitante escolhe serviço, profissional, data/horário e confirma com nome + WhatsApp sem login. Painel autenticado em `/app`.
 
-### RF07 — WhatsApp (futuro)
+### RF07 — Configurações do salão
+ADMIN gerencia salão/SEO, profissionais agendáveis, horários semanais, pausa entre atendimentos, bloqueios e férias.
+
+### RF08 — WhatsApp (futuro)
 Envio de confirmação e lembrete de agendamento.
 
 ## Requisitos não funcionais
@@ -49,3 +52,6 @@ Envio de confirmação e lembrete de agendamento.
 - RN03: Apenas ADMIN pode gerenciar profissionais e configurações do tenant.
 - RN04: Cliente só visualiza e gerencia seus próprios agendamentos.
 - RN05: Cancelamento deve respeitar antecedência mínima configurável pelo tenant.
+- RN06: Slots públicos respeitam duração do serviço + pausa, horário do profissional e bloqueios entre 09:00 e 22:00 (America/Sao_Paulo).
+- RN07: Agendamento visitante revalida disponibilidade no backend; conflito retorna erro amigável.
+- RN08: Dados internos (telefone/e-mail de profissionais) não são expostos na API pública.

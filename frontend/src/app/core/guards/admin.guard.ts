@@ -12,7 +12,7 @@ export const adminGuard: CanActivateFn = () => {
   }
 
   return auth.getMe().pipe(
-    map((profile) => (profile.role === 'ADMIN' ? true : router.parseUrl('/'))),
+    map((profile) => (profile.role === 'ADMIN' ? true : router.parseUrl('/app'))),
     catchError(() => of(router.parseUrl('/login')))
   );
 };

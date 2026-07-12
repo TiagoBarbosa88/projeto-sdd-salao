@@ -21,6 +21,10 @@ export const routes: Routes = [
   },
   {
     path: '',
+    component: PublicSalonComponent,
+  },
+  {
+    path: 'app',
     component: ShellComponent,
     canActivate: [authGuard],
     children: [
