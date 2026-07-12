@@ -89,7 +89,7 @@ public class AuthService {
         );
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(InvalidCredentialsException::new);
