@@ -1,5 +1,58 @@
 openapi: 3.0.3
 info:
-  title: API
+  title: Salão SaaS API
+  description: API REST para gestão multi-tenant de salões de beleza e barbearias.
   version: 1.0.0
+  contact:
+    name: Salão SaaS
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Desenvolvimento local
+
+tags:
+  - name: Auth
+    description: Autenticação e tokens JWT
+  - name: Tenants
+    description: Gestão de salões (tenants)
+  - name: Services
+    description: Serviços oferecidos
+  - name: Appointments
+    description: Agendamentos
+  - name: Dashboard
+    description: Métricas operacionais
+
 paths: {}
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          example: Campo obrigatório ausente
+    UuidRef:
+      type: object
+      required:
+        - publicId
+      properties:
+        publicId:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
