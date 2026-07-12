@@ -26,7 +26,7 @@ describe('HomeComponent', () => {
     expect(element.textContent).toContain('Dia');
     expect(element.textContent).toContain('Semana');
     expect(element.textContent).toContain('Mes');
-    expect(element.textContent).toContain('Com agendamento');
-    expect(element.textContent).toContain('Dia livre');
+    expect(element.textContent).toContain('Ocupado');
+    expect(element.textContent).toContain('Livre');
   });
 });

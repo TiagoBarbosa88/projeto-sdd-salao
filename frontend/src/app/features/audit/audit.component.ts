@@ -41,7 +41,7 @@ import { AuditAction, AuditLog, AuditService } from '../../core/services/audit.s
           <p class="text-slate-400">Nenhum evento encontrado.</p>
         </section>
       } @else {
-        <section class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+        <div class="hidden overflow-hidden rounded-xl border border-slate-800 bg-slate-900 md:block">
           <table class="w-full text-left text-sm">
             <thead
               class="border-b border-slate-800 bg-slate-950/50 text-xs uppercase tracking-wider text-slate-400"
@@ -70,7 +70,29 @@ import { AuditAction, AuditLog, AuditService } from '../../core/services/audit.s
               }
             </tbody>
           </table>
-        </section>
+        </div>
+
+        <div class="space-y-2 md:hidden">
+          @for (log of logs(); track log.publicId) {
+            <article class="rounded-xl border border-slate-800 bg-slate-900 p-3">
+              <div class="flex items-start justify-between gap-2">
+                <p class="text-xs text-slate-400">{{ formatDateTime(log.createdAt) }}</p>
+                <span class="shrink-0 rounded-full bg-violet-500/15 px-2 py-0.5 text-[10px] font-medium text-violet-300">
+                  {{ actionLabel(log.action) }}
+                </span>
+              </div>
+              <p class="mt-2 text-sm font-medium text-white">{{ log.actor?.name ?? 'Sistema' }}</p>
+              <div class="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
+                @if (log.entityType) {
+                  <span>{{ log.entityType }}</span>
+                }
+                @if (log.metadata) {
+                  <span class="text-slate-400">{{ log.metadata }}</span>
+                }
+              </div>
+            </article>
+          }
+        </div>
       }
     </div>
   `,

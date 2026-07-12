@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService, MeResponse } from '../../core/services/auth.service';
 
 @Component({
@@ -25,6 +25,13 @@ import { AuthService, MeResponse } from '../../core/services/auth.service';
               <dd class="text-violet-300">{{ profile()!.role }}</dd>
             </div>
           </dl>
+          <button
+            type="button"
+            (click)="logout()"
+            class="mt-6 rounded-lg border border-rose-500/30 px-4 py-2 text-sm font-medium text-rose-400 transition hover:bg-rose-500/10 md:hidden"
+          >
+            Sair da conta
+          </button>
         </section>
       } @else if (profileError()) {
         <section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
@@ -43,6 +50,7 @@ import { AuthService, MeResponse } from '../../core/services/auth.service';
 })
 export class SettingsComponent {
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
 
   protected readonly profile = signal<MeResponse | null>(null);
   protected readonly profileError = signal<string | null>(null);
@@ -56,5 +64,10 @@ export class SettingsComponent {
     } else {
       this.profileError.set('Voce nao esta autenticado.');
     }
+  }
+
+  protected logout(): void {
+    this.auth.logout();
+    void this.router.navigateByUrl('/login');
   }
 }

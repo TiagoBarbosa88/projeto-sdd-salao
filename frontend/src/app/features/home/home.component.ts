@@ -178,9 +178,81 @@ type CalendarDay = {
         </section>
       }
 
-      <div class="grid gap-6 xl:grid-cols-[minmax(280px,320px)_1fr]">
-        <aside class="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-4">
-          <div class="flex items-center justify-between">
+      <div class="space-y-4">
+        <section class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p class="mb-2 text-xs uppercase tracking-wider text-slate-400">Visualizacao</p>
+              <div class="inline-flex rounded-xl border border-slate-700 bg-slate-950 p-1">
+                @for (mode of viewModes; track mode.value) {
+                  <button
+                    type="button"
+                    (click)="setViewMode(mode.value)"
+                    class="rounded-lg px-3 py-1.5 text-sm font-medium transition"
+                    [class]="
+                      viewMode() === mode.value
+                        ? 'bg-violet-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    "
+                  >
+                    {{ mode.label }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                (click)="shiftPeriod(-1)"
+                class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+                aria-label="Periodo anterior"
+              >
+                &lt;
+              </button>
+              <button
+                type="button"
+                (click)="goToToday()"
+                class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+              >
+                Hoje
+              </button>
+              <button
+                type="button"
+                (click)="goToTomorrow()"
+                class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+              >
+                Amanha
+              </button>
+              <button
+                type="button"
+                (click)="shiftPeriod(1)"
+                class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+                aria-label="Proximo periodo"
+              >
+                &gt;
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-2.5"
+          >
+            <div>
+              <p class="text-[10px] uppercase tracking-wider text-slate-500">Periodo selecionado</p>
+              <p class="text-sm font-medium text-violet-300">{{ periodLabel() }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-lg font-semibold text-white">{{ filteredAppointments().length }}</p>
+              <p class="text-[10px] text-slate-500">
+                {{ filteredAppointments().length === 1 ? 'agendamento' : 'agendamentos' }}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
             <h3 class="text-sm font-semibold capitalize text-white">{{ calendarMonthLabel() }}</h3>
             <div class="flex gap-1">
               <button
@@ -202,9 +274,11 @@ type CalendarDay = {
             </div>
           </div>
 
-          <div class="mt-4 grid grid-cols-7 gap-1 text-center text-[10px] font-medium uppercase tracking-wider text-slate-500">
+          <div
+            class="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-medium uppercase tracking-wider text-slate-500"
+          >
             @for (label of weekdayLabels; track label) {
-              <span class="py-1">{{ label }}</span>
+              <span class="py-0.5">{{ label }}</span>
             }
           </div>
 
@@ -213,113 +287,42 @@ type CalendarDay = {
               <button
                 type="button"
                 (click)="selectCalendarDay(day.date)"
-                class="relative flex aspect-square flex-col items-center justify-center rounded-xl text-sm transition"
+                class="relative flex h-9 flex-col items-center justify-center rounded-lg text-xs transition sm:h-10"
                 [class]="calendarDayClass(day)"
                 [attr.aria-label]="calendarDayAriaLabel(day)"
               >
-                <span class="font-medium">{{ day.date.getDate() }}</span>
+                <span class="font-medium leading-none">{{ day.date.getDate() }}</span>
                 @if (day.appointmentCount > 0) {
                   <span
-                    class="mt-0.5 flex h-1.5 w-1.5 rounded-full"
+                    class="mt-0.5 h-1 w-1 rounded-full"
                     [class]="day.isSelected ? 'bg-white' : 'bg-violet-400'"
                   ></span>
                 } @else if (day.inMonth && !isPastDay(day.date)) {
-                  <span class="mt-0.5 h-1.5 w-1.5 rounded-full bg-emerald-500/30"></span>
+                  <span class="mt-0.5 h-1 w-1 rounded-full bg-emerald-500/30"></span>
                 }
               </button>
             }
           </div>
 
-          <div class="mt-4 space-y-2 border-t border-slate-800 pt-4 text-xs text-slate-400">
-            <div class="flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-violet-400"></span>
-              <span>Com agendamento</span>
+          <div
+            class="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-800 pt-3 text-[10px] text-slate-400"
+          >
+            <div class="flex items-center gap-1.5">
+              <span class="h-1.5 w-1.5 rounded-full bg-violet-400"></span>
+              <span>Ocupado</span>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-emerald-500/40"></span>
-              <span>Dia livre</span>
+            <div class="flex items-center gap-1.5">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500/40"></span>
+              <span>Livre</span>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="h-5 w-5 rounded-lg ring-2 ring-violet-400/60"></span>
+            <div class="flex items-center gap-1.5">
+              <span class="h-3 w-3 rounded ring-2 ring-violet-400/60"></span>
               <span>Hoje</span>
             </div>
           </div>
-        </aside>
+        </section>
 
-        <div class="space-y-4">
-          <section class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-            <div class="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p class="mb-2 text-xs uppercase tracking-wider text-slate-400">Visualizacao</p>
-                <div class="inline-flex rounded-xl border border-slate-700 bg-slate-950 p-1">
-                  @for (mode of viewModes; track mode.value) {
-                    <button
-                      type="button"
-                      (click)="setViewMode(mode.value)"
-                      class="rounded-lg px-3 py-1.5 text-sm font-medium transition"
-                      [class]="
-                        viewMode() === mode.value
-                          ? 'bg-violet-600 text-white shadow-sm'
-                          : 'text-slate-400 hover:text-white'
-                      "
-                    >
-                      {{ mode.label }}
-                    </button>
-                  }
-                </div>
-              </div>
-
-              <div class="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  (click)="shiftPeriod(-1)"
-                  class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
-                  aria-label="Periodo anterior"
-                >
-                  &lt;
-                </button>
-                <button
-                  type="button"
-                  (click)="goToToday()"
-                  class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
-                >
-                  Hoje
-                </button>
-                <button
-                  type="button"
-                  (click)="goToTomorrow()"
-                  class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
-                >
-                  Amanha
-                </button>
-                <button
-                  type="button"
-                  (click)="shiftPeriod(1)"
-                  class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
-                  aria-label="Proximo periodo"
-                >
-                  &gt;
-                </button>
-              </div>
-            </div>
-
-            <div
-              class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3"
-            >
-              <div>
-                <p class="text-xs uppercase tracking-wider text-slate-500">Periodo selecionado</p>
-                <p class="mt-0.5 font-medium text-violet-300">{{ periodLabel() }}</p>
-              </div>
-              <div class="text-right">
-                <p class="text-2xl font-semibold text-white">{{ filteredAppointments().length }}</p>
-                <p class="text-xs text-slate-500">
-                  {{ filteredAppointments().length === 1 ? 'agendamento' : 'agendamentos' }}
-                </p>
-              </div>
-            </div>
-          </section>
-
-          @if (loading()) {
+        @if (loading()) {
             <div class="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center">
               <p class="text-slate-400">Carregando agendamentos...</p>
             </div>
@@ -407,81 +410,50 @@ type CalendarDay = {
               }
             </section>
           } @else {
-            <div class="space-y-3">
+            <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               @for (appointment of filteredAppointments(); track appointment.publicId) {
                 <article
-                  class="group relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-5 transition hover:border-violet-500/30 hover:shadow-lg hover:shadow-violet-950/20"
+                  class="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/80 p-3 transition hover:border-violet-500/30"
                 >
                   <div
-                    class="absolute inset-y-0 left-0 w-1 rounded-l-2xl"
+                    class="absolute inset-y-0 left-0 w-0.5"
                     [class]="statusAccentClass(appointment.status)"
                   ></div>
 
-                  <div class="flex flex-wrap items-start justify-between gap-3 pl-2">
-                    <div class="min-w-0 flex-1">
-                      <div class="flex flex-wrap items-center gap-2">
-                        <span class="text-lg font-semibold text-white">
+                  <div class="pl-2">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="min-w-0">
+                        <p class="text-sm font-semibold text-white">
                           {{ formatTime(appointment.startAt) }}
-                        </span>
-                        <span class="text-slate-500">&mdash;</span>
-                        <span class="text-sm text-slate-400">{{ formatTime(appointment.endAt) }}</span>
-                        <span
-                          class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
-                          [class]="statusClass(appointment.status)"
-                        >
-                          {{ statusLabel(appointment.status) }}
-                        </span>
+                          <span class="font-normal text-slate-500">–</span>
+                          {{ formatTime(appointment.endAt) }}
+                        </p>
+                        <p class="mt-0.5 truncate text-sm text-violet-200">
+                          {{ appointment.service.name }}
+                        </p>
                       </div>
-
-                      <h4 class="mt-2 text-base font-medium text-violet-200">
-                        {{ appointment.service.name }}
-                      </h4>
-
-                      <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-400">
-                        <span class="inline-flex items-center gap-1.5">
-                          <svg class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="1.5"
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                          </svg>
-                          {{ appointment.professional.name }}
-                        </span>
-                        @if (!isClient()) {
-                          <span class="inline-flex items-center gap-1.5">
-                            <svg class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="1.5"
-                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                            </svg>
-                            {{ appointment.client.name }}
-                          </span>
-                        }
-                        <span class="inline-flex items-center gap-1.5">
-                          <svg class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="1.5"
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                          {{ formatDateShort(appointment.startAt) }}
-                        </span>
-                      </div>
+                      <span
+                        class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
+                        [class]="statusClass(appointment.status)"
+                      >
+                        {{ statusLabel(appointment.status) }}
+                      </span>
                     </div>
+
+                    <p class="mt-2 truncate text-xs text-slate-500">
+                      {{ appointment.professional.name }}
+                      @if (!isClient()) {
+                        <span class="text-slate-600"> · </span>
+                        {{ appointment.client.name }}
+                      }
+                    </p>
 
                     @if (canCancel(appointment)) {
                       <button
                         type="button"
                         (click)="cancel(appointment)"
                         [disabled]="cancellingId() === appointment.publicId"
-                        class="rounded-lg border border-rose-500/30 px-3 py-1.5 text-xs font-medium text-rose-400 transition hover:bg-rose-500/10 disabled:opacity-50"
+                        class="mt-2 text-[11px] font-medium text-rose-400 transition hover:text-rose-300 disabled:opacity-50"
                       >
                         {{ cancellingId() === appointment.publicId ? 'Cancelando...' : 'Cancelar' }}
                       </button>
@@ -491,7 +463,6 @@ type CalendarDay = {
               }
             </div>
           }
-        </div>
       </div>
     </div>
   `,

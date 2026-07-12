@@ -47,7 +47,7 @@ import {
           <p class="text-slate-400">Nenhum servico cadastrado.</p>
         </section>
       } @else {
-        <section class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+        <div class="hidden overflow-hidden rounded-xl border border-slate-800 bg-slate-900 md:block">
           <table class="w-full text-left text-sm">
             <thead class="border-b border-slate-800 bg-slate-950/50 text-xs uppercase tracking-wider text-slate-400">
               <tr>
@@ -107,7 +107,56 @@ import {
               }
             </tbody>
           </table>
-        </section>
+        </div>
+
+        <div class="space-y-2 md:hidden">
+          @for (service of services(); track service.publicId) {
+            <article class="rounded-xl border border-slate-800 bg-slate-900 p-3">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="font-medium text-white">{{ service.name }}</p>
+                  @if (service.description) {
+                    <p class="mt-0.5 line-clamp-2 text-xs text-slate-400">{{ service.description }}</p>
+                  }
+                </div>
+                <span
+                  class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
+                  [class]="
+                    service.active
+                      ? 'bg-emerald-500/15 text-emerald-300'
+                      : 'bg-slate-700/50 text-slate-400'
+                  "
+                >
+                  {{ service.active ? 'Ativo' : 'Inativo' }}
+                </span>
+              </div>
+              <div class="mt-2 flex flex-wrap gap-3 text-xs text-slate-400">
+                <span>{{ service.durationMinutes }} min</span>
+                <span>{{ formatPrice(service.price) }}</span>
+              </div>
+              @if (isAdmin()) {
+                <div class="mt-2 flex gap-3 text-xs">
+                  <button
+                    type="button"
+                    (click)="startEdit(service)"
+                    class="font-medium text-violet-400 transition hover:text-violet-300"
+                  >
+                    Editar
+                  </button>
+                  @if (service.active) {
+                    <button
+                      type="button"
+                      (click)="deactivate(service)"
+                      class="font-medium text-rose-400 transition hover:text-rose-300"
+                    >
+                      Desativar
+                    </button>
+                  }
+                </div>
+              }
+            </article>
+          }
+        </div>
       }
 
       @if (isAdmin() && showForm()) {
