@@ -40,6 +40,17 @@ type StepItem = { id: BookingStep; label: string; number: number };
 
 type NavSection = { id: string; label: string };
 
+type BookingConfirmation = {
+  guestName: string;
+  guestPhone: string;
+  startAt: string;
+  endAt: string;
+  serviceName: string;
+  serviceDurationMinutes: number;
+  servicePrice: number;
+  professionalName: string;
+};
+
 @Component({
   selector: 'app-public-salon',
   standalone: true,
@@ -242,6 +253,40 @@ type NavSection = { id: string; label: string };
                   {{ confirmation()!.guestName }}, reservamos seu horario para
                   <span class="font-medium text-white">{{ formatSlotLabel(confirmation()!.startAt) }}</span>.
                 </p>
+
+                <div class="mx-auto mt-6 max-w-md rounded-2xl border border-slate-700/80 bg-slate-950/50 p-5 text-left">
+                  <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Resumo</p>
+                  <dl class="mt-3 space-y-2 text-sm">
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-400">Servico</dt>
+                      <dd class="text-right font-medium text-white">{{ confirmation()!.serviceName }}</dd>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-400">Profissional</dt>
+                      <dd class="text-right text-white">{{ confirmation()!.professionalName }}</dd>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-400">Horario</dt>
+                      <dd class="text-right text-white">
+                        {{ formatTimeRange(confirmation()!.startAt, confirmation()!.endAt) }}
+                      </dd>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-400">Duracao</dt>
+                      <dd class="text-right text-white">{{ confirmation()!.serviceDurationMinutes }} min</dd>
+                    </div>
+                    <div class="flex justify-between gap-4 border-t border-slate-800 pt-2">
+                      <dt class="text-slate-400">Valor</dt>
+                      <dd class="text-right font-semibold text-violet-300">
+                        {{ formatCurrency(confirmation()!.servicePrice) }}
+                      </dd>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                      <dt class="text-slate-400">WhatsApp</dt>
+                      <dd class="text-right text-white">{{ confirmation()!.guestPhone }}</dd>
+                    </div>
+                  </dl>
+                </div>
                 <button
                   type="button"
                   (click)="restartBooking()"
@@ -665,7 +710,7 @@ export class PublicSalonComponent implements OnInit {
   protected readonly selectedProfessional = signal<PublicProfessional | null>(null);
   protected readonly selectedDate = signal<string | null>(null);
   protected readonly selectedSlot = signal<AvailabilitySlot | null>(null);
-  protected readonly confirmation = signal<{ guestName: string; startAt: string } | null>(null);
+  protected readonly confirmation = signal<BookingConfirmation | null>(null);
 
   protected readonly calendarMonth = signal(this.startOfMonth(new Date()));
 
@@ -851,7 +896,16 @@ export class PublicSalonComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.booking.set(false);
-          this.confirmation.set({ guestName: response.guestName, startAt: response.startAt });
+          this.confirmation.set({
+            guestName: response.guestName,
+            guestPhone: normalizedPhone,
+            startAt: response.startAt,
+            endAt: response.endAt,
+            serviceName: service.name,
+            serviceDurationMinutes: service.durationMinutes,
+            servicePrice: service.price,
+            professionalName: professional.name,
+          });
           this.step.set('done');
           scrollToSection('agenda');
         },
@@ -894,6 +948,12 @@ export class PublicSalonComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit',
     }).format(new Date(value));
+  }
+
+  protected formatTimeRange(startAt: string, endAt: string): string {
+    const start = this.formatSlotTime(startAt);
+    const end = this.formatSlotTime(endAt);
+    return `${start} – ${end}`;
   }
 
   protected formatDateLabel(isoDate: string): string {

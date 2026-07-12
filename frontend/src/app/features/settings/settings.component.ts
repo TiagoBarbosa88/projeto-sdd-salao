@@ -48,6 +48,9 @@ type DayScheduleRow = {
   enabled: boolean;
   startTime: string;
   endTime: string;
+  lunchEnabled: boolean;
+  lunchStart: string;
+  lunchEnd: string;
 };
 
 @Component({
@@ -439,26 +442,55 @@ type DayScheduleRow = {
                 } @else {
                   <div class="mt-6 space-y-3">
                     @for (row of dayRows(); track row.dayOfWeek) {
-                      <div class="flex flex-wrap items-center gap-3 rounded-lg border border-slate-800 bg-slate-950/40 p-3">
-                        <label class="flex w-28 items-center gap-2 text-sm text-slate-300">
-                          <input type="checkbox" [checked]="row.enabled" (change)="toggleDay(row.dayOfWeek, $event)" />
-                          {{ row.label }}
-                        </label>
-                        <input
-                          type="time"
-                          [value]="row.startTime"
-                          [disabled]="!row.enabled"
-                          (change)="updateDayTime(row.dayOfWeek, 'startTime', $event)"
-                          class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white disabled:opacity-40"
-                        />
-                        <span class="text-slate-500">ate</span>
-                        <input
-                          type="time"
-                          [value]="row.endTime"
-                          [disabled]="!row.enabled"
-                          (change)="updateDayTime(row.dayOfWeek, 'endTime', $event)"
-                          class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white disabled:opacity-40"
-                        />
+                      <div class="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                          <label class="flex w-28 items-center gap-2 text-sm text-slate-300">
+                            <input type="checkbox" [checked]="row.enabled" (change)="toggleDay(row.dayOfWeek, $event)" />
+                            {{ row.label }}
+                          </label>
+                          <input
+                            type="time"
+                            [value]="row.startTime"
+                            [disabled]="!row.enabled"
+                            (change)="updateDayTime(row.dayOfWeek, 'startTime', $event)"
+                            class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white disabled:opacity-40"
+                          />
+                          <span class="text-slate-500">ate</span>
+                          <input
+                            type="time"
+                            [value]="row.endTime"
+                            [disabled]="!row.enabled"
+                            (change)="updateDayTime(row.dayOfWeek, 'endTime', $event)"
+                            class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white disabled:opacity-40"
+                          />
+                        </div>
+                        @if (row.enabled) {
+                          <div class="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-800/80 pt-3 pl-0 sm:pl-[7.5rem]">
+                            <label class="flex items-center gap-2 text-sm text-slate-300">
+                              <input
+                                type="checkbox"
+                                [checked]="row.lunchEnabled"
+                                (change)="toggleLunch(row.dayOfWeek, $event)"
+                              />
+                              Almoco
+                            </label>
+                            @if (row.lunchEnabled) {
+                              <input
+                                type="time"
+                                [value]="row.lunchStart"
+                                (change)="updateDayTime(row.dayOfWeek, 'lunchStart', $event)"
+                                class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                              />
+                              <span class="text-slate-500">ate</span>
+                              <input
+                                type="time"
+                                [value]="row.lunchEnd"
+                                (change)="updateDayTime(row.dayOfWeek, 'lunchEnd', $event)"
+                                class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                              />
+                            }
+                          </div>
+                        }
                       </div>
                     }
                   </div>
@@ -487,7 +519,7 @@ type DayScheduleRow = {
                         <label class="mb-1 block text-sm text-slate-300">Tipo</label>
                         <select formControlName="blockType" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500">
                           <option value="VACATION">Ferias</option>
-                          <option value="BREAK">Pausa</option>
+                          <option value="BREAK">Pausa / Almoco</option>
                           <option value="OTHER">Outro</option>
                         </select>
                       </div>
@@ -940,9 +972,16 @@ export class SettingsComponent {
     );
   }
 
+  protected toggleLunch(dayOfWeek: number, event: Event): void {
+    const enabled = (event.target as HTMLInputElement).checked;
+    this.dayRows.update((rows) =>
+      rows.map((row) => (row.dayOfWeek === dayOfWeek ? { ...row, lunchEnabled: enabled } : row))
+    );
+  }
+
   protected updateDayTime(
     dayOfWeek: number,
-    field: 'startTime' | 'endTime',
+    field: 'startTime' | 'endTime' | 'lunchStart' | 'lunchEnd',
     event: Event
   ): void {
     const value = (event.target as HTMLInputElement).value;
@@ -955,13 +994,30 @@ export class SettingsComponent {
     const memberId = this.selectedProfessionalId();
     if (!memberId || this.scheduleSaving()) return;
 
-    const periods: WorkingPeriodEntry[] = this.dayRows()
-      .filter((row) => row.enabled)
-      .map((row) => ({
-        dayOfWeek: row.dayOfWeek,
-        startTime: row.startTime,
-        endTime: row.endTime,
-      }));
+    const periods: WorkingPeriodEntry[] = [];
+    for (const row of this.dayRows()) {
+      if (!row.enabled) {
+        continue;
+      }
+      if (row.lunchEnabled && row.lunchStart && row.lunchEnd && row.lunchStart < row.lunchEnd) {
+        periods.push({
+          dayOfWeek: row.dayOfWeek,
+          startTime: row.startTime,
+          endTime: row.lunchStart,
+        });
+        periods.push({
+          dayOfWeek: row.dayOfWeek,
+          startTime: row.lunchEnd,
+          endTime: row.endTime,
+        });
+      } else {
+        periods.push({
+          dayOfWeek: row.dayOfWeek,
+          startTime: row.startTime,
+          endTime: row.endTime,
+        });
+      }
+    }
 
     this.scheduleSaving.set(true);
     this.scheduleService.updateWorkingHours(memberId, periods).subscribe({
@@ -1128,13 +1184,35 @@ export class SettingsComponent {
 
   private mergeWorkingHours(periods: { dayOfWeek: number; startTime: string; endTime: string }[]): DayScheduleRow[] {
     return WEEKDAYS.map((day) => {
-      const match = periods.find((period) => period.dayOfWeek === day.value);
+      const dayPeriods = periods
+        .filter((period) => period.dayOfWeek === day.value)
+        .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+      if (dayPeriods.length >= 2) {
+        const first = dayPeriods[0];
+        const last = dayPeriods[dayPeriods.length - 1];
+        return {
+          dayOfWeek: day.value,
+          label: day.label,
+          enabled: true,
+          startTime: first.startTime.slice(0, 5),
+          endTime: last.endTime.slice(0, 5),
+          lunchEnabled: true,
+          lunchStart: first.endTime.slice(0, 5),
+          lunchEnd: last.startTime.slice(0, 5),
+        };
+      }
+
+      const match = dayPeriods[0];
       return {
         dayOfWeek: day.value,
         label: day.label,
         enabled: !!match,
         startTime: match?.startTime?.slice(0, 5) ?? '09:00',
         endTime: match?.endTime?.slice(0, 5) ?? '18:00',
+        lunchEnabled: false,
+        lunchStart: '12:00',
+        lunchEnd: '13:00',
       };
     });
   }
@@ -1146,6 +1224,9 @@ export class SettingsComponent {
       enabled: day.value <= 5,
       startTime: '09:00',
       endTime: '18:00',
+      lunchEnabled: false,
+      lunchStart: '12:00',
+      lunchEnd: '13:00',
     }));
   }
 
