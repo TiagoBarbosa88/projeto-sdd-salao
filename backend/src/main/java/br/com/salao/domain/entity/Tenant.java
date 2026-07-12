@@ -47,6 +47,9 @@ public class Tenant {
     @Column(columnDefinition = "TEXT")
     private String address;
 
+    @Column(name = "business_hours", columnDefinition = "TEXT")
+    private String businessHours;
+
     @Column(name = "logo_url", columnDefinition = "TEXT")
     private String logoUrl;
 
@@ -153,6 +156,14 @@ public class Tenant {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getBusinessHours() {
+        return businessHours;
+    }
+
+    public void setBusinessHours(String businessHours) {
+        this.businessHours = businessHours;
     }
 
     public String getLogoUrl() {

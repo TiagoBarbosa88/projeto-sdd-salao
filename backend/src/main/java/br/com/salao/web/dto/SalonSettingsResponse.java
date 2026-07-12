@@ -10,6 +10,7 @@ public record SalonSettingsResponse(
         String phone,
         String whatsapp,
         String address,
+        String businessHours,
         String logoUrl,
         String instagramUrl,
         String facebookUrl,

@@ -622,14 +622,14 @@ type BookingConfirmation = {
             id="contato"
             class="page-section border-t border-slate-800/60 py-12 pb-20 md:py-16 md:pb-24"
           >
-            <div class="grid gap-6 md:grid-cols-2 md:gap-8">
+            <div class="grid gap-6 md:grid-cols-3 md:gap-8">
               <div class="scroll-mt-24">
                 <h2 class="text-xl font-semibold text-white md:text-2xl">Contato</h2>
                 <p class="mt-1 text-sm text-slate-400">Fale conosco pelo WhatsApp ou redes sociais.</p>
 
                 <div class="mt-4 rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5 md:p-6">
                   @if (hasContactLinks()) {
-                    <div class="flex flex-wrap gap-3">
+                    <div class="flex flex-wrap gap-2.5">
                       @if (tenant()!.whatsapp) {
                         <a
                           [href]="whatsappLink()"
@@ -637,9 +637,9 @@ type BookingConfirmation = {
                           rel="noopener noreferrer"
                           [title]="'WhatsApp: ' + formatPhoneDisplay(tenant()!.whatsapp!)"
                           aria-label="WhatsApp"
-                          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] text-white transition hover:opacity-90"
+                          class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366] text-white transition hover:opacity-90"
                         >
-                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path
                               d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.435 9.884-9.881 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"
                             />
@@ -652,9 +652,9 @@ type BookingConfirmation = {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="Instagram"
-                          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] text-white transition hover:opacity-90"
+                          class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] text-white transition hover:opacity-90"
                         >
-                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path
                               d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4A5.8 5.8 0 0 1 16.2 22H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4H7.8m8.65 1.5a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"
                             />
@@ -667,9 +667,9 @@ type BookingConfirmation = {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="Facebook"
-                          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#1877F2] text-white transition hover:opacity-90"
+                          class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#1877F2] text-white transition hover:opacity-90"
                         >
-                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path
                               d="M22 12a10 10 0 1 0-11.5 9.9v-7H8v-3h2.5V9.5A3.5 3.5 0 0 1 14 6h3v3h-2a1 1 0 0 0-1 1V12H17l-.5 3h-2.5v7A10 10 0 0 0 22 12"
                             />
@@ -682,9 +682,9 @@ type BookingConfirmation = {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="TikTok"
-                          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-black text-white transition hover:opacity-90"
+                          class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-black text-white transition hover:opacity-90"
                         >
-                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path
                               d="M16.6 5.82s.51.5 0 0A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.1 2.96-5.05 6.41 1.03 3.2 4.66 4.76 7.74 3.04 1.65-.89 2.76-2.66 2.76-4.58V6.9c2 .12 3.86 1.27 4.7 2.82l2.44-.9z"
                             />
@@ -697,9 +697,9 @@ type BookingConfirmation = {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="YouTube"
-                          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#FF0000] text-white transition hover:opacity-90"
+                          class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#FF0000] text-white transition hover:opacity-90"
                         >
-                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path
                               d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8M9.75 15.02V8.98L15.5 12l-5.75 3.02z"
                             />
@@ -712,9 +712,9 @@ type BookingConfirmation = {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="Site"
-                          class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-slate-600 text-white transition hover:opacity-90"
+                          class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-600 text-white transition hover:opacity-90"
                         >
-                          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <circle cx="12" cy="12" r="10" />
                             <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                           </svg>
@@ -723,6 +723,23 @@ type BookingConfirmation = {
                     </div>
                   } @else {
                     <p class="text-sm text-slate-500">Nenhum contato informado.</p>
+                  }
+                </div>
+              </div>
+
+              <div class="scroll-mt-24">
+                <h2 class="text-xl font-semibold text-white md:text-2xl">Horario de funcionamento</h2>
+                <p class="mt-1 text-sm text-slate-400">Quando estamos abertos.</p>
+
+                <div class="mt-4 rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5 md:p-6">
+                  @if (businessHoursLines().length) {
+                    <div class="space-y-1.5">
+                      @for (line of businessHoursLines(); track line) {
+                        <p class="text-sm leading-relaxed text-slate-300">{{ line }}</p>
+                      }
+                    </div>
+                  } @else {
+                    <p class="text-sm text-slate-500">Horario nao informado.</p>
                   }
                 </div>
               </div>
@@ -936,6 +953,17 @@ export class PublicSalonComponent implements OnInit {
       return '#';
     }
     return `https://wa.me/${raw}`;
+  }
+
+  protected businessHoursLines(): string[] {
+    const text = this.tenant()?.businessHours?.trim();
+    if (!text) {
+      return [];
+    }
+    return text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
   }
 
   protected selectService(service: PublicService): void {

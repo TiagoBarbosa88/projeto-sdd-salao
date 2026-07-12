@@ -163,6 +163,18 @@ type DayScheduleRow = {
                       />
                     </div>
                     <div class="md:col-span-2">
+                      <label class="mb-1 block text-sm text-slate-300">Horario de funcionamento</label>
+                      <textarea
+                        formControlName="businessHours"
+                        rows="3"
+                        placeholder="Terca a sabado das 10 as 22h.&#10;Domingo das 10 as 14h."
+                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                      ></textarea>
+                      <p class="mt-1 text-xs text-slate-500">
+                        Exibido no rodape da pagina publica. Uma linha por periodo.
+                      </p>
+                    </div>
+                    <div class="md:col-span-2">
                       <label class="mb-1 block text-sm text-slate-300">Logo do salao</label>
                       <div class="flex flex-wrap items-center gap-4">
                         @if (logoPreview()) {
@@ -717,6 +729,7 @@ export class SettingsComponent {
     phone: ['', (control: AbstractControl) => optionalPhoneValidator(control.value)],
     whatsapp: ['', (control: AbstractControl) => optionalPhoneValidator(control.value)],
     address: [''],
+    businessHours: [''],
     logoUrl: [''],
   });
 
@@ -1120,6 +1133,7 @@ export class SettingsComponent {
           phone: formatPhoneDisplay(salon.phone),
           whatsapp: formatPhoneDisplay(salon.whatsapp),
           address: salon.address ?? '',
+          businessHours: salon.businessHours ?? '',
           logoUrl: salon.logoUrl ?? '',
         });
         this.socialForm.patchValue({
@@ -1254,6 +1268,7 @@ export class SettingsComponent {
       phone: normalizePhoneValue(personalization.phone),
       whatsapp: normalizePhoneValue(personalization.whatsapp),
       address: personalization.address || undefined,
+      businessHours: personalization.businessHours || undefined,
       logoUrl: personalization.logoUrl || undefined,
       instagramUrl: social.instagramUrl || undefined,
       facebookUrl: social.facebookUrl || undefined,

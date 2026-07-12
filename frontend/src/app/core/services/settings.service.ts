@@ -10,6 +10,7 @@ export interface SalonSettings {
   phone?: string;
   whatsapp?: string;
   address?: string;
+  businessHours?: string;
   logoUrl?: string;
   instagramUrl?: string;
   facebookUrl?: string;
@@ -28,6 +29,7 @@ export interface UpdateSalonSettings {
   phone?: string;
   whatsapp?: string;
   address?: string;
+  businessHours?: string;
   logoUrl?: string;
   instagramUrl?: string;
   facebookUrl?: string;

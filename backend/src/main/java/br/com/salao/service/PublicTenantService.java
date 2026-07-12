@@ -67,6 +67,7 @@ public class PublicTenantService {
                 tenant.getPhone(),
                 tenant.getWhatsapp(),
                 tenant.getAddress(),
+                tenant.getBusinessHours(),
                 tenant.getLogoUrl(),
                 tenant.getInstagramUrl(),
                 tenant.getFacebookUrl(),

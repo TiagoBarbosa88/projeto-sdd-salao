@@ -45,6 +45,7 @@ public class SalonSettingsService {
         tenant.setPhone(request.phone());
         tenant.setWhatsapp(request.whatsapp());
         tenant.setAddress(request.address());
+        tenant.setBusinessHours(request.businessHours());
         tenant.setLogoUrl(request.logoUrl());
         tenant.setInstagramUrl(request.instagramUrl());
         tenant.setFacebookUrl(request.facebookUrl());
@@ -137,6 +138,7 @@ public class SalonSettingsService {
                 tenant.getPhone(),
                 tenant.getWhatsapp(),
                 tenant.getAddress(),
+                tenant.getBusinessHours(),
                 tenant.getLogoUrl(),
                 tenant.getInstagramUrl(),
                 tenant.getFacebookUrl(),
