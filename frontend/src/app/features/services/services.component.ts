@@ -99,35 +99,48 @@ import {
                   <td class="px-4 py-3">{{ service.durationMinutes }} min</td>
                   <td class="px-4 py-3">{{ formatPrice(service.price) }}</td>
                   <td class="px-4 py-3">
-                    <span
-                      class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                      [class]="
-                        service.active
-                          ? 'bg-emerald-500/15 text-emerald-300'
-                          : 'bg-slate-700/50 text-slate-400'
-                      "
-                    >
-                      {{ service.active ? 'Ativo' : 'Inativo' }}
-                    </span>
+                    @if (isAdmin()) {
+                      <button
+                        type="button"
+                        (click)="toggleActive(service)"
+                        [disabled]="togglingId() === service.publicId"
+                        class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium transition hover:ring-1 disabled:cursor-wait disabled:opacity-60"
+                        [class.bg-emerald-500/15]="service.active"
+                        [class.text-emerald-300]="service.active"
+                        [class.hover:ring-emerald-500/40]="service.active"
+                        [class.bg-slate-700/50]="!service.active"
+                        [class.text-slate-400]="!service.active"
+                        [class.hover:ring-slate-500/40]="!service.active"
+                        [title]="
+                          service.active
+                            ? 'Clique para desativar na pagina publica'
+                            : 'Clique para reativar na pagina publica'
+                        "
+                      >
+                        {{ togglingId() === service.publicId ? '...' : service.active ? 'Ativo' : 'Inativo' }}
+                      </button>
+                    } @else {
+                      <span
+                        class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                        [class]="
+                          service.active
+                            ? 'bg-emerald-500/15 text-emerald-300'
+                            : 'bg-slate-700/50 text-slate-400'
+                        "
+                      >
+                        {{ service.active ? 'Ativo' : 'Inativo' }}
+                      </span>
+                    }
                   </td>
                   @if (isAdmin()) {
                     <td class="px-4 py-3 text-right">
                       <button
                         type="button"
                         (click)="startEdit(service)"
-                        class="mr-2 text-violet-400 transition hover:text-violet-300"
+                        class="text-violet-400 transition hover:text-violet-300"
                       >
                         Editar
                       </button>
-                      @if (service.active) {
-                        <button
-                          type="button"
-                          (click)="deactivate(service)"
-                          class="text-rose-400 transition hover:text-rose-300"
-                        >
-                          Desativar
-                        </button>
-                      }
                     </td>
                   }
                 </tr>
@@ -153,16 +166,31 @@ import {
                     <p class="mt-0.5 line-clamp-2 text-xs text-slate-400">{{ service.description }}</p>
                   }
                 </div>
-                <span
-                  class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
-                  [class]="
-                    service.active
-                      ? 'bg-emerald-500/15 text-emerald-300'
-                      : 'bg-slate-700/50 text-slate-400'
-                  "
-                >
-                  {{ service.active ? 'Ativo' : 'Inativo' }}
-                </span>
+                @if (isAdmin()) {
+                  <button
+                    type="button"
+                    (click)="toggleActive(service)"
+                    [disabled]="togglingId() === service.publicId"
+                    class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium transition disabled:opacity-60"
+                    [class.bg-emerald-500/15]="service.active"
+                    [class.text-emerald-300]="service.active"
+                    [class.bg-slate-700/50]="!service.active"
+                    [class.text-slate-400]="!service.active"
+                  >
+                    {{ togglingId() === service.publicId ? '...' : service.active ? 'Ativo' : 'Inativo' }}
+                  </button>
+                } @else {
+                  <span
+                    class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
+                    [class]="
+                      service.active
+                        ? 'bg-emerald-500/15 text-emerald-300'
+                        : 'bg-slate-700/50 text-slate-400'
+                    "
+                  >
+                    {{ service.active ? 'Ativo' : 'Inativo' }}
+                  </span>
+                }
               </div>
               <div class="mt-2 flex flex-wrap gap-3 text-xs text-slate-400">
                 <span
@@ -178,7 +206,7 @@ import {
                 <span>{{ formatPrice(service.price) }}</span>
               </div>
               @if (isAdmin()) {
-                <div class="mt-2 flex gap-3 text-xs">
+                <div class="mt-2 flex flex-wrap items-center gap-3 text-xs">
                   <button
                     type="button"
                     (click)="startEdit(service)"
@@ -186,15 +214,6 @@ import {
                   >
                     Editar
                   </button>
-                  @if (service.active) {
-                    <button
-                      type="button"
-                      (click)="deactivate(service)"
-                      class="font-medium text-rose-400 transition hover:text-rose-300"
-                    >
-                      Desativar
-                    </button>
-                  }
                 </div>
               }
                 </div>
@@ -365,6 +384,7 @@ export class ServicesComponent {
   protected readonly imagePreview = signal<string | null>(null);
   protected readonly imageUploadError = signal<string | null>(null);
   protected readonly isAdmin = signal(false);
+  protected readonly togglingId = signal<string | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(255)]],
@@ -528,14 +548,47 @@ export class ServicesComponent {
     });
   }
 
-  protected deactivate(service: SalonService): void {
-    if (!confirm(`Desativar o servico "${service.name}"?`)) {
+  protected toggleActive(service: SalonService): void {
+    if (!this.isAdmin() || this.togglingId()) {
       return;
     }
 
-    this.serviceApi.delete(service.publicId).subscribe({
-      next: () => this.loadServices(),
-      error: () => this.error.set('Nao foi possivel desativar o servico.'),
+    this.togglingId.set(service.publicId);
+    this.error.set(null);
+
+    if (service.active) {
+      this.serviceApi.delete(service.publicId).subscribe({
+        next: () => {
+          this.togglingId.set(null);
+          this.loadServices();
+        },
+        error: () => {
+          this.error.set('Nao foi possivel desativar o servico.');
+          this.togglingId.set(null);
+        },
+      });
+      return;
+    }
+
+    const request: UpdateServiceRequest = {
+      name: service.name,
+      description: service.description ?? undefined,
+      durationMinutes: service.durationMinutes,
+      price: service.price,
+      active: true,
+      imageUrl: service.imageUrl ?? undefined,
+      gender: this.serviceGender(service),
+    };
+
+    this.serviceApi.update(service.publicId, request).subscribe({
+      next: () => {
+        this.togglingId.set(null);
+        this.loadServices();
+      },
+      error: () => {
+        this.error.set('Nao foi possivel reativar o servico.');
+        this.togglingId.set(null);
+      },
     });
   }
 
