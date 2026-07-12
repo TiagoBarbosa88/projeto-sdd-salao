@@ -149,7 +149,7 @@ type StepItem = { id: BookingStep; label: string; number: number };
             </section>
 
             @if (step() === 'service') {
-              <section class="space-y-8">
+              <section class="space-y-5">
                 <div>
                   <h2 class="text-xl font-semibold text-white">Escolha seu servico</h2>
                   <p class="mt-1 text-sm text-slate-400">Selecione o que deseja agendar hoje.</p>
@@ -158,58 +158,89 @@ type StepItem = { id: BookingStep; label: string; number: number };
                 @if (services().length === 0) {
                   <p class="text-slate-400">Nenhum servico disponivel no momento.</p>
                 } @else {
-                  @for (group of serviceGroups(); track group.gender) {
-                    <div>
-                      <div class="mb-4 flex items-center gap-3">
-                        <span
-                          class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
-                          [class.bg-sky-500/15]="group.gender === 'masculino'"
-                          [class.text-sky-200]="group.gender === 'masculino'"
-                          [class.bg-fuchsia-500/15]="group.gender === 'feminino'"
-                          [class.text-fuchsia-200]="group.gender === 'feminino'"
+                  @if (serviceGroups().length > 1) {
+                    <div
+                      class="inline-flex rounded-xl border border-slate-800 bg-slate-900/60 p-1"
+                      role="tablist"
+                    >
+                      @for (group of serviceGroups(); track group.gender) {
+                        <button
+                          type="button"
+                          role="tab"
+                          [attr.aria-selected]="activeGenderTab() === group.gender"
+                          (click)="setGenderTab(group.gender)"
+                          class="rounded-lg px-4 py-2 text-sm font-semibold uppercase tracking-wide transition"
+                          [class.bg-sky-600]="
+                            activeGenderTab() === group.gender && group.gender === 'masculino'
+                          "
+                          [class.text-white]="
+                            activeGenderTab() === group.gender && group.gender === 'masculino'
+                          "
+                          [class.bg-fuchsia-600]="
+                            activeGenderTab() === group.gender && group.gender === 'feminino'
+                          "
+                          [class.text-slate-400]="activeGenderTab() !== group.gender"
+                          [class.hover:text-white]="activeGenderTab() !== group.gender"
                         >
                           {{ group.label }}
-                        </span>
-                        <span class="h-px flex-1 bg-slate-800"></span>
-                      </div>
-                      <div class="grid gap-4 sm:grid-cols-2">
-                        @for (service of group.services; track service.publicId) {
-                          <button
-                            type="button"
-                            (click)="selectService(service)"
-                            class="group overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 text-left transition hover:-translate-y-0.5 hover:border-violet-500/40 hover:shadow-lg hover:shadow-violet-950/30"
-                          >
-                            <div class="relative aspect-[16/10] overflow-hidden bg-slate-950">
-                              <img
-                                [src]="serviceImage(service)"
-                                [alt]="service.name"
-                                class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                              />
-                              <div
-                                class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent"
-                              ></div>
-                            </div>
-                            <div class="p-5">
-                              <h3 class="font-semibold text-white">{{ service.name }}</h3>
-                              @if (service.description) {
-                                <p class="mt-2 line-clamp-2 text-sm text-slate-400">
-                                  {{ service.description }}
-                                </p>
-                              }
-                              <div class="mt-4 flex items-center justify-between text-sm">
-                                <span class="rounded-full bg-slate-800 px-2.5 py-1 text-slate-300">
-                                  {{ service.durationMinutes }} min
-                                </span>
-                                <span class="font-semibold text-emerald-400">{{
-                                  formatCurrency(service.price)
-                                }}</span>
-                              </div>
-                            </div>
-                          </button>
-                        }
-                      </div>
+                        </button>
+                      }
                     </div>
+                  } @else if (serviceGroups().length === 1) {
+                    <p
+                      class="text-xs font-semibold uppercase tracking-[0.2em]"
+                      [class.text-sky-300]="serviceGroups()[0].gender === 'masculino'"
+                      [class.text-fuchsia-300]="serviceGroups()[0].gender === 'feminino'"
+                    >
+                      {{ serviceGroups()[0].label }}
+                    </p>
                   }
+
+                  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                    @for (service of activeTabServices(); track service.publicId) {
+                      <button
+                        type="button"
+                        (click)="selectService(service)"
+                        class="group flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:border-violet-400/50 hover:shadow-lg hover:shadow-violet-950/20"
+                      >
+                        <div class="relative aspect-[4/5] overflow-hidden bg-slate-100">
+                          <img
+                            [src]="serviceImage(service)"
+                            [alt]="service.name"
+                            class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+                          />
+                          <div
+                            class="absolute inset-x-0 bottom-0 bg-black/90 px-2 py-1.5"
+                          >
+                            <h3
+                              class="truncate text-[10px] font-bold uppercase tracking-wide text-white sm:text-[11px]"
+                            >
+                              {{ service.name }}
+                            </h3>
+                          </div>
+                        </div>
+                        <div class="flex flex-1 flex-col p-2.5">
+                          @if (service.description) {
+                            <p class="line-clamp-2 flex-1 text-[10px] leading-snug text-slate-600 sm:text-[11px]">
+                              {{ service.description }}
+                            </p>
+                          }
+                          <div
+                            class="mt-2 flex items-center justify-between gap-1 border-t border-slate-100 pt-2 text-[10px] sm:text-xs"
+                          >
+                            <span class="text-slate-500">{{ service.durationMinutes }} min</span>
+                            <span
+                              class="font-bold"
+                              [class.text-sky-600]="serviceGender(service) === 'masculino'"
+                              [class.text-fuchsia-600]="serviceGender(service) === 'feminino'"
+                            >
+                              {{ formatCurrency(service.price) }}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    }
+                  </div>
                 }
               </section>
             }
@@ -533,6 +564,8 @@ export class PublicSalonComponent implements OnInit {
     new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(this.calendarMonth())
   );
 
+  protected readonly activeGenderTab = signal<ServiceGender>('feminino');
+
   protected readonly serviceGroups = computed(() => {
     const groups = new Map<ServiceGender, PublicService[]>();
     for (const service of this.services()) {
@@ -552,6 +585,13 @@ export class PublicSalonComponent implements OnInit {
       }));
   });
 
+  protected readonly activeTabServices = computed(() => {
+    const groups = this.serviceGroups();
+    const tab = this.activeGenderTab();
+    const match = groups.find((group) => group.gender === tab);
+    return match?.services ?? groups[0]?.services ?? [];
+  });
+
   ngOnInit(): void {
     this.slug = this.route.snapshot.paramMap.get('slug') ?? environment.publicTenantSlug;
     if (!this.slug) {
@@ -567,6 +607,7 @@ export class PublicSalonComponent implements OnInit {
       next: ({ tenant, services }) => {
         this.tenant.set(tenant);
         this.services.set(services);
+        this.syncGenderTab(services);
         this.applySeo(tenant);
         this.loading.set(false);
       },
@@ -579,6 +620,14 @@ export class PublicSalonComponent implements OnInit {
 
   protected serviceImage(service: PublicService): string {
     return resolveServiceImageUrl(service.name, service.description, service.imageUrl);
+  }
+
+  protected setGenderTab(gender: ServiceGender): void {
+    this.activeGenderTab.set(gender);
+  }
+
+  protected serviceGender(service: PublicService): ServiceGender {
+    return resolveServiceGender(service.name, service.description);
   }
 
   protected isStepActive(step: BookingStep): boolean {
@@ -788,6 +837,20 @@ export class PublicSalonComponent implements OnInit {
     }
 
     return days;
+  }
+
+  private syncGenderTab(services: PublicService[]): void {
+    const hasFeminino = services.some(
+      (service) => resolveServiceGender(service.name, service.description) === 'feminino'
+    );
+    const hasMasculino = services.some(
+      (service) => resolveServiceGender(service.name, service.description) === 'masculino'
+    );
+    if (hasFeminino) {
+      this.activeGenderTab.set('feminino');
+    } else if (hasMasculino) {
+      this.activeGenderTab.set('masculino');
+    }
   }
 
   private applySeo(tenant: PublicTenant): void {

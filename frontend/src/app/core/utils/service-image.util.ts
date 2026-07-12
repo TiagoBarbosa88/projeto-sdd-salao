@@ -4,13 +4,13 @@ const MASCULINE_KEYWORDS = [
   'barba',
   'degrade',
   'degradê',
-  'masculino',
+  'masculin',
   'navalha',
   'bigode',
   'barbearia',
-  'acabamento',
-  'nuca',
-  'laterais',
+  'pigmenta',
+  'infantil',
+  'fade',
 ];
 
 const FEMININE_KEYWORDS = [
@@ -22,7 +22,6 @@ const FEMININE_KEYWORDS = [
   'colora',
   'balayage',
   'botox',
-  'sobrancelha',
   'design',
   'maquiagem',
   'feminino',
@@ -33,28 +32,37 @@ const FEMININE_KEYWORDS = [
   'alisamento',
   'cauteriz',
   'cronograma',
+  'acabamento',
+  'nuca',
+  'laterais',
 ];
 
 const IMAGE_BY_KEY: Record<string, string> = {
-  barba: '/images/services/barba.svg',
-  degrade: '/images/services/corte-masculino.svg',
-  masculino: '/images/services/corte-masculino.svg',
-  navalha: '/images/services/barba.svg',
-  progressiva: '/images/services/progressiva.svg',
-  escova: '/images/services/escova.svg',
-  hidrat: '/images/services/hidratacao.svg',
+  acabamento: '/images/services/acabamento.jpg',
+  'corte + escova': '/images/services/corte-escova.jpg',
+  'corte escova': '/images/services/corte-escova.jpg',
+  'corte feminino': '/images/services/corte-feminino.jpg',
+  feminino: '/images/services/corte-feminino.jpg',
+  escova: '/images/services/escova.jpg',
+  hidrat: '/images/services/hidratacao.jpg',
+  progressiva: '/images/services/progressiva-masculina.jpg',
+  sobrancelha: '/images/services/sobrancelha.jpg',
+  barba: '/images/services/barba.jpg',
+  'corte + barba': '/images/services/corte-barba.jpg',
+  'corte barba': '/images/services/corte-barba.jpg',
+  degrade: '/images/services/corte-degrade.jpg',
+  degradê: '/images/services/corte-degrade.jpg',
+  fade: '/images/services/corte-degrade.jpg',
+  infantil: '/images/services/corte-infantil.jpg',
+  tradicional: '/images/services/corte-tradicional.jpg',
+  pigmenta: '/images/services/pigmentacao-barba.jpg',
   manicure: '/images/services/manicure.svg',
   pedicure: '/images/services/manicure.svg',
   colora: '/images/services/coloracao.svg',
-  balayage: '/images/services/coloracao.svg',
-  sobrancelha: '/images/services/sobrancelha.svg',
   maquiagem: '/images/services/maquiagem.svg',
-  feminino: '/images/services/corte-feminino.svg',
-  unha: '/images/services/manicure.svg',
-  acabamento: '/images/services/corte-masculino.svg',
-  contorno: '/images/services/barba.svg',
-  tradicional: '/images/services/corte-masculino.svg',
-  corte: '/images/services/corte-feminino.svg',
+  masculino: '/images/services/corte-tradicional.jpg',
+  navalha: '/images/services/barba.jpg',
+  corte: '/images/services/corte-feminino.jpg',
 };
 
 export function resolveServiceImageUrl(
@@ -70,6 +78,9 @@ export function resolveServiceImageUrl(
 
 export function resolveServiceGender(name: string, description?: string): ServiceGender {
   const text = `${name} ${description ?? ''}`.toLowerCase();
+  if (text.includes('masculin')) {
+    return 'masculino';
+  }
   if (MASCULINE_KEYWORDS.some((keyword) => text.includes(keyword))) {
     return 'masculino';
   }
@@ -81,15 +92,16 @@ export function resolveServiceGender(name: string, description?: string): Servic
 
 export function resolveServiceImage(name: string, description?: string): string {
   const text = `${name} ${description ?? ''}`.toLowerCase();
-  for (const [keyword, image] of Object.entries(IMAGE_BY_KEY)) {
+  const sortedKeys = Object.keys(IMAGE_BY_KEY).sort((a, b) => b.length - a.length);
+  for (const keyword of sortedKeys) {
     if (text.includes(keyword)) {
-      return image;
+      return IMAGE_BY_KEY[keyword];
     }
   }
   const gender = resolveServiceGender(name, description);
   return gender === 'masculino'
-    ? '/images/services/corte-masculino.svg'
-    : '/images/services/corte-feminino.svg';
+    ? '/images/services/corte-tradicional.jpg'
+    : '/images/services/corte-feminino.jpg';
 }
 
 export function serviceGenderLabel(gender: ServiceGender): string {
