@@ -22,6 +22,7 @@ describe('PublicSalonComponent', () => {
       description: 'Corte masculino',
       durationMinutes: 30,
       price: 45,
+      gender: 'masculino' as const,
     },
   ];
 

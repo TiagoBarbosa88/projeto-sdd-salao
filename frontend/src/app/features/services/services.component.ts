@@ -9,9 +9,9 @@ import {
 } from '../../core/services/service.service';
 import { readImageAsDataUrl } from '../../core/utils/image-file.util';
 import {
-  resolveServiceGenderForService,
   resolveServiceImageUrl,
   serviceGenderLabel,
+  serviceGroupGender,
   ServiceGender,
 } from '../../core/utils/service-image.util';
 
@@ -413,11 +413,7 @@ export class ServicesComponent {
   }
 
   protected serviceGender(service: SalonService): ServiceGender {
-    return resolveServiceGenderForService(
-      service.name,
-      service.description ?? undefined,
-      service.gender
-    );
+    return serviceGroupGender(service.gender);
   }
 
   protected genderLabel(service: SalonService): string {
@@ -450,7 +446,7 @@ export class ServicesComponent {
       price: service.price,
       active: service.active,
       imageUrl: service.imageUrl ?? '',
-      gender: this.serviceGender(service),
+      gender: service.gender ?? 'feminino',
     });
     this.imagePreview.set(service.imageUrl ?? null);
     this.imageUploadError.set(null);
@@ -577,7 +573,7 @@ export class ServicesComponent {
       price: service.price,
       active: true,
       imageUrl: service.imageUrl ?? undefined,
-      gender: this.serviceGender(service),
+      gender: service.gender ?? 'feminino',
     };
 
     this.serviceApi.update(service.publicId, request).subscribe({

@@ -141,13 +141,17 @@ export function serviceGenderLabel(gender: ServiceGender): string {
 
 export function normalizeServiceGender(value?: string | null): ServiceGender | null {
   const normalized = value?.trim().toLowerCase();
-  if (normalized === 'masculino') {
+  if (normalized === 'masculino' || normalized === 'masc') {
     return 'masculino';
   }
-  if (normalized === 'feminino') {
+  if (normalized === 'feminino' || normalized === 'fem') {
     return 'feminino';
   }
   return null;
+}
+
+export function serviceGroupGender(gender?: string | null): ServiceGender {
+  return normalizeServiceGender(gender) ?? 'feminino';
 }
 
 export function resolveServiceGenderForService(
@@ -155,5 +159,9 @@ export function resolveServiceGenderForService(
   description?: string,
   gender?: string | null
 ): ServiceGender {
-  return normalizeServiceGender(gender) ?? resolveServiceGender(name, description);
+  const saved = normalizeServiceGender(gender);
+  if (saved) {
+    return saved;
+  }
+  return resolveServiceGender(name, description);
 }

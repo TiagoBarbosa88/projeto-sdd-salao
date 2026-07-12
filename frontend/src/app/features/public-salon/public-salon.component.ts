@@ -17,9 +17,9 @@ import {
   isValidBrazilianPhone,
 } from '../../core/utils/phone.util';
 import {
-  resolveServiceGenderForService,
   resolveServiceImageUrl,
   serviceGenderLabel,
+  serviceGroupGender,
   ServiceGender,
 } from '../../core/utils/service-image.util';
 
@@ -100,10 +100,10 @@ type NavSection = { id: string; label: string };
         } @else if (tenant()) {
           <section
             id="inicio"
-            class="page-section flex min-h-[70vh] flex-col justify-center py-12 md:min-h-[75vh] md:py-20"
+            class="page-section pt-4 pb-8 md:pt-6 md:pb-10"
           >
             <div
-              class="relative overflow-hidden rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-950/60 via-slate-900/80 to-fuchsia-950/40 p-8 shadow-2xl shadow-violet-950/30 md:p-12"
+              class="relative overflow-hidden rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-950/60 via-slate-900/80 to-fuchsia-950/40 p-6 shadow-2xl shadow-violet-950/30 md:p-8"
             >
               <div
                 class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-violet-600/20 blur-3xl"
@@ -116,10 +116,10 @@ type NavSection = { id: string; label: string };
               <h1 class="mt-3 text-3xl font-bold tracking-tight text-white md:text-5xl">
                 {{ tenant()!.name }}
               </h1>
-              <p class="mt-5 max-w-2xl text-base leading-relaxed text-slate-300 md:text-lg">
+              <p class="mt-4 max-w-2xl text-base leading-relaxed text-slate-300 md:text-lg">
                 {{ aboutText() }}
               </p>
-              <div class="mt-8 flex flex-wrap gap-3">
+              <div class="mt-6 flex flex-wrap gap-3">
                 <button
                   type="button"
                   (click)="scrollTo('servicos')"
@@ -699,10 +699,7 @@ export class PublicSalonComponent implements OnInit {
 
   protected readonly activeTabServices = computed(() => {
     const tab = this.activeGenderTab();
-    return this.services().filter(
-      (service) =>
-        resolveServiceGenderForService(service.name, service.description, service.gender) === tab
-    );
+    return this.services().filter((service) => serviceGroupGender(service.gender) === tab);
   });
 
   ngOnInit(): void {
@@ -757,7 +754,7 @@ export class PublicSalonComponent implements OnInit {
   }
 
   protected serviceGender(service: PublicService): ServiceGender {
-    return resolveServiceGenderForService(service.name, service.description, service.gender);
+    return serviceGroupGender(service.gender);
   }
 
   protected isStepActive(step: BookingStep): boolean {
@@ -978,16 +975,8 @@ export class PublicSalonComponent implements OnInit {
   }
 
   private syncGenderTab(services: PublicService[]): void {
-    const hasFeminino = services.some(
-      (service) =>
-        resolveServiceGenderForService(service.name, service.description, service.gender) ===
-        'feminino'
-    );
-    const hasMasculino = services.some(
-      (service) =>
-        resolveServiceGenderForService(service.name, service.description, service.gender) ===
-        'masculino'
-    );
+    const hasFeminino = services.some((service) => serviceGroupGender(service.gender) === 'feminino');
+    const hasMasculino = services.some((service) => serviceGroupGender(service.gender) === 'masculino');
     if (hasFeminino) {
       this.activeGenderTab.set('feminino');
     } else if (hasMasculino) {
