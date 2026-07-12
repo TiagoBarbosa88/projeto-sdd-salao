@@ -98,7 +98,8 @@ class ServiceControllerTest {
                 "name", "Corte Masculino",
                 "description", "Corte classico",
                 "durationMinutes", 30,
-                "price", 45.00
+                "price", 45.00,
+                "gender", "masculino"
         );
 
         mockMvc.perform(post("/services")
@@ -127,7 +128,8 @@ class ServiceControllerTest {
                 "description", "Atualizado",
                 "durationMinutes", 45,
                 "price", 60.00,
-                "active", true
+                "active", true,
+                "gender", "masculino"
         );
 
         mockMvc.perform(put("/services/" + publicId)
@@ -157,7 +159,8 @@ class ServiceControllerTest {
         Map<String, Object> request = Map.of(
                 "name", "Barba",
                 "durationMinutes", 20,
-                "price", 25.00
+                "price", 25.00,
+                "gender", "masculino"
         );
 
         mockMvc.perform(post("/services")
@@ -171,7 +174,8 @@ class ServiceControllerTest {
         Map<String, Object> request = Map.of(
                 "name", "Corte",
                 "durationMinutes", 30,
-                "price", 40.00
+                "price", 40.00,
+                "gender", "feminino"
         );
 
         String response = mockMvc.perform(post("/services")

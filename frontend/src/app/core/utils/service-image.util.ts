@@ -138,3 +138,22 @@ function resolveSobrancelhaImage(name: string, description?: string): string {
 export function serviceGenderLabel(gender: ServiceGender): string {
   return gender === 'masculino' ? 'Masculino' : 'Feminino';
 }
+
+export function normalizeServiceGender(value?: string | null): ServiceGender | null {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === 'masculino') {
+    return 'masculino';
+  }
+  if (normalized === 'feminino') {
+    return 'feminino';
+  }
+  return null;
+}
+
+export function resolveServiceGenderForService(
+  name: string,
+  description?: string,
+  gender?: string | null
+): ServiceGender {
+  return normalizeServiceGender(gender) ?? resolveServiceGender(name, description);
+}

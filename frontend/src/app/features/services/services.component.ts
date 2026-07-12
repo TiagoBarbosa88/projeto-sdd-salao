@@ -8,7 +8,12 @@ import {
   UpdateServiceRequest,
 } from '../../core/services/service.service';
 import { readImageAsDataUrl } from '../../core/utils/image-file.util';
-import { resolveServiceImageUrl } from '../../core/utils/service-image.util';
+import {
+  resolveServiceGenderForService,
+  resolveServiceImageUrl,
+  serviceGenderLabel,
+  ServiceGender,
+} from '../../core/utils/service-image.util';
 
 @Component({
   selector: 'app-services',
@@ -55,6 +60,7 @@ import { resolveServiceImageUrl } from '../../core/utils/service-image.util';
               <tr>
                 <th class="px-4 py-3">Imagem</th>
                 <th class="px-4 py-3">Nome</th>
+                <th class="px-4 py-3">Grupo</th>
                 <th class="px-4 py-3">Duracao</th>
                 <th class="px-4 py-3">Preco</th>
                 <th class="px-4 py-3">Status</th>
@@ -78,6 +84,17 @@ import { resolveServiceImageUrl } from '../../core/utils/service-image.util';
                     @if (service.description) {
                       <p class="mt-0.5 text-xs text-slate-400">{{ service.description }}</p>
                     }
+                  </td>
+                  <td class="px-4 py-3">
+                    <span
+                      class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                      [class.bg-sky-500/15]="serviceGender(service) === 'masculino'"
+                      [class.text-sky-300]="serviceGender(service) === 'masculino'"
+                      [class.bg-fuchsia-500/15]="serviceGender(service) === 'feminino'"
+                      [class.text-fuchsia-300]="serviceGender(service) === 'feminino'"
+                    >
+                      {{ genderLabel(service) }}
+                    </span>
                   </td>
                   <td class="px-4 py-3">{{ service.durationMinutes }} min</td>
                   <td class="px-4 py-3">{{ formatPrice(service.price) }}</td>
@@ -148,6 +165,15 @@ import { resolveServiceImageUrl } from '../../core/utils/service-image.util';
                 </span>
               </div>
               <div class="mt-2 flex flex-wrap gap-3 text-xs text-slate-400">
+                <span
+                  class="rounded-full px-2 py-0.5 font-medium"
+                  [class.bg-sky-500/15]="serviceGender(service) === 'masculino'"
+                  [class.text-sky-300]="serviceGender(service) === 'masculino'"
+                  [class.bg-fuchsia-500/15]="serviceGender(service) === 'feminino'"
+                  [class.text-fuchsia-300]="serviceGender(service) === 'feminino'"
+                >
+                  {{ genderLabel(service) }}
+                </span>
                 <span>{{ service.durationMinutes }} min</span>
                 <span>{{ formatPrice(service.price) }}</span>
               </div>
@@ -204,6 +230,21 @@ import { resolveServiceImageUrl } from '../../core/utils/service-image.util';
                   rows="2"
                   class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
                 ></textarea>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label for="gender" class="mb-1 block text-sm text-slate-300">Grupo</label>
+                <select
+                  id="gender"
+                  formControlName="gender"
+                  class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                >
+                  <option value="feminino">Feminino</option>
+                  <option value="masculino">Masculino</option>
+                </select>
+                <p class="mt-1 text-xs text-slate-500">
+                  Define em qual aba o servico aparece na pagina publica de agendamento.
+                </p>
               </div>
 
               <div class="sm:col-span-2">
@@ -332,6 +373,7 @@ export class ServicesComponent {
     price: [0, [Validators.required, Validators.min(0)]],
     active: [true],
     imageUrl: [''],
+    gender: ['feminino' as ServiceGender, Validators.required],
   });
 
   constructor() {
@@ -350,6 +392,18 @@ export class ServicesComponent {
     return resolveServiceImageUrl(service.name, service.description ?? undefined, service.imageUrl);
   }
 
+  protected serviceGender(service: SalonService): ServiceGender {
+    return resolveServiceGenderForService(
+      service.name,
+      service.description ?? undefined,
+      service.gender
+    );
+  }
+
+  protected genderLabel(service: SalonService): string {
+    return serviceGenderLabel(this.serviceGender(service));
+  }
+
   protected startCreate(): void {
     this.editingId.set(null);
     this.form.reset({
@@ -359,6 +413,7 @@ export class ServicesComponent {
       price: 0,
       active: true,
       imageUrl: '',
+      gender: 'feminino',
     });
     this.imagePreview.set(null);
     this.imageUploadError.set(null);
@@ -375,6 +430,7 @@ export class ServicesComponent {
       price: service.price,
       active: service.active,
       imageUrl: service.imageUrl ?? '',
+      gender: this.serviceGender(service),
     });
     this.imagePreview.set(service.imageUrl ?? null);
     this.imageUploadError.set(null);
@@ -433,6 +489,7 @@ export class ServicesComponent {
         price: raw.price,
         active: raw.active,
         imageUrl: raw.imageUrl || undefined,
+        gender: raw.gender,
       };
 
       this.serviceApi.update(editingId, request).subscribe({
@@ -455,6 +512,7 @@ export class ServicesComponent {
       durationMinutes: raw.durationMinutes,
       price: raw.price,
       imageUrl: raw.imageUrl || undefined,
+      gender: raw.gender,
     };
 
     this.serviceApi.create(request).subscribe({

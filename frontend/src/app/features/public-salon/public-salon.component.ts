@@ -12,7 +12,7 @@ import {
   PublicTenant,
 } from '../../core/services/public-salon.service';
 import {
-  resolveServiceGender,
+  resolveServiceGenderForService,
   resolveServiceImageUrl,
   serviceGenderLabel,
   ServiceGender,
@@ -567,7 +567,11 @@ export class PublicSalonComponent implements OnInit {
   protected readonly serviceGroups = computed(() => {
     const groups = new Map<ServiceGender, PublicService[]>();
     for (const service of this.services()) {
-      const gender = resolveServiceGender(service.name, service.description);
+      const gender = resolveServiceGenderForService(
+        service.name,
+        service.description,
+        service.gender
+      );
       const list = groups.get(gender) ?? [];
       list.push(service);
       groups.set(gender, list);
@@ -625,7 +629,7 @@ export class PublicSalonComponent implements OnInit {
   }
 
   protected serviceGender(service: PublicService): ServiceGender {
-    return resolveServiceGender(service.name, service.description);
+    return resolveServiceGenderForService(service.name, service.description, service.gender);
   }
 
   protected isStepActive(step: BookingStep): boolean {
@@ -839,10 +843,14 @@ export class PublicSalonComponent implements OnInit {
 
   private syncGenderTab(services: PublicService[]): void {
     const hasFeminino = services.some(
-      (service) => resolveServiceGender(service.name, service.description) === 'feminino'
+      (service) =>
+        resolveServiceGenderForService(service.name, service.description, service.gender) ===
+        'feminino'
     );
     const hasMasculino = services.some(
-      (service) => resolveServiceGender(service.name, service.description) === 'masculino'
+      (service) =>
+        resolveServiceGenderForService(service.name, service.description, service.gender) ===
+        'masculino'
     );
     if (hasFeminino) {
       this.activeGenderTab.set('feminino');

@@ -1,5 +1,6 @@
 package br.com.salao.web.dto;
 
+import br.com.salao.domain.entity.ServiceGender;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -14,6 +15,7 @@ public record UpdateServiceRequest(
         @NotNull @Min(1) Integer durationMinutes,
         @NotNull @DecimalMin("0.00") BigDecimal price,
         @NotNull Boolean active,
-        String imageUrl
+        String imageUrl,
+        @NotNull ServiceGender gender
 ) {
 }

@@ -86,7 +86,8 @@ public class PublicTenantService {
                 service.getDescription(),
                 service.getDurationMinutes(),
                 service.getPrice(),
-                service.getImageUrl());
+                service.getImageUrl(),
+                service.getGender());
     }
 
     private PublicProfessionalResponse toProfessionalResponse(ProfessionalProfile profile) {

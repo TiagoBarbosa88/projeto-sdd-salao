@@ -1,0 +1,5 @@
+ALTER TABLE service
+    ADD COLUMN gender VARCHAR(20) NOT NULL DEFAULT 'FEMININO';
+
+ALTER TABLE service
+    ADD CONSTRAINT chk_service_gender CHECK (gender IN ('MASCULINO', 'FEMININO'));

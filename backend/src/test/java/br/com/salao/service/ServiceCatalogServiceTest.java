@@ -13,6 +13,7 @@ import br.com.salao.security.AuthenticatedUser;
 import br.com.salao.security.TenantContext;
 import br.com.salao.testsupport.TestDataFactory;
 import br.com.salao.testsupport.TestRepositories;
+import br.com.salao.domain.entity.ServiceGender;
 import br.com.salao.web.dto.CreateServiceRequest;
 import br.com.salao.web.dto.UpdateServiceRequest;
 import org.junit.jupiter.api.AfterEach;
@@ -96,7 +97,8 @@ class ServiceCatalogServiceTest {
                 "Escova modeladora",
                 40,
                 new BigDecimal("55.00"),
-                null
+                null,
+                ServiceGender.FEMININO
         ));
 
         assertThat(created.publicId()).isNotNull();
@@ -111,7 +113,8 @@ class ServiceCatalogServiceTest {
                 50,
                 new BigDecimal("65.00"),
                 true,
-                null
+                null,
+                ServiceGender.FEMININO
         ));
         assertThat(updated.name()).isEqualTo("Escova Premium");
 
@@ -131,7 +134,8 @@ class ServiceCatalogServiceTest {
                 null,
                 30,
                 new BigDecimal("35.00"),
-                null
+                null,
+                ServiceGender.FEMININO
         ))).isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
     }
 

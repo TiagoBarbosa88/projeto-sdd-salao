@@ -1,5 +1,7 @@
 package br.com.salao.web.dto;
 
+import br.com.salao.domain.entity.ServiceGender;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -9,4 +11,5 @@ public record PublicServiceResponse(
         String description,
         Integer durationMinutes,
         BigDecimal price,
-        String imageUrl) {}
+        String imageUrl,
+        ServiceGender gender) {}

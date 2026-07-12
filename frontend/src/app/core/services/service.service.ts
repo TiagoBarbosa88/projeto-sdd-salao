@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { ServiceGender } from '../utils/service-image.util';
 
 export interface SalonService {
   publicId: string;
@@ -10,6 +11,7 @@ export interface SalonService {
   price: number;
   active: boolean;
   imageUrl?: string | null;
+  gender: ServiceGender;
 }
 
 export interface CreateServiceRequest {
@@ -18,6 +20,7 @@ export interface CreateServiceRequest {
   durationMinutes: number;
   price: number;
   imageUrl?: string;
+  gender: ServiceGender;
 }
 
 export interface UpdateServiceRequest extends CreateServiceRequest {

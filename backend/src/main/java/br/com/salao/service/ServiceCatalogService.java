@@ -57,6 +57,7 @@ public class ServiceCatalogService {
         service.setPrice(request.price());
         service.setActive(true);
         service.setImageUrl(request.imageUrl());
+        service.setGender(request.gender());
 
         SalonService saved = salonServiceRepository.save(service);
         auditService.record(
@@ -83,6 +84,7 @@ public class ServiceCatalogService {
         service.setPrice(request.price());
         service.setActive(request.active());
         service.setImageUrl(request.imageUrl());
+        service.setGender(request.gender());
 
         SalonService saved = salonServiceRepository.save(service);
         auditService.record(
@@ -140,7 +142,8 @@ public class ServiceCatalogService {
                 service.getDurationMinutes(),
                 service.getPrice(),
                 service.isActive(),
-                service.getImageUrl()
+                service.getImageUrl(),
+                service.getGender()
         );
     }
 }

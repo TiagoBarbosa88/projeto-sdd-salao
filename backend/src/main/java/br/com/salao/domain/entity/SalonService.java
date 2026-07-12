@@ -2,6 +2,8 @@ package br.com.salao.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -42,6 +44,10 @@ public class SalonService {
 
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ServiceGender gender = ServiceGender.FEMININO;
 
     @PrePersist
     void prePersist() {
@@ -112,5 +118,13 @@ public class SalonService {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public ServiceGender getGender() {
+        return gender;
+    }
+
+    public void setGender(ServiceGender gender) {
+        this.gender = gender;
     }
 }

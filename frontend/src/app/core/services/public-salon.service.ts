@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { ServiceGender } from '../utils/service-image.util';
 
 export interface PublicTenant {
   publicId: string;
@@ -28,6 +29,7 @@ export interface PublicService {
   durationMinutes: number;
   price: number;
   imageUrl?: string;
+  gender?: ServiceGender;
 }
 
 export interface PublicProfessional {
