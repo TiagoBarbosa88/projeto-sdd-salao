@@ -44,3 +44,28 @@ export function normalizePhoneValue(value: string): string | undefined {
   const formatted = formatPhoneInput(value);
   return formatted || undefined;
 }
+
+export function whatsappInternationalDigits(value: string): string {
+  const digits = phoneDigits(value);
+  if (!digits) {
+    return '';
+  }
+  if (digits.startsWith('55') && digits.length >= 12) {
+    return digits;
+  }
+  if (digits.length === 10 || digits.length === 11) {
+    return `55${digits}`;
+  }
+  return digits;
+}
+
+export function buildWhatsAppUrl(phone: string, message?: string): string {
+  const intl = whatsappInternationalDigits(phone);
+  if (!intl) {
+    return '#';
+  }
+  if (!message?.trim()) {
+    return `https://wa.me/${intl}`;
+  }
+  return `https://wa.me/${intl}?text=${encodeURIComponent(message.trim())}`;
+}

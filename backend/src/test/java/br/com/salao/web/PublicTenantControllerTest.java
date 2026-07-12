@@ -139,7 +139,9 @@ class PublicTenantControllerTest {
                 .andExpect(jsonPath("$.slug").value("studio-bella"))
                 .andExpect(jsonPath("$.publicId").exists())
                 .andExpect(jsonPath("$.seoTitle").value("Studio Bella SEO"))
-                .andExpect(jsonPath("$.description").value("Salao premium"));
+                .andExpect(jsonPath("$.description").value("Salao premium"))
+                .andExpect(jsonPath("$.businessHoursLines", hasSize(1)))
+                .andExpect(jsonPath("$.businessHoursLines[0]").value("Segunda a Sabado das 9h as 22h"));
     }
 
     @Test

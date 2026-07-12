@@ -20,6 +20,7 @@ import {
   extractMapCoordinates,
 } from '../../core/utils/maps.util';
 import {
+  buildWhatsAppUrl,
   formatPhoneDisplay,
   isValidBrazilianPhone,
   normalizePhoneValue,
@@ -63,7 +64,7 @@ type BookingConfirmation = {
   standalone: true,
   imports: [ReactiveFormsModule, PhoneMaskDirective],
   template: `
-    <div class="app-view min-h-screen bg-gradient-to-b from-slate-950 via-slate-950 to-violet-950/20 text-slate-100">
+    <div class="app-view min-h-screen bg-gradient-to-b from-slate-950 via-slate-950 to-violet-950/20 pb-[4.75rem] text-slate-100 md:pb-0">
       <header
         class="sticky top-0 z-50 border-b border-slate-800/50 bg-slate-950/85 backdrop-blur-xl transition-shadow duration-300"
       >
@@ -93,14 +94,14 @@ type BookingConfirmation = {
 
           @if (tenant()) {
             <nav
-              class="ml-auto flex max-w-full items-center gap-1 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              class="ml-auto hidden max-w-full items-center gap-1 overflow-x-auto md:flex"
               aria-label="Navegacao principal"
             >
               @for (item of navSections; track item.id) {
                 <button
                   type="button"
                   (click)="scrollTo(item.id)"
-                  class="shrink-0 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-400 transition hover:bg-slate-800/80 hover:text-white md:px-3 md:text-sm"
+                  class="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-slate-400 transition hover:bg-slate-800/80 hover:text-white"
                 >
                   {{ item.label }}
                 </button>
@@ -635,8 +636,8 @@ type BookingConfirmation = {
                           [href]="whatsappLink()"
                           target="_blank"
                           rel="noopener noreferrer"
-                          [title]="'WhatsApp: ' + formatPhoneDisplay(tenant()!.whatsapp!)"
-                          aria-label="WhatsApp"
+                          [title]="whatsappLinkTitle()"
+                          [attr.aria-label]="whatsappLinkTitle()"
                           class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366] text-white transition hover:opacity-90"
                         >
                           <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -697,12 +698,14 @@ type BookingConfirmation = {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="YouTube"
-                          class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#FF0000] text-white transition hover:opacity-90"
+                          class="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:opacity-90"
                         >
-                          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <svg class="h-9 w-9" viewBox="0 0 24 24" aria-hidden="true">
                             <path
-                              d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8M9.75 15.02V8.98L15.5 12l-5.75 3.02z"
+                              fill="#FF0000"
+                              d="M21.582 6.186c-.23-1.039-1.234-1.858-2.326-2.034C17.982 4 12 4 12 4s-5.982 0-7.256.152C3.652 4.328 2.648 5.147 2.418 6.186 2.262 7.023 2 8.688 2 12s.262 4.977.418 5.814c.23 1.039 1.234 1.858 2.326 2.034C6.018 20 12 20 12 20s5.982 0 7.256-.152c1.092-.176 2.096-.995 2.326-2.034C21.738 16.977 22 15.312 22 12s-.262-4.977-.418-5.814z"
                             />
+                            <path fill="#FFFFFF" d="M10 8.5 16 12l-6 3.5z" />
                           </svg>
                         </a>
                       }
@@ -760,6 +763,29 @@ type BookingConfirmation = {
           </footer>
         }
       </main>
+
+      @if (tenant()) {
+        <nav
+          class="fixed inset-x-0 bottom-0 z-50 border-t border-slate-800/80 bg-slate-950/95 backdrop-blur-xl md:hidden"
+          aria-label="Navegacao mobile"
+        >
+          <div
+            class="mx-auto flex max-w-6xl items-stretch justify-around px-1 pt-1.5 pb-[max(0.625rem,env(safe-area-inset-bottom))]"
+          >
+            @for (item of navSections; track item.id) {
+              <button
+                type="button"
+                (click)="scrollTo(item.id)"
+                class="flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-slate-500 transition hover:bg-slate-800/50 hover:text-violet-300"
+              >
+                <span class="w-full truncate text-center text-[10px] font-medium leading-tight">{{
+                  mobileNavLabel(item)
+                }}</span>
+              </button>
+            }
+          </div>
+        </nav>
+      }
     </div>
   `,
 })
@@ -948,11 +974,38 @@ export class PublicSalonComponent implements OnInit {
   }
 
   protected whatsappLink(): string {
-    const raw = this.tenant()?.whatsapp?.replace(/\D/g, '') ?? '';
-    if (!raw) {
+    const tenant = this.tenant();
+    const phone = tenant?.whatsapp ?? '';
+    if (!phone) {
       return '#';
     }
-    return `https://wa.me/${raw}`;
+    const salonName = tenant?.name?.trim() || 'nosso salao';
+    return buildWhatsAppUrl(
+      phone,
+      `Ola! Vim pelo site do ${salonName} e gostaria de saber mais sobre os servicos. Pode me ajudar?`
+    );
+  }
+
+  protected whatsappLinkTitle(): string {
+    const salonName = this.tenant()?.name?.trim() || 'Salao';
+    return `Fale com ${salonName} no WhatsApp`;
+  }
+
+  protected mobileNavLabel(item: NavSection): string {
+    switch (item.id) {
+      case 'inicio':
+        return 'Inicio';
+      case 'servicos':
+        return 'Servicos';
+      case 'agenda':
+        return 'Agenda';
+      case 'endereco':
+        return 'Mapa';
+      case 'contato':
+        return 'Contato';
+      default:
+        return item.label;
+    }
   }
 
   protected businessHoursLines(): string[] {

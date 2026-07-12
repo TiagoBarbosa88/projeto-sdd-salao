@@ -80,7 +80,7 @@ public class PublicBusinessHoursService {
 
     private List<String> buildFromScheduling(Long tenantId) {
         TenantSchedulingSettings settings = salonSettingsService.requireSchedulingSettingsForTenant(tenantId);
-        String line = "Atendimento das "
+        String line = "Segunda a Sabado das "
                 + formatTime(settings.getDayStartTime())
                 + " as "
                 + formatTime(settings.getDayEndTime());
