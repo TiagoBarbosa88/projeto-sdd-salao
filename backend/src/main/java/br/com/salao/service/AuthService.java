@@ -1,5 +1,6 @@
 package br.com.salao.service;
 
+import br.com.salao.domain.entity.AuditAction;
 import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.entity.Tenant;
 import br.com.salao.domain.entity.TenantUser;
@@ -27,18 +28,21 @@ public class AuthService {
     private final TenantUserRepository tenantUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuditService auditService;
 
     public AuthService(
             TenantRepository tenantRepository,
             UserRepository userRepository,
             TenantUserRepository tenantUserRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService) {
+            JwtService jwtService,
+            AuditService auditService) {
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
         this.tenantUserRepository = tenantUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -97,6 +101,14 @@ public class AuthService {
         TenantUser tenantUser = tenantUserRepository.findAllByUserIdWithTenant(user.getId()).stream()
                 .findFirst()
                 .orElseThrow(InvalidCredentialsException::new);
+
+        auditService.record(
+                tenantUser.getTenant().getId(),
+                user.getId(),
+                AuditAction.LOGIN,
+                "User",
+                user.getPublicId(),
+                null);
 
         return buildAuthResponse(user, tenantUser.getTenant(), tenantUser.getRole());
     }

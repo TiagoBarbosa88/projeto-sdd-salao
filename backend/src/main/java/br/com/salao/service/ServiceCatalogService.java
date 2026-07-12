@@ -1,5 +1,6 @@
 package br.com.salao.service;
 
+import br.com.salao.domain.entity.AuditAction;
 import br.com.salao.domain.entity.SalonService;
 import br.com.salao.domain.entity.Tenant;
 import br.com.salao.domain.repository.SalonServiceRepository;
@@ -18,10 +19,15 @@ public class ServiceCatalogService {
 
     private final SalonServiceRepository salonServiceRepository;
     private final TenantResolver tenantResolver;
+    private final AuditService auditService;
 
-    public ServiceCatalogService(SalonServiceRepository salonServiceRepository, TenantResolver tenantResolver) {
+    public ServiceCatalogService(
+            SalonServiceRepository salonServiceRepository,
+            TenantResolver tenantResolver,
+            AuditService auditService) {
         this.salonServiceRepository = salonServiceRepository;
         this.tenantResolver = tenantResolver;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -51,7 +57,15 @@ public class ServiceCatalogService {
         service.setPrice(request.price());
         service.setActive(true);
 
-        return toResponse(salonServiceRepository.save(service));
+        SalonService saved = salonServiceRepository.save(service);
+        auditService.record(
+                tenant.getId(),
+                auditService.resolveCurrentActorUserId(),
+                AuditAction.SERVICE_CREATED,
+                "Service",
+                saved.getPublicId(),
+                saved.getName());
+        return toResponse(saved);
     }
 
     @Transactional
@@ -64,7 +78,15 @@ public class ServiceCatalogService {
         service.setPrice(request.price());
         service.setActive(request.active());
 
-        return toResponse(salonServiceRepository.save(service));
+        SalonService saved = salonServiceRepository.save(service);
+        auditService.record(
+                tenantResolver.requireCurrentTenant().getId(),
+                auditService.resolveCurrentActorUserId(),
+                AuditAction.SERVICE_UPDATED,
+                "Service",
+                saved.getPublicId(),
+                saved.getName());
+        return toResponse(saved);
     }
 
     @Transactional
@@ -73,6 +95,13 @@ public class ServiceCatalogService {
         SalonService service = findServiceForTenant(publicId);
         service.setActive(false);
         salonServiceRepository.save(service);
+        auditService.record(
+                tenantResolver.requireCurrentTenant().getId(),
+                auditService.resolveCurrentActorUserId(),
+                AuditAction.SERVICE_DEACTIVATED,
+                "Service",
+                service.getPublicId(),
+                service.getName());
     }
 
     private SalonService findServiceForTenant(UUID publicId) {

@@ -1,5 +1,6 @@
 package br.com.salao.web;
 
+import br.com.salao.domain.entity.AuditAction;
 import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.entity.Tenant;
 import br.com.salao.domain.entity.User;
@@ -10,6 +11,7 @@ import br.com.salao.domain.repository.TenantRepository;
 import br.com.salao.domain.repository.TenantUserRepository;
 import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.security.JwtService;
+import br.com.salao.service.AuditService;
 import br.com.salao.testsupport.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class TeamControllerTest {
+class AuditControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -52,6 +54,9 @@ class TeamControllerTest {
     private AuditLogRepository auditLogRepository;
 
     @Autowired
+    private AuditService auditService;
+
+    @Autowired
     private JwtService jwtService;
 
     @Autowired
@@ -60,8 +65,8 @@ class TeamControllerTest {
     private Tenant tenant;
     private User admin;
     private User professional;
-    private User client;
     private String adminToken;
+    private String professionalToken;
 
     @BeforeEach
     void setUp() {
@@ -73,48 +78,52 @@ class TeamControllerTest {
                 userRepository,
                 tenantRepository);
 
-        tenant = TestDataFactory.createTenant(tenantRepository, "team-salon");
-        admin = TestDataFactory.createUser(userRepository, passwordEncoder, "admin@team.com", "Admin");
-        professional = TestDataFactory.createUser(userRepository, passwordEncoder, "pro@team.com", "Marina");
-        client = TestDataFactory.createUser(userRepository, passwordEncoder, "client@team.com", "Cliente");
+        tenant = TestDataFactory.createTenant(tenantRepository, "audit-salon");
+        admin = TestDataFactory.createUser(userRepository, passwordEncoder, "admin@audit.com", "Admin");
+        professional = TestDataFactory.createUser(userRepository, passwordEncoder, "pro@audit.com", "Pro");
 
         TestDataFactory.linkUser(tenantUserRepository, tenant, admin, Role.ADMIN);
         TestDataFactory.linkUser(tenantUserRepository, tenant, professional, Role.PROFESSIONAL);
-        TestDataFactory.linkUser(tenantUserRepository, tenant, client, Role.CLIENT);
 
         adminToken = TestDataFactory.tokenFor(jwtService, admin, tenant, Role.ADMIN);
+        professionalToken = TestDataFactory.tokenFor(jwtService, professional, tenant, Role.PROFESSIONAL);
+
+        auditService.record(tenant.getId(), admin.getId(), AuditAction.LOGIN, "User", admin.getPublicId(), null);
+        auditService.record(
+                tenant.getId(),
+                admin.getId(),
+                AuditAction.SERVICE_CREATED,
+                "Service",
+                java.util.UUID.randomUUID(),
+                "Corte");
     }
 
     @Test
-    void listsAllTenantMembers() throws Exception {
-        mockMvc.perform(get("/team/members")
+    void adminListsAuditLogs() throws Exception {
+        mockMvc.perform(get("/audit-logs")
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)))
-                .andExpect(jsonPath("$[0].name").exists())
+                .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].publicId").exists())
-                .andExpect(jsonPath("$[0].role").exists());
+                .andExpect(jsonPath("$[0].action").exists())
+                .andExpect(jsonPath("$[0].createdAt").exists());
     }
 
     @Test
-    void filtersMembersByProfessionalRole() throws Exception {
-        mockMvc.perform(get("/team/members")
-                        .param("role", "PROFESSIONAL")
+    void adminFiltersAuditLogsByAction() throws Exception {
+        mockMvc.perform(get("/audit-logs")
+                        .param("action", "LOGIN")
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].name").value("Marina"))
-                .andExpect(jsonPath("$[0].role").value("PROFESSIONAL"));
+                .andExpect(jsonPath("$[0].action").value("LOGIN"))
+                .andExpect(jsonPath("$[0].actor.name").value("Admin"));
     }
 
     @Test
-    void filtersMembersByClientRole() throws Exception {
-        mockMvc.perform(get("/team/members")
-                        .param("role", "CLIENT")
-                        .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].name").value("Cliente"))
-                .andExpect(jsonPath("$[0].role").value("CLIENT"));
+    void nonAdminCannotListAuditLogs() throws Exception {
+        mockMvc.perform(get("/audit-logs")
+                        .header("Authorization", "Bearer " + professionalToken))
+                .andExpect(status().isForbidden());
     }
 }

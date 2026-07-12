@@ -2,11 +2,13 @@ package br.com.salao.service;
 
 import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.repository.AppointmentRepository;
+import br.com.salao.domain.repository.AuditLogRepository;
 import br.com.salao.domain.repository.SalonServiceRepository;
 import br.com.salao.domain.repository.TenantRepository;
 import br.com.salao.domain.repository.TenantUserRepository;
 import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.security.JwtService;
+import br.com.salao.testsupport.TestDataFactory;
 import br.com.salao.web.dto.AuthResponse;
 import br.com.salao.web.dto.LoginRequest;
 import br.com.salao.web.dto.RegisterRequest;
@@ -44,13 +46,18 @@ class AuthServiceTest {
     @Autowired
     private TenantUserRepository tenantUserRepository;
 
+    @Autowired
+    private AuditLogRepository auditLogRepository;
+
     @BeforeEach
     void cleanDatabase() {
-        appointmentRepository.deleteAll();
-        salonServiceRepository.deleteAll();
-        tenantUserRepository.deleteAll();
-        userRepository.deleteAll();
-        tenantRepository.deleteAll();
+        TestDataFactory.resetDatabase(
+                auditLogRepository,
+                appointmentRepository,
+                salonServiceRepository,
+                tenantUserRepository,
+                userRepository,
+                tenantRepository);
     }
 
     @Test

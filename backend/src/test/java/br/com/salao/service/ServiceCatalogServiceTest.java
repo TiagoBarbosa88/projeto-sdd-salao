@@ -4,6 +4,7 @@ import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.entity.Tenant;
 import br.com.salao.domain.entity.User;
 import br.com.salao.domain.repository.AppointmentRepository;
+import br.com.salao.domain.repository.AuditLogRepository;
 import br.com.salao.domain.repository.SalonServiceRepository;
 import br.com.salao.domain.repository.TenantRepository;
 import br.com.salao.domain.repository.TenantUserRepository;
@@ -51,6 +52,9 @@ class ServiceCatalogServiceTest {
     private AppointmentRepository appointmentRepository;
 
     @Autowired
+    private AuditLogRepository auditLogRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     private Tenant tenant;
@@ -58,11 +62,13 @@ class ServiceCatalogServiceTest {
 
     @BeforeEach
     void setUp() {
-        appointmentRepository.deleteAll();
-        salonServiceRepository.deleteAll();
-        tenantUserRepository.deleteAll();
-        userRepository.deleteAll();
-        tenantRepository.deleteAll();
+        TestDataFactory.resetDatabase(
+                auditLogRepository,
+                appointmentRepository,
+                salonServiceRepository,
+                tenantUserRepository,
+                userRepository,
+                tenantRepository);
 
         tenant = TestDataFactory.createTenant(tenantRepository, "catalog-salon");
         admin = TestDataFactory.createUser(userRepository, passwordEncoder, "admin@catalog.com", "Admin");

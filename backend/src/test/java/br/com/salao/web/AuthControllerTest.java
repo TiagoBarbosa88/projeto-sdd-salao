@@ -2,10 +2,12 @@ package br.com.salao.web;
 
 import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.repository.AppointmentRepository;
+import br.com.salao.domain.repository.AuditLogRepository;
 import br.com.salao.domain.repository.SalonServiceRepository;
 import br.com.salao.domain.repository.TenantRepository;
 import br.com.salao.domain.repository.TenantUserRepository;
 import br.com.salao.domain.repository.UserRepository;
+import br.com.salao.testsupport.TestDataFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,13 +54,18 @@ class AuthControllerTest {
     @Autowired
     private TenantUserRepository tenantUserRepository;
 
+    @Autowired
+    private AuditLogRepository auditLogRepository;
+
     @BeforeEach
     void cleanDatabase() {
-        appointmentRepository.deleteAll();
-        salonServiceRepository.deleteAll();
-        tenantUserRepository.deleteAll();
-        userRepository.deleteAll();
-        tenantRepository.deleteAll();
+        TestDataFactory.resetDatabase(
+                auditLogRepository,
+                appointmentRepository,
+                salonServiceRepository,
+                tenantUserRepository,
+                userRepository,
+                tenantRepository);
     }
 
     @Test

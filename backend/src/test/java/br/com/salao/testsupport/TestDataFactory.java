@@ -4,6 +4,9 @@ import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.entity.Tenant;
 import br.com.salao.domain.entity.TenantUser;
 import br.com.salao.domain.entity.User;
+import br.com.salao.domain.repository.AppointmentRepository;
+import br.com.salao.domain.repository.AuditLogRepository;
+import br.com.salao.domain.repository.SalonServiceRepository;
 import br.com.salao.domain.repository.TenantRepository;
 import br.com.salao.domain.repository.TenantUserRepository;
 import br.com.salao.domain.repository.UserRepository;
@@ -13,6 +16,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public final class TestDataFactory {
 
     private TestDataFactory() {}
+
+    public static void resetDatabase(
+            AuditLogRepository auditLogRepository,
+            AppointmentRepository appointmentRepository,
+            SalonServiceRepository salonServiceRepository,
+            TenantUserRepository tenantUserRepository,
+            UserRepository userRepository,
+            TenantRepository tenantRepository) {
+        auditLogRepository.deleteAll();
+        appointmentRepository.deleteAll();
+        salonServiceRepository.deleteAll();
+        tenantUserRepository.deleteAll();
+        userRepository.deleteAll();
+        tenantRepository.deleteAll();
+    }
 
     public static Tenant createTenant(TenantRepository tenantRepository, String slug) {
         Tenant tenant = new Tenant();

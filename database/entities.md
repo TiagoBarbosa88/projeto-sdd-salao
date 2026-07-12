@@ -81,7 +81,25 @@ Tenant 1──N Appointment
 Service 1──N Appointment
 User (professional) 1──N Appointment
 User (client) 1──N Appointment
+Tenant 1──N AuditLog
+User (actor) 1──N AuditLog
 ```
+
+## AuditLog
+
+Registro de ações críticas para auditoria do tenant.
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | Long | PK interna |
+| publicId | UUID | Identificador público |
+| tenantId | Long | FK → Tenant |
+| actorUserId | Long | FK → User (nullable) |
+| action | Enum | LOGIN, SERVICE_CREATED, SERVICE_UPDATED, SERVICE_DEACTIVATED, APPOINTMENT_CREATED, APPOINTMENT_CANCELLED |
+| entityType | String | Tipo da entidade afetada |
+| entityPublicId | UUID | ID público da entidade |
+| metadata | String | Dados adicionais (texto) |
+| createdAt | OffsetDateTime | Momento do evento |
 
 ## Índices sugeridos
 
@@ -89,3 +107,4 @@ User (client) 1──N Appointment
 - `user.email` (unique)
 - `appointment(tenant_id, professional_id, start_at)` (conflito de agenda)
 - `service(tenant_id, active)`
+- `audit_log(tenant_id, created_at)` (consulta por tenant)

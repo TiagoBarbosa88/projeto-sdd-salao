@@ -23,6 +23,8 @@ tags:
     description: Métricas operacionais
   - name: Team
     description: Membros do salão para agendamento
+  - name: Audit
+    description: Trilha de auditoria de ações críticas
 
 paths:
   /health:
@@ -290,6 +292,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/DashboardSummaryResponse'
 
+  /audit-logs:
+    get:
+      tags: [Audit]
+      summary: Lista eventos de auditoria do tenant (ADMIN)
+      parameters:
+        - name: action
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AuditAction'
+      responses:
+        '200':
+          description: Lista de eventos de auditoria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogResponse'
+        '403':
+          description: Acesso negado
+
 components:
   parameters:
     PublicId:
@@ -541,6 +565,39 @@ components:
         role:
           type: string
           enum: [PROFESSIONAL, CLIENT, ADMIN]
+
+    AuditAction:
+      type: string
+      enum:
+        - LOGIN
+        - SERVICE_CREATED
+        - SERVICE_UPDATED
+        - SERVICE_DEACTIVATED
+        - APPOINTMENT_CREATED
+        - APPOINTMENT_CANCELLED
+
+    AuditLogResponse:
+      type: object
+      required: [publicId, action, createdAt]
+      properties:
+        publicId:
+          type: string
+          format: uuid
+        action:
+          $ref: '#/components/schemas/AuditAction'
+        actor:
+          $ref: '#/components/schemas/NamedRef'
+        entityType:
+          type: string
+          example: Service
+        entityPublicId:
+          type: string
+          format: uuid
+        metadata:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
 
     UuidRef:
       type: object

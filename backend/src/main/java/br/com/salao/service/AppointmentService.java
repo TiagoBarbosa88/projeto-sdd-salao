@@ -2,6 +2,7 @@ package br.com.salao.service;
 
 import br.com.salao.domain.entity.Appointment;
 import br.com.salao.domain.entity.AppointmentStatus;
+import br.com.salao.domain.entity.AuditAction;
 import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.entity.SalonService;
 import br.com.salao.domain.entity.Tenant;
@@ -32,18 +33,21 @@ public class AppointmentService {
     private final TenantUserRepository tenantUserRepository;
     private final UserRepository userRepository;
     private final TenantResolver tenantResolver;
+    private final AuditService auditService;
 
     public AppointmentService(
             AppointmentRepository appointmentRepository,
             SalonServiceRepository salonServiceRepository,
             TenantUserRepository tenantUserRepository,
             UserRepository userRepository,
-            TenantResolver tenantResolver) {
+            TenantResolver tenantResolver,
+            AuditService auditService) {
         this.appointmentRepository = appointmentRepository;
         this.salonServiceRepository = salonServiceRepository;
         this.tenantUserRepository = tenantUserRepository;
         this.userRepository = userRepository;
         this.tenantResolver = tenantResolver;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -102,7 +106,15 @@ public class AppointmentService {
         appointment.setEndAt(endAt);
         appointment.setStatus(AppointmentStatus.SCHEDULED);
 
-        return toResponse(appointmentRepository.save(appointment));
+        Appointment saved = appointmentRepository.save(appointment);
+        auditService.record(
+                tenant.getId(),
+                auditService.resolveCurrentActorUserId(),
+                AuditAction.APPOINTMENT_CREATED,
+                "Appointment",
+                saved.getPublicId(),
+                null);
+        return toResponse(saved);
     }
 
     @Transactional
@@ -123,7 +135,15 @@ public class AppointmentService {
         }
 
         appointment.setStatus(AppointmentStatus.CANCELLED);
-        return toResponse(appointmentRepository.save(appointment));
+        Appointment saved = appointmentRepository.save(appointment);
+        auditService.record(
+                tenant.getId(),
+                auditService.resolveCurrentActorUserId(),
+                AuditAction.APPOINTMENT_CANCELLED,
+                "Appointment",
+                saved.getPublicId(),
+                null);
+        return toResponse(saved);
     }
 
     private User resolveClient(CreateAppointmentRequest request, AuthenticatedUser principal, Long tenantId) {
