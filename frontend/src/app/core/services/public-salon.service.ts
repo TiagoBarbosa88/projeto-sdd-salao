@@ -37,6 +37,8 @@ export interface PublicService {
 export interface PublicProfessional {
   publicId: string;
   name: string;
+  phone?: string;
+  openDaysOfWeek?: number[];
 }
 
 export interface AvailabilitySlot {

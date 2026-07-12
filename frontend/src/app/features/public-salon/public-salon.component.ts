@@ -43,6 +43,7 @@ type CalendarDay = {
   isToday: boolean;
   isSelected: boolean;
   isPast: boolean;
+  isClosed: boolean;
 };
 
 type StepItem = { id: BookingStep; label: string; number: number };
@@ -60,6 +61,8 @@ type BookingConfirmation = {
   serviceDurationMinutes: number;
   servicePrice: number;
   professionalName: string;
+  professionalPhone?: string;
+  salonName: string;
 };
 
 @Component({
@@ -298,6 +301,29 @@ type BookingConfirmation = {
                     </div>
                   </dl>
                 </div>
+                <p class="mt-4 text-sm text-emerald-300">
+                  Enviamos a confirmacao por WhatsApp para voce e para o profissional.
+                </p>
+                <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                  <a
+                    [href]="confirmationClientWhatsAppUrl()"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90"
+                  >
+                    Abrir confirmacao no WhatsApp
+                  </a>
+                  @if (confirmation()!.professionalPhone) {
+                    <a
+                      [href]="confirmationProfessionalWhatsAppUrl()"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center justify-center gap-2 rounded-xl border border-[#25D366]/40 bg-[#25D366]/10 px-5 py-3 text-sm font-medium text-[#25D366] transition hover:bg-[#25D366]/20"
+                    >
+                      WhatsApp do profissional
+                    </a>
+                  }
+                </div>
                 <button
                   type="button"
                   (click)="restartBooking()"
@@ -450,18 +476,18 @@ type BookingConfirmation = {
                       @for (day of calendarDays(); track day.key) {
                         <button
                           type="button"
-                          [disabled]="day.isPast || !day.inMonth"
+                          [disabled]="day.isPast || !day.inMonth || day.isClosed"
                           (click)="selectDate(day)"
-                          class="rounded-xl py-2.5 text-sm transition duration-200"
+                          class="rounded-xl py-2.5 text-sm transition duration-200 disabled:cursor-not-allowed disabled:opacity-35"
                           [class.text-slate-600]="!day.inMonth"
-                          [class.text-slate-500]="day.inMonth && day.isPast"
-                          [class.text-white]="day.inMonth && !day.isPast"
+                          [class.text-slate-500]="day.inMonth && (day.isPast || day.isClosed)"
+                          [class.text-white]="day.inMonth && !day.isPast && !day.isClosed"
                           [class.bg-violet-600]="day.isSelected"
                           [class.shadow-md]="day.isSelected"
                           [class.shadow-violet-900/40]="day.isSelected"
-                          [class.ring-1]="day.isToday && !day.isSelected"
-                          [class.ring-violet-400/40]="day.isToday && !day.isSelected"
-                          [class.hover:bg-slate-800]="day.inMonth && !day.isPast && !day.isSelected"
+                          [class.ring-1]="day.isToday && !day.isSelected && !day.isClosed"
+                          [class.ring-violet-400/40]="day.isToday && !day.isSelected && !day.isClosed"
+                          [class.hover:bg-slate-800]="day.inMonth && !day.isPast && !day.isClosed && !day.isSelected"
                         >
                           {{ day.date.getDate() }}
                         </button>
@@ -701,14 +727,10 @@ type BookingConfirmation = {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="YouTube"
-                          class="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:opacity-90"
+                          class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#FF0000] text-white transition hover:opacity-90"
                         >
-                          <svg class="h-9 w-9" viewBox="0 0 24 24" aria-hidden="true">
-                            <path
-                              fill="#FF0000"
-                              d="M21.582 6.186c-.23-1.039-1.234-1.858-2.326-2.034C17.982 4 12 4 12 4s-5.982 0-7.256.152C3.652 4.328 2.648 5.147 2.418 6.186 2.262 7.023 2 8.688 2 12s.262 4.977.418 5.814c.23 1.039 1.234 1.858 2.326 2.034C6.018 20 12 20 12 20s5.982 0 7.256-.152c1.092-.176 2.096-.995 2.326-2.034C21.738 16.977 22 15.312 22 12s-.262-4.977-.418-5.814z"
-                            />
-                            <path fill="#FFFFFF" d="M10 8.5 16 12l-6 3.5z" />
+                          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M8 5v14l11-7z" />
                           </svg>
                         </a>
                       }
@@ -873,6 +895,7 @@ export class PublicSalonComponent implements OnInit, OnDestroy {
   protected readonly step = signal<BookingStep>('service');
   protected readonly selectedService = signal<PublicService | null>(null);
   protected readonly selectedProfessional = signal<PublicProfessional | null>(null);
+  protected readonly openDaysOfWeek = signal<number[]>([]);
   protected readonly selectedDate = signal<string | null>(null);
   protected readonly selectedSlot = signal<AvailabilitySlot | null>(null);
   protected readonly confirmation = signal<BookingConfirmation | null>(null);
@@ -1055,14 +1078,34 @@ export class PublicSalonComponent implements OnInit, OnDestroy {
 
   protected selectProfessional(pro: PublicProfessional): void {
     this.selectedProfessional.set(pro);
+    this.openDaysOfWeek.set(pro.openDaysOfWeek ?? []);
     this.selectedDate.set(null);
     this.selectedSlot.set(null);
     this.slots.set([]);
     this.step.set('datetime');
   }
 
+  protected confirmationClientWhatsAppUrl(): string {
+    const confirmation = this.confirmation();
+    if (!confirmation) {
+      return '#';
+    }
+    return buildWhatsAppUrl(confirmation.guestPhone, this.buildConfirmationMessage(confirmation));
+  }
+
+  protected confirmationProfessionalWhatsAppUrl(): string {
+    const confirmation = this.confirmation();
+    if (!confirmation?.professionalPhone) {
+      return '#';
+    }
+    return buildWhatsAppUrl(
+      confirmation.professionalPhone,
+      this.buildProfessionalNotificationMessage(confirmation)
+    );
+  }
+
   protected selectDate(day: CalendarDay): void {
-    if (day.isPast || !day.inMonth) return;
+    if (day.isPast || !day.inMonth || day.isClosed) return;
     const iso = this.toIsoDate(day.date);
     this.selectedDate.set(iso);
     this.selectedSlot.set(null);
@@ -1122,6 +1165,8 @@ export class PublicSalonComponent implements OnInit, OnDestroy {
             serviceDurationMinutes: service.durationMinutes,
             servicePrice: service.price,
             professionalName: professional.name,
+            professionalPhone: professional.phone,
+            salonName: this.tenant()?.name ?? 'Salao',
           });
           this.step.set('done');
           scrollToSection('agenda');
@@ -1227,12 +1272,15 @@ export class PublicSalonComponent implements OnInit, OnDestroy {
     const gridStart = new Date(year, month, 1 - startOffset);
     const todayKey = this.toIsoDate(new Date());
     const selected = this.selectedDate();
+    const openDays = this.openDaysOfWeek();
     const days: CalendarDay[] = [];
 
     for (let i = 0; i < 42; i++) {
       const date = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
       const key = this.toIsoDate(date);
       const isPast = key < todayKey;
+      const backendDay = this.backendDayOfWeek(date);
+      const isClosed = openDays.length > 0 && !openDays.includes(backendDay);
       days.push({
         date,
         key,
@@ -1240,6 +1288,7 @@ export class PublicSalonComponent implements OnInit, OnDestroy {
         isToday: key === todayKey,
         isSelected: selected === key,
         isPast,
+        isClosed,
       });
     }
 
@@ -1282,6 +1331,32 @@ export class PublicSalonComponent implements OnInit, OnDestroy {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private backendDayOfWeek(date: Date): number {
+    const jsDay = date.getDay();
+    return jsDay === 0 ? 7 : jsDay;
+  }
+
+  private buildConfirmationMessage(confirmation: BookingConfirmation): string {
+    return (
+      `Ola! Meu agendamento no ${confirmation.salonName} foi confirmado.\n\n` +
+      `Servico: ${confirmation.serviceName}\n` +
+      `Profissional: ${confirmation.professionalName}\n` +
+      `Horario: ${this.formatSlotLabel(confirmation.startAt)} (${this.formatTimeRange(confirmation.startAt, confirmation.endAt)})\n` +
+      `Duracao: ${confirmation.serviceDurationMinutes} min\n` +
+      `Valor: ${this.formatCurrency(confirmation.servicePrice)}`
+    );
+  }
+
+  private buildProfessionalNotificationMessage(confirmation: BookingConfirmation): string {
+    return (
+      `Ola ${confirmation.professionalName}! Novo agendamento no ${confirmation.salonName}.\n\n` +
+      `Cliente: ${confirmation.guestName}\n` +
+      `WhatsApp: ${confirmation.guestPhone}\n` +
+      `Servico: ${confirmation.serviceName}\n` +
+      `Horario: ${this.formatSlotLabel(confirmation.startAt)} (${this.formatTimeRange(confirmation.startAt, confirmation.endAt)})`
+    );
   }
 
   private setupSectionObserver(): void {

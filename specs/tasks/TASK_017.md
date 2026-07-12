@@ -38,4 +38,4 @@ feat(backend): adiciona notificacoes whatsapp mock
 
 ## Status
 
-TODO
+DONE

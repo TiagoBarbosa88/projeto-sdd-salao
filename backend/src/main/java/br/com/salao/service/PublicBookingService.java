@@ -29,6 +29,7 @@ public class PublicBookingService {
     private final AvailabilityService availabilityService;
     private final SalonSettingsService salonSettingsService;
     private final AuditService auditService;
+    private final AppointmentWhatsAppService appointmentWhatsAppService;
 
     public PublicBookingService(
             TenantRepository tenantRepository,
@@ -37,7 +38,8 @@ public class PublicBookingService {
             AppointmentRepository appointmentRepository,
             AvailabilityService availabilityService,
             SalonSettingsService salonSettingsService,
-            AuditService auditService) {
+            AuditService auditService,
+            AppointmentWhatsAppService appointmentWhatsAppService) {
         this.tenantRepository = tenantRepository;
         this.salonServiceRepository = salonServiceRepository;
         this.tenantUserRepository = tenantUserRepository;
@@ -45,6 +47,7 @@ public class PublicBookingService {
         this.availabilityService = availabilityService;
         this.salonSettingsService = salonSettingsService;
         this.auditService = auditService;
+        this.appointmentWhatsAppService = appointmentWhatsAppService;
     }
 
     @Transactional
@@ -94,6 +97,8 @@ public class PublicBookingService {
                 "Appointment",
                 saved.getPublicId(),
                 "{\"guest\":\"" + escapeJson(request.guestName()) + "\",\"startAt\":\"" + saved.getStartAt() + "\"}");
+
+        appointmentWhatsAppService.notifyGuestBooking(tenant, saved);
 
         return toResponse(saved);
     }

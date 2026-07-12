@@ -62,10 +62,20 @@ export function whatsappInternationalDigits(value: string): string {
 export function buildWhatsAppUrl(phone: string, message?: string): string {
   const intl = whatsappInternationalDigits(phone);
   if (!intl) {
-    return '#';
+    if (!message?.trim()) {
+      return '#';
+    }
+    return `https://wa.me/?text=${encodeURIComponent(message.trim())}`;
   }
   if (!message?.trim()) {
     return `https://wa.me/${intl}`;
   }
   return `https://wa.me/${intl}?text=${encodeURIComponent(message.trim())}`;
+}
+
+export function buildWhatsAppShareUrl(message: string): string {
+  if (!message.trim()) {
+    return '#';
+  }
+  return `https://wa.me/?text=${encodeURIComponent(message.trim())}`;
 }

@@ -4,6 +4,7 @@ import br.com.salao.domain.entity.ProfessionalProfile;
 import br.com.salao.domain.entity.SalonService;
 import br.com.salao.domain.entity.Tenant;
 import br.com.salao.domain.repository.ProfessionalProfileRepository;
+import br.com.salao.domain.repository.ProfessionalWorkingPeriodRepository;
 import br.com.salao.domain.repository.SalonServiceRepository;
 import br.com.salao.domain.repository.TenantRepository;
 import br.com.salao.web.dto.PublicProfessionalResponse;
@@ -20,16 +21,19 @@ public class PublicTenantService {
     private final TenantRepository tenantRepository;
     private final SalonServiceRepository salonServiceRepository;
     private final ProfessionalProfileRepository professionalProfileRepository;
+    private final ProfessionalWorkingPeriodRepository workingPeriodRepository;
     private final PublicBusinessHoursService publicBusinessHoursService;
 
     public PublicTenantService(
             TenantRepository tenantRepository,
             SalonServiceRepository salonServiceRepository,
             ProfessionalProfileRepository professionalProfileRepository,
+            ProfessionalWorkingPeriodRepository workingPeriodRepository,
             PublicBusinessHoursService publicBusinessHoursService) {
         this.tenantRepository = tenantRepository;
         this.salonServiceRepository = salonServiceRepository;
         this.professionalProfileRepository = professionalProfileRepository;
+        this.workingPeriodRepository = workingPeriodRepository;
         this.publicBusinessHoursService = publicBusinessHoursService;
     }
 
@@ -96,10 +100,17 @@ public class PublicTenantService {
     }
 
     private PublicProfessionalResponse toProfessionalResponse(ProfessionalProfile profile) {
+        List<Integer> openDays = workingPeriodRepository
+                .findByTenantUser_IdOrderByDayOfWeekAscStartTimeAsc(profile.getTenantUser().getId())
+                .stream()
+                .map(period -> period.getDayOfWeek())
+                .distinct()
+                .sorted()
+                .toList();
         return new PublicProfessionalResponse(
                 profile.getTenantUser().getUser().getPublicId(),
                 profile.getTenantUser().getUser().getName(),
-                profile.getPhone()
-        );
+                profile.getPhone(),
+                openDays);
     }
 }
