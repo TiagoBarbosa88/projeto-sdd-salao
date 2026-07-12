@@ -13,6 +13,7 @@ public record UpdateServiceRequest(
         @Size(max = 1000) String description,
         @NotNull @Min(1) Integer durationMinutes,
         @NotNull @DecimalMin("0.00") BigDecimal price,
-        @NotNull Boolean active
+        @NotNull Boolean active,
+        String imageUrl
 ) {
 }

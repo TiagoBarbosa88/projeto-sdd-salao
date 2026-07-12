@@ -9,6 +9,7 @@ public record ServiceResponse(
         String description,
         Integer durationMinutes,
         BigDecimal price,
-        boolean active
+        boolean active,
+        String imageUrl
 ) {
 }

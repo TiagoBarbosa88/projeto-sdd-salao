@@ -12,6 +12,7 @@ public record CreateServiceRequest(
         @NotBlank @Size(max = 255) String name,
         @Size(max = 1000) String description,
         @NotNull @Min(1) Integer durationMinutes,
-        @NotNull @DecimalMin("0.00") BigDecimal price
+        @NotNull @DecimalMin("0.00") BigDecimal price,
+        String imageUrl
 ) {
 }

@@ -46,9 +46,12 @@ public class SalonSettingsService {
         tenant.setWhatsapp(request.whatsapp());
         tenant.setAddress(request.address());
         tenant.setLogoUrl(request.logoUrl());
-        tenant.setSeoTitle(request.seoTitle());
-        tenant.setSeoDescription(request.seoDescription());
-        tenant.setSeoImageUrl(request.seoImageUrl());
+        tenant.setInstagramUrl(request.instagramUrl());
+        tenant.setFacebookUrl(request.facebookUrl());
+        tenant.setTiktokUrl(request.tiktokUrl());
+        tenant.setWebsiteUrl(request.websiteUrl());
+        tenant.setGoogleMapsUrl(request.googleMapsUrl());
+        syncSeoMetadata(tenant);
         return toSalonResponse(tenantRepository.save(tenant));
     }
 
@@ -94,6 +97,36 @@ public class SalonSettingsService {
         }
     }
 
+    void syncSeoMetadata(Tenant tenant) {
+        String name = tenant.getName() != null ? tenant.getName().trim() : "Salao";
+        tenant.setSeoTitle(name + " | Agende online");
+
+        StringBuilder description = new StringBuilder();
+        if (tenant.getDescription() != null && !tenant.getDescription().isBlank()) {
+            description.append(tenant.getDescription().trim());
+        } else {
+            description.append("Agende online no ").append(name);
+        }
+
+        if (tenant.getAddress() != null && !tenant.getAddress().isBlank()) {
+            description.append(" — ").append(tenant.getAddress().trim());
+        }
+
+        if (tenant.getInstagramUrl() != null && !tenant.getInstagramUrl().isBlank()) {
+            description.append(" Siga no Instagram.");
+        }
+
+        tenant.setSeoDescription(truncate(description.toString(), 320));
+        tenant.setSeoImageUrl(tenant.getLogoUrl());
+    }
+
+    private String truncate(String value, int maxLength) {
+        if (value == null || value.length() <= maxLength) {
+            return value;
+        }
+        return value.substring(0, maxLength - 1).trim() + "…";
+    }
+
     private SalonSettingsResponse toSalonResponse(Tenant tenant) {
         return new SalonSettingsResponse(
                 tenant.getPublicId(),
@@ -104,6 +137,11 @@ public class SalonSettingsService {
                 tenant.getWhatsapp(),
                 tenant.getAddress(),
                 tenant.getLogoUrl(),
+                tenant.getInstagramUrl(),
+                tenant.getFacebookUrl(),
+                tenant.getTiktokUrl(),
+                tenant.getWebsiteUrl(),
+                tenant.getGoogleMapsUrl(),
                 tenant.getSeoTitle(),
                 tenant.getSeoDescription(),
                 tenant.getSeoImageUrl()

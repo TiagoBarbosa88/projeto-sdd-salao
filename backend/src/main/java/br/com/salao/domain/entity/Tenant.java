@@ -47,7 +47,7 @@ public class Tenant {
     @Column(columnDefinition = "TEXT")
     private String address;
 
-    @Column(name = "logo_url", length = 500)
+    @Column(name = "logo_url", columnDefinition = "TEXT")
     private String logoUrl;
 
     @Column(name = "seo_title", length = 255)
@@ -56,8 +56,23 @@ public class Tenant {
     @Column(name = "seo_description", columnDefinition = "TEXT")
     private String seoDescription;
 
-    @Column(name = "seo_image_url", length = 500)
+    @Column(name = "seo_image_url", columnDefinition = "TEXT")
     private String seoImageUrl;
+
+    @Column(name = "instagram_url", length = 500)
+    private String instagramUrl;
+
+    @Column(name = "facebook_url", length = 500)
+    private String facebookUrl;
+
+    @Column(name = "tiktok_url", length = 500)
+    private String tiktokUrl;
+
+    @Column(name = "website_url", length = 500)
+    private String websiteUrl;
+
+    @Column(name = "google_maps_url", length = 500)
+    private String googleMapsUrl;
 
     @PrePersist
     void prePersist() {
@@ -167,5 +182,45 @@ public class Tenant {
 
     public void setSeoImageUrl(String seoImageUrl) {
         this.seoImageUrl = seoImageUrl;
+    }
+
+    public String getInstagramUrl() {
+        return instagramUrl;
+    }
+
+    public void setInstagramUrl(String instagramUrl) {
+        this.instagramUrl = instagramUrl;
+    }
+
+    public String getFacebookUrl() {
+        return facebookUrl;
+    }
+
+    public void setFacebookUrl(String facebookUrl) {
+        this.facebookUrl = facebookUrl;
+    }
+
+    public String getTiktokUrl() {
+        return tiktokUrl;
+    }
+
+    public void setTiktokUrl(String tiktokUrl) {
+        this.tiktokUrl = tiktokUrl;
+    }
+
+    public String getWebsiteUrl() {
+        return websiteUrl;
+    }
+
+    public void setWebsiteUrl(String websiteUrl) {
+        this.websiteUrl = websiteUrl;
+    }
+
+    public String getGoogleMapsUrl() {
+        return googleMapsUrl;
+    }
+
+    public void setGoogleMapsUrl(String googleMapsUrl) {
+        this.googleMapsUrl = googleMapsUrl;
     }
 }

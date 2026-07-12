@@ -11,6 +11,11 @@ public record SalonSettingsResponse(
         String whatsapp,
         String address,
         String logoUrl,
+        String instagramUrl,
+        String facebookUrl,
+        String tiktokUrl,
+        String websiteUrl,
+        String googleMapsUrl,
         String seoTitle,
         String seoDescription,
         String seoImageUrl

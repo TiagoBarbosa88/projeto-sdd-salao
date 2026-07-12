@@ -8,4 +8,5 @@ public record PublicServiceResponse(
         String name,
         String description,
         Integer durationMinutes,
-        BigDecimal price) {}
+        BigDecimal price,
+        String imageUrl) {}

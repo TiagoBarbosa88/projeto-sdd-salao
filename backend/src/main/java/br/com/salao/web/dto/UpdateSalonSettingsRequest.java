@@ -7,8 +7,10 @@ public record UpdateSalonSettingsRequest(
         String whatsapp,
         String address,
         String logoUrl,
-        String seoTitle,
-        String seoDescription,
-        String seoImageUrl
+        String instagramUrl,
+        String facebookUrl,
+        String tiktokUrl,
+        String websiteUrl,
+        String googleMapsUrl
 ) {
 }

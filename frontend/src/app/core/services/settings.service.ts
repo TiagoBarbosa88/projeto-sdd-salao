@@ -11,6 +11,11 @@ export interface SalonSettings {
   whatsapp?: string;
   address?: string;
   logoUrl?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  tiktokUrl?: string;
+  websiteUrl?: string;
+  googleMapsUrl?: string;
   seoTitle?: string;
   seoDescription?: string;
   seoImageUrl?: string;
@@ -23,9 +28,11 @@ export interface UpdateSalonSettings {
   whatsapp?: string;
   address?: string;
   logoUrl?: string;
-  seoTitle?: string;
-  seoDescription?: string;
-  seoImageUrl?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  tiktokUrl?: string;
+  websiteUrl?: string;
+  googleMapsUrl?: string;
 }
 
 export interface SchedulingSettings {

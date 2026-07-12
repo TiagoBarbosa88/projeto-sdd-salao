@@ -68,6 +68,11 @@ public class PublicTenantService {
                 tenant.getWhatsapp(),
                 tenant.getAddress(),
                 tenant.getLogoUrl(),
+                tenant.getInstagramUrl(),
+                tenant.getFacebookUrl(),
+                tenant.getTiktokUrl(),
+                tenant.getWebsiteUrl(),
+                tenant.getGoogleMapsUrl(),
                 tenant.getSeoTitle(),
                 tenant.getSeoDescription(),
                 tenant.getSeoImageUrl()
@@ -80,7 +85,8 @@ public class PublicTenantService {
                 service.getName(),
                 service.getDescription(),
                 service.getDurationMinutes(),
-                service.getPrice());
+                service.getPrice(),
+                service.getImageUrl());
     }
 
     private PublicProfessionalResponse toProfessionalResponse(ProfessionalProfile profile) {

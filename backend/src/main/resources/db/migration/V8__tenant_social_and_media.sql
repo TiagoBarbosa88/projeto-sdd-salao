@@ -1,0 +1,8 @@
+ALTER TABLE tenant ALTER COLUMN logo_url TYPE TEXT;
+ALTER TABLE tenant ALTER COLUMN seo_image_url TYPE TEXT;
+
+ALTER TABLE tenant ADD COLUMN instagram_url VARCHAR(500);
+ALTER TABLE tenant ADD COLUMN facebook_url VARCHAR(500);
+ALTER TABLE tenant ADD COLUMN tiktok_url VARCHAR(500);
+ALTER TABLE tenant ADD COLUMN website_url VARCHAR(500);
+ALTER TABLE tenant ADD COLUMN google_maps_url VARCHAR(500);

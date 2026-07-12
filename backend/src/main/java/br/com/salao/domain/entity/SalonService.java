@@ -40,6 +40,9 @@ public class SalonService {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
+
     @PrePersist
     void prePersist() {
         if (publicId == null) {
@@ -101,5 +104,13 @@ public class SalonService {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

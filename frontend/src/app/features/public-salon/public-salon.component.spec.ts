@@ -70,7 +70,7 @@ describe('PublicSalonComponent', () => {
 
     const element = fixture.nativeElement as HTMLElement;
     expect(element.textContent).toContain('Studio Bella');
-    expect(element.textContent).toContain('Escolha o servico');
+    expect(element.textContent).toContain('Escolha seu servico');
     expect(element.textContent).toContain('Corte');
   });
 });

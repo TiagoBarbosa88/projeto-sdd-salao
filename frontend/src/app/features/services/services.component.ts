@@ -7,6 +7,8 @@ import {
   ServiceService,
   UpdateServiceRequest,
 } from '../../core/services/service.service';
+import { readImageAsDataUrl } from '../../core/utils/image-file.util';
+import { resolveServiceImageUrl } from '../../core/utils/service-image.util';
 
 @Component({
   selector: 'app-services',
@@ -51,6 +53,7 @@ import {
           <table class="w-full text-left text-sm">
             <thead class="border-b border-slate-800 bg-slate-950/50 text-xs uppercase tracking-wider text-slate-400">
               <tr>
+                <th class="px-4 py-3">Imagem</th>
                 <th class="px-4 py-3">Nome</th>
                 <th class="px-4 py-3">Duracao</th>
                 <th class="px-4 py-3">Preco</th>
@@ -63,6 +66,13 @@ import {
             <tbody class="divide-y divide-slate-800">
               @for (service of services(); track service.publicId) {
                 <tr class="text-slate-200">
+                  <td class="px-4 py-3">
+                    <img
+                      [src]="serviceImage(service)"
+                      [alt]="service.name"
+                      class="h-14 w-20 rounded-lg border border-slate-700 object-cover"
+                    />
+                  </td>
                   <td class="px-4 py-3">
                     <p class="font-medium text-white">{{ service.name }}</p>
                     @if (service.description) {
@@ -112,6 +122,13 @@ import {
         <div class="space-y-2 md:hidden">
           @for (service of services(); track service.publicId) {
             <article class="rounded-xl border border-slate-800 bg-slate-900 p-3">
+              <div class="flex gap-3">
+                <img
+                  [src]="serviceImage(service)"
+                  [alt]="service.name"
+                  class="h-16 w-20 shrink-0 rounded-lg border border-slate-700 object-cover"
+                />
+                <div class="min-w-0 flex-1">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <p class="font-medium text-white">{{ service.name }}</p>
@@ -154,6 +171,8 @@ import {
                   }
                 </div>
               }
+                </div>
+              </div>
             </article>
           }
         </div>
@@ -185,6 +204,45 @@ import {
                   rows="2"
                   class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
                 ></textarea>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="mb-1 block text-sm text-slate-300">Imagem do servico</label>
+                <div class="flex flex-wrap items-center gap-4">
+                  @if (imagePreview()) {
+                    <img
+                      [src]="imagePreview()"
+                      alt="Imagem do servico"
+                      class="h-20 w-32 rounded-xl border border-slate-700 object-cover"
+                    />
+                  }
+                  <label
+                    class="cursor-pointer rounded-xl border border-dashed border-slate-600 px-4 py-3 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+                  >
+                    Escolher da galeria ou documentos
+                    <input
+                      type="file"
+                      accept="image/*"
+                      class="hidden"
+                      (change)="onImageSelected($event)"
+                    />
+                  </label>
+                  @if (imagePreview()) {
+                    <button
+                      type="button"
+                      (click)="clearImage()"
+                      class="text-sm text-rose-400 transition hover:text-rose-300"
+                    >
+                      Remover imagem
+                    </button>
+                  }
+                </div>
+                @if (imageUploadError()) {
+                  <p class="mt-2 text-sm text-rose-400">{{ imageUploadError() }}</p>
+                }
+                <p class="mt-2 text-xs text-slate-500">
+                  Se nao escolher, usamos uma ilustracao padrao na pagina publica.
+                </p>
               </div>
 
               <div>
@@ -263,6 +321,8 @@ export class ServicesComponent {
   protected readonly editingId = signal<string | null>(null);
   protected readonly saving = signal(false);
   protected readonly formError = signal<string | null>(null);
+  protected readonly imagePreview = signal<string | null>(null);
+  protected readonly imageUploadError = signal<string | null>(null);
   protected readonly isAdmin = signal(false);
 
   protected readonly form = this.fb.nonNullable.group({
@@ -271,6 +331,7 @@ export class ServicesComponent {
     durationMinutes: [30, [Validators.required, Validators.min(1)]],
     price: [0, [Validators.required, Validators.min(0)]],
     active: [true],
+    imageUrl: [''],
   });
 
   constructor() {
@@ -285,6 +346,10 @@ export class ServicesComponent {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   }
 
+  protected serviceImage(service: SalonService): string {
+    return resolveServiceImageUrl(service.name, service.description ?? undefined, service.imageUrl);
+  }
+
   protected startCreate(): void {
     this.editingId.set(null);
     this.form.reset({
@@ -293,7 +358,10 @@ export class ServicesComponent {
       durationMinutes: 30,
       price: 0,
       active: true,
+      imageUrl: '',
     });
+    this.imagePreview.set(null);
+    this.imageUploadError.set(null);
     this.formError.set(null);
     this.showForm.set(true);
   }
@@ -306,7 +374,10 @@ export class ServicesComponent {
       durationMinutes: service.durationMinutes,
       price: service.price,
       active: service.active,
+      imageUrl: service.imageUrl ?? '',
     });
+    this.imagePreview.set(service.imageUrl ?? null);
+    this.imageUploadError.set(null);
     this.formError.set(null);
     this.showForm.set(true);
   }
@@ -315,6 +386,32 @@ export class ServicesComponent {
     this.showForm.set(false);
     this.editingId.set(null);
     this.formError.set(null);
+    this.imagePreview.set(null);
+    this.imageUploadError.set(null);
+  }
+
+  protected async onImageSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    this.imageUploadError.set(null);
+    try {
+      const dataUrl = await readImageAsDataUrl(file);
+      this.form.controls.imageUrl.setValue(dataUrl);
+      this.imagePreview.set(dataUrl);
+    } catch (error) {
+      this.imageUploadError.set(
+        error instanceof Error ? error.message : 'Nao foi possivel carregar a imagem.'
+      );
+    }
+  }
+
+  protected clearImage(): void {
+    this.form.controls.imageUrl.setValue('');
+    this.imagePreview.set(null);
+    this.imageUploadError.set(null);
   }
 
   protected onSubmit(): void {
@@ -335,6 +432,7 @@ export class ServicesComponent {
         durationMinutes: raw.durationMinutes,
         price: raw.price,
         active: raw.active,
+        imageUrl: raw.imageUrl || undefined,
       };
 
       this.serviceApi.update(editingId, request).subscribe({
@@ -356,6 +454,7 @@ export class ServicesComponent {
       description: raw.description || undefined,
       durationMinutes: raw.durationMinutes,
       price: raw.price,
+      imageUrl: raw.imageUrl || undefined,
     };
 
     this.serviceApi.create(request).subscribe({

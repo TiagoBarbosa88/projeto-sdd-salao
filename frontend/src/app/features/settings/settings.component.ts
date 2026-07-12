@@ -19,8 +19,9 @@ import {
   Professional,
   TeamService,
 } from '../../core/services/team.service';
+import { readImageAsDataUrl } from '../../core/utils/image-file.util';
 
-type SettingsTab = 'salon' | 'professionals' | 'agenda' | 'account';
+type SettingsTab = 'personalization' | 'social' | 'professionals' | 'agenda' | 'account';
 
 const WEEKDAYS: { value: number; label: string }[] = [
   { value: 1, label: 'Segunda' },
@@ -79,17 +80,17 @@ type DayScheduleRow = {
             </p>
           }
 
-          @if (activeTab() === 'salon' && isAdmin()) {
+          @if (activeTab() === 'personalization' && isAdmin()) {
             <section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
-              <h2 class="text-xl font-semibold text-white">Salao e SEO</h2>
+              <h2 class="text-xl font-semibold text-white">Personalizacao</h2>
               <p class="mt-1 text-sm text-slate-400">
-                Dados exibidos na pagina publica e nos metadados de busca.
+                Como seu salao aparece na pagina publica de agendamento.
               </p>
 
               @if (salonLoading()) {
                 <p class="mt-6 text-slate-400">Carregando...</p>
               } @else {
-                <form class="mt-6 space-y-4" [formGroup]="salonForm" (ngSubmit)="saveSalon()">
+                <form class="mt-6 space-y-4" [formGroup]="personalizationForm" (ngSubmit)="savePersonalization()">
                   <div class="grid gap-4 md:grid-cols-2">
                     <div>
                       <label class="mb-1 block text-sm text-slate-300">Nome do salao</label>
@@ -99,7 +100,7 @@ type DayScheduleRow = {
                       />
                     </div>
                     <div>
-                      <label class="mb-1 block text-sm text-slate-300">Slug publico</label>
+                      <label class="mb-1 block text-sm text-slate-300">Link publico</label>
                       <input
                         [value]="salonSettings()?.slug ?? ''"
                         disabled
@@ -136,114 +137,107 @@ type DayScheduleRow = {
                       />
                     </div>
                     <div class="md:col-span-2">
-                      <label class="mb-1 block text-sm text-slate-300">URL do logo</label>
-                      <input
-                        formControlName="logoUrl"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                      />
+                      <label class="mb-1 block text-sm text-slate-300">Logo do salao</label>
+                      <div class="flex flex-wrap items-center gap-4">
+                        @if (logoPreview()) {
+                          <img
+                            [src]="logoPreview()"
+                            alt="Logo do salao"
+                            class="h-20 w-20 rounded-2xl border border-slate-700 object-cover"
+                          />
+                        }
+                        <label
+                          class="cursor-pointer rounded-xl border border-dashed border-slate-600 px-4 py-3 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+                        >
+                          Escolher da galeria ou documentos
+                          <input
+                            type="file"
+                            accept="image/*"
+                            class="hidden"
+                            (change)="onLogoSelected($event)"
+                          />
+                        </label>
+                      </div>
+                      @if (logoUploadError()) {
+                        <p class="mt-2 text-sm text-rose-400">{{ logoUploadError() }}</p>
+                      }
                     </div>
-                    <div>
-                      <label class="mb-1 block text-sm text-slate-300">Titulo SEO</label>
-                      <input
-                        formControlName="seoTitle"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                      />
-                    </div>
-                    <div>
-                      <label class="mb-1 block text-sm text-slate-300">Imagem SEO (URL)</label>
-                      <input
-                        formControlName="seoImageUrl"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                      />
-                    </div>
-                    <div class="md:col-span-2">
-                      <label class="mb-1 block text-sm text-slate-300">Descricao SEO</label>
-                      <textarea
-                        formControlName="seoDescription"
-                        rows="2"
-                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                      ></textarea>
-                    </div>
-                  </div>
-
-                  <div class="rounded-lg border border-slate-800 bg-slate-950/60 p-4">
-                    <p class="text-xs uppercase tracking-wider text-violet-400">Previa</p>
-                    <p class="mt-2 font-medium text-white">
-                      {{ salonForm.controls.seoTitle.value || salonForm.controls.name.value || 'Titulo' }}
-                    </p>
-                    <p class="mt-1 text-sm text-slate-400">
-                      {{ salonForm.controls.seoDescription.value || salonForm.controls.description.value || 'Descricao do salao' }}
-                    </p>
                   </div>
 
                   <button
                     type="submit"
-                    [disabled]="salonForm.invalid || salonSaving()"
+                    [disabled]="personalizationForm.invalid || salonSaving()"
                     class="rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
                   >
-                    {{ salonSaving() ? 'Salvando...' : 'Salvar salao e SEO' }}
+                    {{ salonSaving() ? 'Salvando...' : 'Salvar personalizacao' }}
                   </button>
                 </form>
+              }
+            </section>
+          }
 
-                @if (schedulingSettings()) {
-                  <form
-                    class="mt-8 space-y-4 border-t border-slate-800 pt-8"
-                    [formGroup]="schedulingForm"
-                    (ngSubmit)="saveScheduling()"
-                  >
-                    <h3 class="text-lg font-semibold text-white">Regras de agenda</h3>
-                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      <div>
-                        <label class="mb-1 block text-sm text-slate-300">Pausa entre atendimentos (min)</label>
-                        <input
-                          type="number"
-                          formControlName="bufferMinutes"
-                          min="0"
-                          class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                        />
-                      </div>
-                      <div>
-                        <label class="mb-1 block text-sm text-slate-300">Intervalo de slots (min)</label>
-                        <input
-                          type="number"
-                          formControlName="slotIntervalMinutes"
-                          min="5"
-                          class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                        />
-                      </div>
-                      <div>
-                        <label class="mb-1 block text-sm text-slate-300">Fuso horario</label>
-                        <input
-                          formControlName="zoneId"
-                          class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                        />
-                      </div>
-                      <div>
-                        <label class="mb-1 block text-sm text-slate-300">Inicio do dia</label>
-                        <input
-                          type="time"
-                          formControlName="dayStartTime"
-                          class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                        />
-                      </div>
-                      <div>
-                        <label class="mb-1 block text-sm text-slate-300">Fim do dia</label>
-                        <input
-                          type="time"
-                          formControlName="dayEndTime"
-                          class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
-                        />
-                      </div>
+          @if (activeTab() === 'social' && isAdmin()) {
+            <section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+              <h2 class="text-xl font-semibold text-white">Redes e presenca online</h2>
+              <p class="mt-1 text-sm text-slate-400">
+                Links exibidos no rodape da pagina publica e usados para melhorar a visibilidade local.
+              </p>
+
+              @if (salonLoading()) {
+                <p class="mt-6 text-slate-400">Carregando...</p>
+              } @else {
+                <form class="mt-6 space-y-4" [formGroup]="socialForm" (ngSubmit)="saveSocial()">
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Instagram</label>
+                      <input
+                        formControlName="instagramUrl"
+                        placeholder="https://instagram.com/seusalao"
+                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                      />
                     </div>
-                    <button
-                      type="submit"
-                      [disabled]="schedulingForm.invalid || schedulingSaving()"
-                      class="rounded-lg border border-violet-500/40 px-4 py-2.5 text-sm font-medium text-violet-300 hover:bg-violet-500/10 disabled:opacity-50"
-                    >
-                      {{ schedulingSaving() ? 'Salvando...' : 'Salvar regras de agenda' }}
-                    </button>
-                  </form>
-                }
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Facebook</label>
+                      <input
+                        formControlName="facebookUrl"
+                        placeholder="https://facebook.com/seusalao"
+                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                      />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">TikTok</label>
+                      <input
+                        formControlName="tiktokUrl"
+                        placeholder="https://tiktok.com/@seusalao"
+                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                      />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Site</label>
+                      <input
+                        formControlName="websiteUrl"
+                        placeholder="https://seusalao.com.br"
+                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                      />
+                    </div>
+                    <div class="md:col-span-2">
+                      <label class="mb-1 block text-sm text-slate-300">Google Maps (como chegar)</label>
+                      <input
+                        formControlName="googleMapsUrl"
+                        placeholder="https://maps.google.com/..."
+                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    [disabled]="socialSaving()"
+                    class="rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
+                  >
+                    {{ socialSaving() ? 'Salvando...' : 'Salvar redes' }}
+                  </button>
+                </form>
               }
             </section>
           }
@@ -442,6 +436,42 @@ type DayScheduleRow = {
                   </div>
                 }
               }
+
+              @if (schedulingSettings()) {
+                <form
+                  class="mt-8 space-y-4 border-t border-slate-800 pt-8"
+                  [formGroup]="schedulingForm"
+                  (ngSubmit)="saveScheduling()"
+                >
+                  <h3 class="text-lg font-semibold text-white">Regras gerais de agenda</h3>
+                  <p class="text-sm text-slate-400">Pausa entre atendimentos e horario publico de slots.</p>
+                  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Pausa entre atendimentos (min)</label>
+                      <input type="number" formControlName="bufferMinutes" min="0" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Intervalo de slots (min)</label>
+                      <input type="number" formControlName="slotIntervalMinutes" min="5" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Fuso horario</label>
+                      <input formControlName="zoneId" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Inicio do dia</label>
+                      <input type="time" formControlName="dayStartTime" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-sm text-slate-300">Fim do dia</label>
+                      <input type="time" formControlName="dayEndTime" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                    </div>
+                  </div>
+                  <button type="submit" [disabled]="schedulingForm.invalid || schedulingSaving()" class="rounded-lg border border-violet-500/40 px-4 py-2.5 text-sm font-medium text-violet-300 hover:bg-violet-500/10 disabled:opacity-50">
+                    {{ schedulingSaving() ? 'Salvando...' : 'Salvar regras de agenda' }}
+                  </button>
+                </form>
+              }
             </section>
           }
 
@@ -500,7 +530,10 @@ export class SettingsComponent {
   protected readonly schedulingSettings = signal<SchedulingSettings | null>(null);
   protected readonly salonLoading = signal(false);
   protected readonly salonSaving = signal(false);
+  protected readonly socialSaving = signal(false);
   protected readonly schedulingSaving = signal(false);
+  protected readonly logoPreview = signal<string | null>(null);
+  protected readonly logoUploadError = signal<string | null>(null);
 
   protected readonly professionals = signal<Professional[]>([]);
   protected readonly professionalsLoading = signal(false);
@@ -514,16 +547,21 @@ export class SettingsComponent {
   protected readonly scheduleSaving = signal(false);
   protected readonly blockSaving = signal(false);
 
-  protected readonly salonForm = this.fb.nonNullable.group({
+  protected readonly personalizationForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
     description: [''],
     phone: [''],
     whatsapp: [''],
     address: [''],
     logoUrl: [''],
-    seoTitle: [''],
-    seoDescription: [''],
-    seoImageUrl: [''],
+  });
+
+  protected readonly socialForm = this.fb.nonNullable.group({
+    instagramUrl: [''],
+    facebookUrl: [''],
+    tiktokUrl: [''],
+    websiteUrl: [''],
+    googleMapsUrl: [''],
   });
 
   protected readonly schedulingForm = this.fb.nonNullable.group({
@@ -555,7 +593,8 @@ export class SettingsComponent {
     const tabs: { id: SettingsTab; label: string }[] = [];
     if (this.isAdmin()) {
       tabs.push(
-        { id: 'salon', label: 'Salao e SEO' },
+        { id: 'personalization', label: 'Personalizacao' },
+        { id: 'social', label: 'Redes' },
         { id: 'professionals', label: 'Profissionais' },
         { id: 'agenda', label: 'Agenda' }
       );
@@ -573,7 +612,7 @@ export class SettingsComponent {
     this.auth.getMe().subscribe({
       next: (response) => {
         this.profile.set(response);
-        this.activeTab.set(response.role === 'ADMIN' ? 'salon' : 'account');
+        this.activeTab.set(response.role === 'ADMIN' ? 'personalization' : 'account');
         if (response.role === 'ADMIN') {
           this.loadAdminData();
         }
@@ -587,20 +626,55 @@ export class SettingsComponent {
     this.banner.set(null);
   }
 
-  protected saveSalon(): void {
-    if (this.salonForm.invalid || this.salonSaving()) return;
+  protected savePersonalization(): void {
+    if (this.personalizationForm.invalid || this.salonSaving()) return;
     this.salonSaving.set(true);
-    this.settingsService.updateSalonSettings(this.salonForm.getRawValue()).subscribe({
+    this.settingsService.updateSalonSettings(this.buildSalonPayload()).subscribe({
       next: (settings) => {
         this.salonSettings.set(settings);
+        this.logoPreview.set(settings.logoUrl ?? null);
         this.salonSaving.set(false);
-        this.showBanner('success', 'Salao e SEO atualizados.');
+        this.showBanner('success', 'Personalizacao atualizada.');
       },
       error: () => {
         this.salonSaving.set(false);
-        this.showBanner('error', 'Nao foi possivel salvar o salao.');
+        this.showBanner('error', 'Nao foi possivel salvar a personalizacao.');
       },
     });
+  }
+
+  protected saveSocial(): void {
+    if (this.socialSaving()) return;
+    this.socialSaving.set(true);
+    this.settingsService.updateSalonSettings(this.buildSalonPayload()).subscribe({
+      next: (settings) => {
+        this.salonSettings.set(settings);
+        this.socialSaving.set(false);
+        this.showBanner('success', 'Redes atualizadas.');
+      },
+      error: () => {
+        this.socialSaving.set(false);
+        this.showBanner('error', 'Nao foi possivel salvar as redes.');
+      },
+    });
+  }
+
+  protected async onLogoSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    this.logoUploadError.set(null);
+    try {
+      const dataUrl = await readImageAsDataUrl(file);
+      this.personalizationForm.controls.logoUrl.setValue(dataUrl);
+      this.logoPreview.set(dataUrl);
+    } catch (error) {
+      this.logoUploadError.set(
+        error instanceof Error ? error.message : 'Nao foi possivel carregar a imagem.'
+      );
+    }
   }
 
   protected saveScheduling(): void {
@@ -771,17 +845,22 @@ export class SettingsComponent {
       next: ({ salon, scheduling }) => {
         this.salonSettings.set(salon);
         this.schedulingSettings.set(scheduling);
-        this.salonForm.patchValue({
+        this.personalizationForm.patchValue({
           name: salon.name,
           description: salon.description ?? '',
           phone: salon.phone ?? '',
           whatsapp: salon.whatsapp ?? '',
           address: salon.address ?? '',
           logoUrl: salon.logoUrl ?? '',
-          seoTitle: salon.seoTitle ?? '',
-          seoDescription: salon.seoDescription ?? '',
-          seoImageUrl: salon.seoImageUrl ?? '',
         });
+        this.socialForm.patchValue({
+          instagramUrl: salon.instagramUrl ?? '',
+          facebookUrl: salon.facebookUrl ?? '',
+          tiktokUrl: salon.tiktokUrl ?? '',
+          websiteUrl: salon.websiteUrl ?? '',
+          googleMapsUrl: salon.googleMapsUrl ?? '',
+        });
+        this.logoPreview.set(salon.logoUrl ?? null);
         this.schedulingForm.patchValue({
           zoneId: scheduling.zoneId,
           bufferMinutes: scheduling.bufferMinutes,
@@ -867,6 +946,24 @@ export class SettingsComponent {
       startTime: '09:00',
       endTime: '18:00',
     }));
+  }
+
+  private buildSalonPayload() {
+    const personalization = this.personalizationForm.getRawValue();
+    const social = this.socialForm.getRawValue();
+    return {
+      name: personalization.name,
+      description: personalization.description || undefined,
+      phone: personalization.phone || undefined,
+      whatsapp: personalization.whatsapp || undefined,
+      address: personalization.address || undefined,
+      logoUrl: personalization.logoUrl || undefined,
+      instagramUrl: social.instagramUrl || undefined,
+      facebookUrl: social.facebookUrl || undefined,
+      tiktokUrl: social.tiktokUrl || undefined,
+      websiteUrl: social.websiteUrl || undefined,
+      googleMapsUrl: social.googleMapsUrl || undefined,
+    };
   }
 
   private showBanner(type: 'success' | 'error', message: string): void {

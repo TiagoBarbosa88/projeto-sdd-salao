@@ -9,6 +9,7 @@ export interface SalonService {
   durationMinutes: number;
   price: number;
   active: boolean;
+  imageUrl?: string | null;
 }
 
 export interface CreateServiceRequest {
@@ -16,6 +17,7 @@ export interface CreateServiceRequest {
   description?: string;
   durationMinutes: number;
   price: number;
+  imageUrl?: string;
 }
 
 export interface UpdateServiceRequest extends CreateServiceRequest {

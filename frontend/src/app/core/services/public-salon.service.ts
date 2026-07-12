@@ -11,6 +11,11 @@ export interface PublicTenant {
   whatsapp?: string;
   address?: string;
   logoUrl?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  tiktokUrl?: string;
+  websiteUrl?: string;
+  googleMapsUrl?: string;
   seoTitle?: string;
   seoDescription?: string;
   seoImageUrl?: string;
@@ -22,6 +27,7 @@ export interface PublicService {
   description?: string;
   durationMinutes: number;
   price: number;
+  imageUrl?: string;
 }
 
 export interface PublicProfessional {
