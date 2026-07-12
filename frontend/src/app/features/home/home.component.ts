@@ -245,12 +245,26 @@ type AgendaViewMode = 'day' | 'week' | 'month';
       } @else if (filteredAppointments().length === 0) {
         <section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
           <p class="text-slate-400">Nenhum agendamento neste periodo.</p>
-          @if (appointments().length > 0) {
+          @if (outOfPeriodAppointments().length > 0) {
             <p class="mt-2 text-sm text-slate-500">
-              Existem {{ appointments().length }} agendamento(s) fora do intervalo selecionado.
-              Use <span class="text-violet-300">Amanha</span>, as setas ou mude para visualizacao
-              <span class="text-violet-300">Dia</span>.
+              Existem {{ outOfPeriodAppointments().length }} agendamento(s) fora do intervalo
+              selecionado:
             </p>
+            <ul class="mt-3 space-y-2">
+              @for (appointment of outOfPeriodAppointments(); track appointment.publicId) {
+                <li class="flex flex-wrap items-center gap-2 text-sm text-slate-300">
+                  <span>{{ formatDateTime(appointment.startAt) }}</span>
+                  <span class="text-slate-500">· {{ appointment.service?.name ?? 'Servico' }}</span>
+                  <button
+                    type="button"
+                    (click)="goToAppointmentDate(appointment.startAt)"
+                    class="rounded-md border border-violet-500/40 px-2 py-0.5 text-xs text-violet-300 transition hover:border-violet-400 hover:text-violet-200"
+                  >
+                    Ver nesta data
+                  </button>
+                </li>
+              }
+            </ul>
           }
         </section>
       } @else {
@@ -336,9 +350,35 @@ export class HomeComponent {
   ];
 
   protected readonly filteredAppointments = computed(() => {
+    const reference = this.referenceDate();
+    const mode = this.viewMode();
+    const { start, end } = this.getPeriodRange(reference, mode);
+    const items = this.appointments();
+    const filtered = items
+      .filter((item) => this.isWithinPeriod(item.startAt, start, end))
+      .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+
+    this.debugAgenda('Filtro aplicado', {
+      viewMode: mode,
+      reference: this.toDateInputValue(reference),
+      periodStart: start.toISOString(),
+      periodEnd: end.toISOString(),
+      total: items.length,
+      matched: filtered.length,
+      appointments: items.map((item) => ({
+        startAt: item.startAt,
+        localDay: this.toDateInputValue(new Date(item.startAt)),
+        inPeriod: this.isWithinPeriod(item.startAt, start, end),
+      })),
+    });
+
+    return filtered;
+  });
+
+  protected readonly outOfPeriodAppointments = computed(() => {
     const { start, end } = this.getPeriodRange(this.referenceDate(), this.viewMode());
     return this.appointments()
-      .filter((item) => this.isWithinPeriod(item.startAt, start, end))
+      .filter((item) => !this.isWithinPeriod(item.startAt, start, end))
       .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
   });
 
@@ -415,8 +455,13 @@ export class HomeComponent {
   }
 
   protected toggleForm(): void {
-    this.showForm.update((value) => !value);
+    const opening = !this.showForm();
+    this.showForm.set(opening);
     this.formError.set(null);
+
+    if (opening) {
+      this.form.controls.startAt.setValue(this.defaultStartAtLocal());
+    }
   }
 
   protected setViewMode(mode: AgendaViewMode): void {
@@ -451,6 +496,11 @@ export class HomeComponent {
     const tomorrow = this.startOfDay(new Date());
     tomorrow.setDate(tomorrow.getDate() + 1);
     this.referenceDate.set(tomorrow);
+    this.viewMode.set('day');
+  }
+
+  protected goToAppointmentDate(isoDate: string): void {
+    this.referenceDate.set(this.startOfDay(new Date(isoDate)));
     this.viewMode.set('day');
   }
 
@@ -576,6 +626,7 @@ export class HomeComponent {
       next: () => {
         this.saving.set(false);
         this.showForm.set(false);
+        this.goToAppointmentDate(startAt);
         this.resetForm();
         this.loadData();
       },
@@ -649,6 +700,7 @@ export class HomeComponent {
     this.appointmentApi.list().subscribe({
       next: (items) => {
         this.appointments.set(items);
+        this.debugAgenda('Agendamentos carregados', items);
         this.loading.set(false);
       },
       error: () => {
@@ -677,10 +729,41 @@ export class HomeComponent {
   }
 
   private isWithinPeriod(isoDate: string, periodStart: Date, periodEnd: Date): boolean {
-    const appointmentDay = this.startOfDay(new Date(isoDate));
-    const start = this.startOfDay(periodStart);
-    const end = this.startOfDay(periodEnd);
-    return appointmentDay >= start && appointmentDay <= end;
+    const startAt = new Date(isoDate).getTime();
+    return startAt >= periodStart.getTime() && startAt <= periodEnd.getTime();
+  }
+
+  private defaultStartAtLocal(): string {
+    const reference = this.referenceDate();
+    const candidate = new Date(
+      reference.getFullYear(),
+      reference.getMonth(),
+      reference.getDate(),
+      9,
+      0,
+      0,
+    );
+    const now = new Date();
+
+    if (candidate.getTime() <= now.getTime()) {
+      candidate.setDate(candidate.getDate() + 1);
+      candidate.setHours(9, 0, 0, 0);
+    }
+
+    return this.toDateTimeLocalValue(candidate);
+  }
+
+  private toDateTimeLocalValue(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hour}:${minute}`;
+  }
+
+  private debugAgenda(message: string, data?: unknown): void {
+    console.debug(`[Agenda] ${message}`, data ?? '');
   }
 
   private getPeriodRange(reference: Date, mode: AgendaViewMode): { start: Date; end: Date } {
