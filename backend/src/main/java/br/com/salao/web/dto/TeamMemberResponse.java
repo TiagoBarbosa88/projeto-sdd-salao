@@ -4,5 +4,5 @@ import br.com.salao.domain.entity.Role;
 
 import java.util.UUID;
 
-public record TeamMemberResponse(UUID publicId, String name, Role role) {
+public record TeamMemberResponse(UUID publicId, String name, String email, Role role, boolean loginActive) {
 }

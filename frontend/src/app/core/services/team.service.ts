@@ -2,18 +2,25 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+export type TeamRole = 'ADMIN' | 'PROFESSIONAL' | 'CLIENT';
+
 export interface TeamMember {
   publicId: string;
   name: string;
-  role: string;
+  email: string;
+  role: TeamRole;
+  loginActive: boolean;
 }
 
 export interface Professional {
   publicId: string;
   name: string;
+  email: string;
   phone?: string;
+  role: TeamRole;
   bookable: boolean;
   active: boolean;
+  loginActive: boolean;
 }
 
 export interface CreateTeamMember {
@@ -24,10 +31,14 @@ export interface CreateTeamMember {
   bookable: boolean;
 }
 
-export interface UpdateProfessionalProfile {
+export interface UpdateTeamMember {
+  name?: string;
   phone?: string;
   bookable?: boolean;
   active?: boolean;
+  role?: TeamRole;
+  loginActive?: boolean;
+  password?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -52,10 +63,7 @@ export class TeamService {
     return this.http.post<Professional>(`${this.baseUrl}/members`, payload);
   }
 
-  updateProfessionalProfile(
-    publicId: string,
-    payload: UpdateProfessionalProfile
-  ): Observable<Professional> {
+  updateTeamMember(publicId: string, payload: UpdateTeamMember): Observable<Professional> {
     return this.http.put<Professional>(`${this.baseUrl}/members/${publicId}/profile`, payload);
   }
 }

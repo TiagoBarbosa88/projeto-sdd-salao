@@ -13,8 +13,10 @@ import br.com.salao.domain.repository.UserRepository;
 import br.com.salao.web.dto.CreateTeamMemberRequest;
 import br.com.salao.web.dto.ProfessionalResponse;
 import br.com.salao.web.dto.TeamMemberResponse;
-import br.com.salao.web.dto.UpdateProfessionalProfileRequest;
+import br.com.salao.web.dto.UpdateTeamMemberRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import br.com.salao.security.AuthenticatedUser;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,7 +60,9 @@ public class TeamService {
                 .map(tenantUser -> new TeamMemberResponse(
                         tenantUser.getUser().getPublicId(),
                         tenantUser.getUser().getName(),
-                        tenantUser.getRole()))
+                        tenantUser.getUser().getEmail(),
+                        tenantUser.getRole(),
+                        tenantUser.getUser().isActive()))
                 .toList();
     }
 
@@ -118,14 +122,21 @@ public class TeamService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public ProfessionalResponse updateProfessionalProfile(UUID userPublicId, UpdateProfessionalProfileRequest request) {
+    public ProfessionalResponse updateTeamMember(UUID userPublicId, UpdateTeamMemberRequest request) {
         Tenant tenant = tenantResolver.requireCurrentTenant();
         ProfessionalProfile profile = professionalProfileRepository
                 .findByTenantIdAndUserPublicId(tenant.getId(), userPublicId)
                 .orElseThrow(ResourceNotFoundException::new);
 
+        TenantUser tenantUser = profile.getTenantUser();
+        User user = tenantUser.getUser();
+        AuthenticatedUser currentUser = getAuthenticatedUser();
+
+        if (request.name() != null && !request.name().isBlank()) {
+            user.setName(request.name().trim());
+        }
         if (request.phone() != null) {
-            profile.setPhone(request.phone());
+            profile.setPhone(request.phone().isBlank() ? null : request.phone().trim());
         }
         if (request.bookable() != null) {
             profile.setBookable(request.bookable());
@@ -133,8 +144,41 @@ public class TeamService {
         if (request.active() != null) {
             profile.setActive(request.active());
         }
+        if (request.role() != null) {
+            if (currentUser.getUserPublicId().equals(userPublicId)
+                    && request.role() != Role.ADMIN
+                    && tenantUser.getRole() == Role.ADMIN) {
+                long adminCount = tenantUserRepository.countByTenant_IdAndRole(tenant.getId(), Role.ADMIN);
+                if (adminCount <= 1) {
+                    throw new InvalidScheduleException();
+                }
+            }
+            tenantUser.setRole(request.role());
+        }
+        if (request.loginActive() != null) {
+            if (currentUser.getUserPublicId().equals(userPublicId) && !request.loginActive()) {
+                throw new InvalidScheduleException();
+            }
+            user.setActive(request.loginActive());
+        }
+        if (request.password() != null && !request.password().isBlank()) {
+            if (request.password().length() < 8) {
+                throw new InvalidScheduleException();
+            }
+            user.setPasswordHash(passwordEncoder.encode(request.password()));
+        }
 
+        userRepository.save(user);
+        tenantUserRepository.save(tenantUser);
         return toProfessionalResponse(professionalProfileRepository.save(profile));
+    }
+
+    private AuthenticatedUser getAuthenticatedUser() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof AuthenticatedUser authenticatedUser)) {
+            throw new InvalidCredentialsException();
+        }
+        return authenticatedUser;
     }
 
     void createDefaultWorkingPeriods(TenantUser tenantUser) {
@@ -149,13 +193,16 @@ public class TeamService {
     }
 
     private ProfessionalResponse toProfessionalResponse(ProfessionalProfile profile) {
-        User user = profile.getTenantUser().getUser();
+        TenantUser tenantUser = profile.getTenantUser();
+        User user = tenantUser.getUser();
         return new ProfessionalResponse(
                 user.getPublicId(),
                 user.getName(),
+                user.getEmail(),
                 profile.getPhone(),
+                tenantUser.getRole(),
                 profile.isBookable(),
-                profile.isActive()
-        );
+                profile.isActive(),
+                user.isActive());
     }
 }

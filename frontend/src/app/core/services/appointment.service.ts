@@ -13,7 +13,9 @@ export interface Appointment {
   publicId: string;
   service: NamedRef;
   professional: NamedRef;
-  client: NamedRef;
+  client: NamedRef | null;
+  guestName?: string | null;
+  guestPhone?: string | null;
   startAt: string;
   endAt: string;
   status: AppointmentStatus;

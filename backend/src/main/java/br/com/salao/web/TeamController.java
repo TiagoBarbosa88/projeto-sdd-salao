@@ -5,7 +5,7 @@ import br.com.salao.service.TeamService;
 import br.com.salao.web.dto.CreateTeamMemberRequest;
 import br.com.salao.web.dto.ProfessionalResponse;
 import br.com.salao.web.dto.TeamMemberResponse;
-import br.com.salao.web.dto.UpdateProfessionalProfileRequest;
+import br.com.salao.web.dto.UpdateTeamMemberRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,9 +49,9 @@ public class TeamController {
     }
 
     @PutMapping("/members/{publicId}/profile")
-    public ProfessionalResponse updateProfessionalProfile(
+    public ProfessionalResponse updateTeamMember(
             @PathVariable UUID publicId,
-            @RequestBody UpdateProfessionalProfileRequest request) {
-        return teamService.updateProfessionalProfile(publicId, request);
+            @RequestBody UpdateTeamMemberRequest request) {
+        return teamService.updateTeamMember(publicId, request);
     }
 }

@@ -2,7 +2,9 @@ package br.com.salao.web;
 
 import br.com.salao.domain.entity.Role;
 import br.com.salao.domain.entity.Tenant;
+import br.com.salao.domain.entity.TenantUser;
 import br.com.salao.domain.entity.User;
+import br.com.salao.domain.repository.ProfessionalProfileRepository;
 import br.com.salao.domain.repository.AppointmentRepository;
 import br.com.salao.domain.repository.AuditLogRepository;
 import br.com.salao.domain.repository.SalonServiceRepository;
@@ -23,6 +25,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -61,6 +67,12 @@ class TeamControllerTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private ProfessionalProfileRepository professionalProfileRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private Tenant tenant;
     private User admin;
     private User professional;
@@ -84,8 +96,10 @@ class TeamControllerTest {
         client = TestDataFactory.createUser(userRepository, passwordEncoder, "client@team.com", "Cliente");
 
         TestDataFactory.linkUser(tenantUserRepository, tenant, admin, Role.ADMIN);
-        TestDataFactory.linkUser(tenantUserRepository, tenant, professional, Role.PROFESSIONAL);
+        TenantUser professionalTenantUser =
+                TestDataFactory.linkUser(tenantUserRepository, tenant, professional, Role.PROFESSIONAL);
         TestDataFactory.linkUser(tenantUserRepository, tenant, client, Role.CLIENT);
+        TestDataFactory.createProfessionalProfile(professionalProfileRepository, professionalTenantUser, true);
 
         adminToken = TestDataFactory.tokenFor(jwtService, admin, tenant, Role.ADMIN);
     }
@@ -121,5 +135,23 @@ class TeamControllerTest {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name").value("Cliente"))
                 .andExpect(jsonPath("$[0].role").value("CLIENT"));
+    }
+
+    @Test
+    void updatesProfessionalProfileFields() throws Exception {
+        mockMvc.perform(put("/team/members/" + professional.getPublicId() + "/profile")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "name", "Wesley Atualizado",
+                                "phone", "(19) 84884-8484",
+                                "bookable", true,
+                                "active", true,
+                                "loginActive", true))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Wesley Atualizado"))
+                .andExpect(jsonPath("$.phone").value("(19) 84884-8484"))
+                .andExpect(jsonPath("$.role").value("PROFESSIONAL"))
+                .andExpect(jsonPath("$.loginActive").value(true));
     }
 }

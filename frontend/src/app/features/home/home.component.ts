@@ -8,6 +8,7 @@ import {
   AppointmentStatus,
 } from '../../core/services/appointment.service';
 import { TeamMember, TeamService } from '../../core/services/team.service';
+import { appointmentClientLabel } from '../../core/utils/team.util';
 
 type AgendaViewMode = 'day' | 'week' | 'month';
 
@@ -409,10 +410,10 @@ type CalendarDay = {
               }
             </section>
           } @else {
-            <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div [class]="appointmentsLayoutClass()">
               @for (appointment of filteredAppointments(); track appointment.publicId) {
                 <article
-                  class="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/80 p-3 transition hover:border-violet-500/30"
+                  class="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/80 p-4 transition hover:border-violet-500/30"
                 >
                   <div
                     class="absolute inset-y-0 left-0 w-0.5"
@@ -427,7 +428,7 @@ type CalendarDay = {
                           <span class="font-normal text-slate-500">–</span>
                           {{ formatTime(appointment.endAt) }}
                         </p>
-                        <p class="mt-0.5 truncate text-sm text-violet-200">
+                        <p class="mt-1 text-sm text-violet-200">
                           {{ appointment.service.name }}
                         </p>
                       </div>
@@ -439,11 +440,15 @@ type CalendarDay = {
                       </span>
                     </div>
 
-                    <p class="mt-2 truncate text-xs text-slate-500">
-                      {{ appointment.professional.name }}
+                    <p class="mt-2 text-xs text-slate-400">
+                      <span class="font-medium text-slate-300">{{ appointment.professional.name }}</span>
                       @if (!isClient()) {
                         <span class="text-slate-600"> · </span>
-                        {{ appointment.client.name }}
+                        <span>{{ clientLabel(appointment) }}</span>
+                        @if (appointment.guestPhone) {
+                          <span class="text-slate-600"> · </span>
+                          <span>{{ appointment.guestPhone }}</span>
+                        }
                       }
                     </p>
 
@@ -553,7 +558,10 @@ export class HomeComponent {
     const { start, end } = this.getPeriodRange(reference, mode);
     const items = this.appointments();
     const filtered = items
-      .filter((item) => this.isWithinPeriod(item.startAt, start, end))
+      .filter(
+        (item) =>
+          item.status !== 'CANCELLED' && this.isWithinPeriod(item.startAt, start, end)
+      )
       .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
 
     this.debugAgenda('Filtro aplicado', {
@@ -576,18 +584,28 @@ export class HomeComponent {
   protected readonly outOfPeriodAppointments = computed(() => {
     const { start, end } = this.getPeriodRange(this.referenceDate(), this.viewMode());
     return this.appointments()
-      .filter((item) => !this.isWithinPeriod(item.startAt, start, end))
+      .filter(
+        (item) =>
+          item.status !== 'CANCELLED' && !this.isWithinPeriod(item.startAt, start, end)
+      )
       .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
   });
 
   protected readonly periodSummary = computed(() => {
     const inPeriod = this.filteredAppointments().length;
-    const total = this.appointments().length;
+    const activeTotal = this.appointments().filter((item) => item.status !== 'CANCELLED').length;
     return {
       inPeriod,
-      outOfPeriod: total - inPeriod,
-      total,
+      outOfPeriod: activeTotal - inPeriod,
+      total: activeTotal,
     };
+  });
+
+  protected readonly appointmentsLayoutClass = computed(() => {
+    if (this.viewMode() === 'day') {
+      return 'flex flex-col gap-2';
+    }
+    return 'grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
   });
 
   protected readonly sameDayDifferentYearAppointments = computed(() => {
@@ -790,6 +808,10 @@ export class HomeComponent {
     this.viewMode.set('day');
   }
 
+  protected clientLabel(appointment: Appointment): string {
+    return appointmentClientLabel(appointment);
+  }
+
   protected formatPeriodYear(value: string): string {
     return String(new Date(value).getFullYear());
   }
@@ -885,7 +907,7 @@ export class HomeComponent {
     }
 
     if (role === 'CLIENT') {
-      return appointment.client.publicId === this.currentUserPublicId();
+      return appointment.client?.publicId === this.currentUserPublicId();
     }
 
     return false;

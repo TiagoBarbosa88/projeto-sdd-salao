@@ -18,6 +18,8 @@ import {
 import {
   CreateTeamMember,
   Professional,
+  TeamMember,
+  TeamRole,
   TeamService,
 } from '../../core/services/team.service';
 import { readImageAsDataUrl } from '../../core/utils/image-file.util';
@@ -26,6 +28,7 @@ import {
   normalizePhoneValue,
   optionalPhoneValidator,
 } from '../../core/utils/phone.util';
+import { roleLabel } from '../../core/utils/team.util';
 
 type SettingsTab = 'personalization' | 'social' | 'professionals' | 'agenda' | 'account';
 
@@ -323,30 +326,87 @@ type DayScheduleRow = {
                 <div class="mt-6 space-y-3">
                   @for (pro of professionals(); track pro.publicId) {
                     <article class="rounded-lg border border-slate-800 bg-slate-950/40 p-4">
-                      <div class="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <h3 class="font-medium text-white">{{ pro.name }}</h3>
-                          <p class="text-sm text-slate-400">{{ formatPhoneDisplay(pro.phone) || 'Sem telefone' }}</p>
+                      @if (editingMemberId() === pro.publicId) {
+                        <form class="space-y-4" [formGroup]="editMemberForm" (ngSubmit)="saveEditMember()">
+                          <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                              <label class="mb-1 block text-sm text-slate-300">Nome</label>
+                              <input formControlName="name" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                            </div>
+                            <div>
+                              <label class="mb-1 block text-sm text-slate-300">Telefone</label>
+                              <input
+                                formControlName="phone"
+                                appPhoneMask
+                                type="tel"
+                                inputmode="tel"
+                                maxlength="15"
+                                placeholder="(11) 99999-9999"
+                                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                              />
+                            </div>
+                            <div>
+                              <label class="mb-1 block text-sm text-slate-300">Funcao</label>
+                              <select formControlName="role" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500">
+                                @for (option of roleOptions; track option.value) {
+                                  <option [value]="option.value">{{ option.label }}</option>
+                                }
+                              </select>
+                            </div>
+                            <div>
+                              <label class="mb-1 block text-sm text-slate-300">Nova senha (opcional)</label>
+                              <input type="password" formControlName="password" placeholder="Minimo 8 caracteres" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                            </div>
+                          </div>
+                          <div class="flex flex-wrap gap-4">
+                            <label class="flex items-center gap-2 text-sm text-slate-300">
+                              <input type="checkbox" formControlName="bookable" class="rounded border-slate-700 bg-slate-950 text-violet-600" />
+                              Aceita agendamentos
+                            </label>
+                            <label class="flex items-center gap-2 text-sm text-slate-300">
+                              <input type="checkbox" formControlName="active" class="rounded border-slate-700 bg-slate-950 text-violet-600" />
+                              Perfil ativo
+                            </label>
+                            <label class="flex items-center gap-2 text-sm text-slate-300">
+                              <input type="checkbox" formControlName="loginActive" class="rounded border-slate-700 bg-slate-950 text-violet-600" />
+                              Acesso ao sistema
+                            </label>
+                          </div>
+                          <div class="flex flex-wrap gap-2">
+                            <button type="submit" [disabled]="editMemberForm.invalid || editMemberSaving()" class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50">
+                              {{ editMemberSaving() ? 'Salvando...' : 'Salvar alteracoes' }}
+                            </button>
+                            <button type="button" (click)="cancelEditMember()" class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:text-white">
+                              Cancelar
+                            </button>
+                          </div>
+                        </form>
+                      } @else {
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <h3 class="font-medium text-white">{{ pro.name }}</h3>
+                            <p class="text-sm text-slate-400">{{ pro.email }}</p>
+                            <p class="text-sm text-slate-400">{{ formatPhoneDisplay(pro.phone) || 'Sem telefone' }}</p>
+                          </div>
+                          <div class="flex flex-wrap gap-2 text-xs">
+                            <span class="rounded-full bg-slate-800 px-2 py-1 text-slate-300">{{ roleLabel(pro.role) }}</span>
+                            <span class="rounded-full px-2 py-1" [class.bg-emerald-500/15]="pro.active" [class.text-emerald-300]="pro.active" [class.bg-slate-700]="!pro.active" [class.text-slate-400]="!pro.active">
+                              {{ pro.active ? 'Ativo' : 'Inativo' }}
+                            </span>
+                            <span class="rounded-full px-2 py-1" [class.bg-violet-500/15]="pro.bookable" [class.text-violet-300]="pro.bookable" [class.bg-slate-700]="!pro.bookable" [class.text-slate-400]="!pro.bookable">
+                              {{ pro.bookable ? 'Agendavel' : 'Nao agendavel' }}
+                            </span>
+                            <span class="rounded-full px-2 py-1" [class.bg-sky-500/15]="pro.loginActive" [class.text-sky-300]="pro.loginActive" [class.bg-rose-500/15]="!pro.loginActive" [class.text-rose-300]="!pro.loginActive">
+                              {{ pro.loginActive ? 'Com acesso' : 'Sem acesso' }}
+                            </span>
+                          </div>
                         </div>
-                        <div class="flex flex-wrap gap-2 text-xs">
-                          <span class="rounded-full px-2 py-1" [class.bg-emerald-500/15]="pro.active" [class.text-emerald-300]="pro.active" [class.bg-slate-700]="!pro.active" [class.text-slate-400]="!pro.active">
-                            {{ pro.active ? 'Ativo' : 'Inativo' }}
-                          </span>
-                          <span class="rounded-full px-2 py-1" [class.bg-violet-500/15]="pro.bookable" [class.text-violet-300]="pro.bookable" [class.bg-slate-700]="!pro.bookable" [class.text-slate-400]="!pro.bookable">
-                            {{ pro.bookable ? 'Agendavel' : 'Nao agendavel' }}
-                          </span>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                          <button type="button" (click)="startEditMember(pro)" class="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white">
+                            Editar
+                          </button>
                         </div>
-                      </div>
-                      <div class="mt-4 flex flex-wrap gap-4">
-                        <label class="flex items-center gap-2 text-sm text-slate-300">
-                          <input type="checkbox" [checked]="pro.bookable" (change)="toggleBookable(pro, $event)" />
-                          Aceita agendamentos
-                        </label>
-                        <label class="flex items-center gap-2 text-sm text-slate-300">
-                          <input type="checkbox" [checked]="pro.active" (change)="toggleActive(pro, $event)" />
-                          Ativo
-                        </label>
-                      </div>
+                      }
                     </article>
                   }
                 </div>
@@ -517,9 +577,36 @@ type DayScheduleRow = {
                   </div>
                   <div class="flex gap-2">
                     <dt class="text-slate-400">Perfil:</dt>
-                    <dd class="text-violet-300">{{ profile()!.role }}</dd>
+                    <dd class="text-violet-300">{{ roleLabel(profile()!.role) }}</dd>
                   </div>
                 </dl>
+
+                <div class="mt-8">
+                  <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Equipe do salao</h3>
+                  @if (teamMembersLoading()) {
+                    <p class="mt-3 text-sm text-slate-400">Carregando equipe...</p>
+                  } @else if (teamMembers().length === 0) {
+                    <p class="mt-3 text-sm text-slate-400">Nenhum membro cadastrado.</p>
+                  } @else {
+                    <div class="mt-3 space-y-2">
+                      @for (member of teamMembers(); track member.publicId) {
+                        <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-950/40 px-4 py-3">
+                          <div>
+                            <p class="font-medium text-white">{{ member.name }}</p>
+                            <p class="text-xs text-slate-400">{{ member.email }}</p>
+                          </div>
+                          <div class="flex flex-wrap items-center gap-2 text-xs">
+                            <span class="rounded-full bg-slate-800 px-2 py-1 text-slate-300">{{ roleLabel(member.role) }}</span>
+                            <span class="rounded-full px-2 py-1" [class.bg-sky-500/15]="member.loginActive" [class.text-sky-300]="member.loginActive" [class.bg-rose-500/15]="!member.loginActive" [class.text-rose-300]="!member.loginActive">
+                              {{ member.loginActive ? 'Com acesso' : 'Sem acesso' }}
+                            </span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
                 <button
                   type="button"
                   (click)="logout()"
@@ -566,6 +653,11 @@ export class SettingsComponent {
   protected readonly professionalsLoading = signal(false);
   protected readonly showMemberForm = signal(false);
   protected readonly memberSaving = signal(false);
+  protected readonly editingMemberId = signal<string | null>(null);
+  protected readonly editMemberSaving = signal(false);
+
+  protected readonly teamMembers = signal<TeamMember[]>([]);
+  protected readonly teamMembersLoading = signal(false);
 
   protected readonly selectedProfessionalId = signal<string | null>(null);
   protected readonly dayRows = signal<DayScheduleRow[]>(this.defaultDayRows());
@@ -607,6 +699,27 @@ export class SettingsComponent {
     bookable: [true],
   });
 
+  protected readonly editMemberForm = this.fb.nonNullable.group({
+    name: ['', Validators.required],
+    phone: ['', (control: AbstractControl) => optionalPhoneValidator(control.value)],
+    role: ['PROFESSIONAL' as TeamRole, Validators.required],
+    bookable: [true],
+    active: [true],
+    loginActive: [true],
+    password: ['', (control: AbstractControl) => {
+      const value = String(control.value ?? '');
+      if (!value) {
+        return null;
+      }
+      return value.length >= 8 ? null : { minlength: true };
+    }],
+  });
+
+  protected readonly roleOptions: { value: TeamRole; label: string }[] = [
+    { value: 'ADMIN', label: 'Administrador' },
+    { value: 'PROFESSIONAL', label: 'Profissional' },
+  ];
+
   protected readonly blockForm = this.fb.nonNullable.group({
     startAt: ['', Validators.required],
     endAt: ['', Validators.required],
@@ -640,6 +753,7 @@ export class SettingsComponent {
       next: (response) => {
         this.profile.set(response);
         this.activeTab.set(response.role === 'ADMIN' ? 'personalization' : 'account');
+        this.loadTeamMembers();
         if (response.role === 'ADMIN') {
           this.loadAdminData();
         }
@@ -649,6 +763,7 @@ export class SettingsComponent {
   }
 
   protected formatPhoneDisplay = formatPhoneDisplay;
+  protected roleLabel = roleLabel;
 
   protected setTab(tab: SettingsTab): void {
     this.activeTab.set(tab);
@@ -741,6 +856,7 @@ export class SettingsComponent {
         this.showMemberForm.set(false);
         this.memberForm.reset({ bookable: true });
         this.loadProfessionals();
+        this.loadTeamMembers();
         this.showBanner('success', 'Profissional criado.');
       },
       error: (err) => {
@@ -755,14 +871,58 @@ export class SettingsComponent {
     });
   }
 
-  protected toggleBookable(pro: Professional, event: Event): void {
-    const checked = (event.target as HTMLInputElement).checked;
-    this.updateProfessional(pro, { bookable: checked });
+  protected startEditMember(pro: Professional): void {
+    this.editingMemberId.set(pro.publicId);
+    this.showMemberForm.set(false);
+    this.editMemberForm.reset({
+      name: pro.name,
+      phone: formatPhoneDisplay(pro.phone),
+      role: pro.role,
+      bookable: pro.bookable,
+      active: pro.active,
+      loginActive: pro.loginActive,
+      password: '',
+    });
   }
 
-  protected toggleActive(pro: Professional, event: Event): void {
-    const checked = (event.target as HTMLInputElement).checked;
-    this.updateProfessional(pro, { active: checked });
+  protected cancelEditMember(): void {
+    this.editingMemberId.set(null);
+    this.editMemberForm.reset();
+  }
+
+  protected saveEditMember(): void {
+    const memberId = this.editingMemberId();
+    if (!memberId || this.editMemberForm.invalid || this.editMemberSaving()) {
+      return;
+    }
+
+    this.editMemberSaving.set(true);
+    const raw = this.editMemberForm.getRawValue();
+    const payload = {
+      name: raw.name.trim(),
+      phone: normalizePhoneValue(raw.phone),
+      role: raw.role,
+      bookable: raw.bookable,
+      active: raw.active,
+      loginActive: raw.loginActive,
+      ...(raw.password ? { password: raw.password } : {}),
+    };
+
+    this.teamService.updateTeamMember(memberId, payload).subscribe({
+      next: (updated) => {
+        this.professionals.update((items) =>
+          items.map((item) => (item.publicId === updated.publicId ? updated : item))
+        );
+        this.editingMemberId.set(null);
+        this.editMemberSaving.set(false);
+        this.loadTeamMembers();
+        this.showBanner('success', 'Profissional atualizado.');
+      },
+      error: () => {
+        this.editMemberSaving.set(false);
+        this.showBanner('error', 'Nao foi possivel atualizar o profissional.');
+      },
+    });
   }
 
   protected onProfessionalChange(event: Event): void {
@@ -917,6 +1077,19 @@ export class SettingsComponent {
     this.loadProfessionals();
   }
 
+  private loadTeamMembers(): void {
+    this.teamMembersLoading.set(true);
+    this.teamService.getMembers().subscribe({
+      next: (items) => {
+        this.teamMembers.set(items);
+        this.teamMembersLoading.set(false);
+      },
+      error: () => {
+        this.teamMembersLoading.set(false);
+      },
+    });
+  }
+
   private loadProfessionals(): void {
     this.professionalsLoading.set(true);
     this.teamService.listAllProfessionalProfiles().subscribe({
@@ -950,17 +1123,6 @@ export class SettingsComponent {
         this.scheduleLoading.set(false);
         this.showBanner('error', 'Nao foi possivel carregar a agenda.');
       },
-    });
-  }
-
-  private updateProfessional(pro: Professional, patch: { bookable?: boolean; active?: boolean }): void {
-    this.teamService.updateProfessionalProfile(pro.publicId, patch).subscribe({
-      next: (updated) => {
-        this.professionals.update((items) =>
-          items.map((item) => (item.publicId === updated.publicId ? updated : item))
-        );
-      },
-      error: () => this.showBanner('error', 'Nao foi possivel atualizar o profissional.'),
     });
   }
 
