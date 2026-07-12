@@ -95,7 +95,8 @@ class ServiceCatalogServiceTest {
                 "Escova",
                 "Escova modeladora",
                 40,
-                new BigDecimal("55.00")
+                new BigDecimal("55.00"),
+                null
         ));
 
         assertThat(created.publicId()).isNotNull();
@@ -109,7 +110,8 @@ class ServiceCatalogServiceTest {
                 "Nova descricao",
                 50,
                 new BigDecimal("65.00"),
-                true
+                true,
+                null
         ));
         assertThat(updated.name()).isEqualTo("Escova Premium");
 
@@ -128,7 +130,8 @@ class ServiceCatalogServiceTest {
                 "Manicure",
                 null,
                 30,
-                new BigDecimal("35.00")
+                new BigDecimal("35.00"),
+                null
         ))).isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
     }
 
