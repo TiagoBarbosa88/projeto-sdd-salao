@@ -15,7 +15,7 @@
 | 012 | 3 | Appointments UI | DONE |
 | 013 | 3 | Dashboard UI | DONE |
 | 014 | 4 | Auditoria backend | DONE |
-| 015 | 4 | Auditoria UI | TODO |
+| 015 | 4 | Auditoria UI | DONE |
 | 016 | 4 | SEO + pagina publica | TODO |
 | 017 | 4 | WhatsApp | TODO |
 | 018 | 4 | Deploy | TODO |

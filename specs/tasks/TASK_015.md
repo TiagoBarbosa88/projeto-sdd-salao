@@ -20,10 +20,10 @@ TASK_014
 
 ## Critérios de aceite
 
-- [ ] Rota /audit acessível para ADMIN
-- [ ] Lista eventos com ação, entidade, ator e data
-- [ ] Filtro por tipo de ação
-- [ ] Testes de componente
+- [x] Rota /audit acessível para ADMIN
+- [x] Lista eventos com ação, entidade, ator e data
+- [x] Filtro por tipo de ação
+- [x] Testes de componente
 
 ## Testes obrigatórios
 
@@ -37,4 +37,4 @@ feat(frontend): adiciona tela de auditoria
 
 ## Status
 
-TODO
+DONE
