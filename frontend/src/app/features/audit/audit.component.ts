@@ -2,6 +2,11 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuditAction, AuditLog, AuditService } from '../../core/services/audit.service';
 
+type AuditDetailRow = {
+  label: string;
+  value: string;
+};
+
 @Component({
   selector: 'app-audit',
   standalone: true,
@@ -50,8 +55,7 @@ import { AuditAction, AuditLog, AuditService } from '../../core/services/audit.s
                 <th class="px-4 py-3">Data</th>
                 <th class="px-4 py-3">Acao</th>
                 <th class="px-4 py-3">Ator</th>
-                <th class="px-4 py-3">Entidade</th>
-                <th class="px-4 py-3">Detalhe</th>
+                <th class="px-4 py-3 text-right">Detalhes</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800">
@@ -59,13 +63,22 @@ import { AuditAction, AuditLog, AuditService } from '../../core/services/audit.s
                 <tr class="text-slate-200">
                   <td class="px-4 py-3 whitespace-nowrap">{{ formatDateTime(log.createdAt) }}</td>
                   <td class="px-4 py-3">
-                    <span class="inline-flex rounded-full bg-violet-500/15 px-2 py-0.5 text-xs font-medium text-violet-300">
+                    <span
+                      class="inline-flex rounded-full bg-violet-500/15 px-2 py-0.5 text-xs font-medium text-violet-300"
+                    >
                       {{ actionLabel(log.action) }}
                     </span>
                   </td>
                   <td class="px-4 py-3">{{ log.actor?.name ?? 'Sistema' }}</td>
-                  <td class="px-4 py-3">{{ log.entityType ?? '—' }}</td>
-                  <td class="px-4 py-3 text-slate-400">{{ log.metadata ?? '—' }}</td>
+                  <td class="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      (click)="openDetail(log)"
+                      class="rounded-lg border border-slate-700 px-3 py-1 text-xs font-medium text-violet-300 transition hover:border-violet-500 hover:text-violet-200"
+                    >
+                      Ver detalhes
+                    </button>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -77,21 +90,84 @@ import { AuditAction, AuditLog, AuditService } from '../../core/services/audit.s
             <article class="rounded-xl border border-slate-800 bg-slate-900 p-3">
               <div class="flex items-start justify-between gap-2">
                 <p class="text-xs text-slate-400">{{ formatDateTime(log.createdAt) }}</p>
-                <span class="shrink-0 rounded-full bg-violet-500/15 px-2 py-0.5 text-[10px] font-medium text-violet-300">
+                <span
+                  class="shrink-0 rounded-full bg-violet-500/15 px-2 py-0.5 text-[10px] font-medium text-violet-300"
+                >
                   {{ actionLabel(log.action) }}
                 </span>
               </div>
               <p class="mt-2 text-sm font-medium text-white">{{ log.actor?.name ?? 'Sistema' }}</p>
-              <div class="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
-                @if (log.entityType) {
-                  <span>{{ log.entityType }}</span>
-                }
-                @if (log.metadata) {
-                  <span class="text-slate-400">{{ log.metadata }}</span>
-                }
-              </div>
+              <button
+                type="button"
+                (click)="openDetail(log)"
+                class="mt-2 text-xs font-medium text-violet-400 transition hover:text-violet-300"
+              >
+                Ver detalhes
+              </button>
             </article>
           }
+        </div>
+      }
+
+      @if (selectedLog()) {
+        <div
+          class="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-4 backdrop-blur-sm sm:items-center"
+          (click)="closeDetail()"
+          role="presentation"
+        >
+          <div
+            class="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl shadow-black/40"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="audit-detail-title"
+            (click)="$event.stopPropagation()"
+          >
+            <div class="flex items-start justify-between gap-4 border-b border-slate-800 px-5 py-4">
+              <div>
+                <p class="text-xs uppercase tracking-wider text-slate-500">Detalhes do evento</p>
+                <h3 id="audit-detail-title" class="mt-1 text-lg font-semibold text-white">
+                  {{ actionLabel(selectedLog()!.action) }}
+                </h3>
+                <p class="mt-1 text-sm text-slate-400">
+                  {{ formatDateTime(selectedLog()!.createdAt) }}
+                </p>
+              </div>
+              <button
+                type="button"
+                (click)="closeDetail()"
+                class="rounded-lg border border-slate-700 px-2 py-1 text-sm text-slate-400 transition hover:text-white"
+                aria-label="Fechar"
+              >
+                &times;
+              </button>
+            </div>
+
+            <dl class="space-y-3 px-5 py-4">
+              <div class="flex gap-3 text-sm">
+                <dt class="w-28 shrink-0 text-slate-500">Ator</dt>
+                <dd class="text-slate-200">{{ selectedLog()!.actor?.name ?? 'Sistema' }}</dd>
+              </div>
+              @for (row of detailRows(selectedLog()!); track row.label) {
+                <div class="flex gap-3 text-sm">
+                  <dt class="w-28 shrink-0 text-slate-500">{{ row.label }}</dt>
+                  <dd class="min-w-0 break-words text-slate-200">{{ row.value }}</dd>
+                </div>
+              }
+              @if (detailRows(selectedLog()!).length === 0) {
+                <p class="text-sm text-slate-400">Nenhum detalhe adicional registrado para este evento.</p>
+              }
+            </dl>
+
+            <div class="border-t border-slate-800 px-5 py-4">
+              <button
+                type="button"
+                (click)="closeDetail()"
+                class="w-full rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
         </div>
       }
     </div>
@@ -104,6 +180,7 @@ export class AuditComponent {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly selectedAction = signal<AuditAction | ''>('');
+  protected readonly selectedLog = signal<AuditLog | null>(null);
 
   protected readonly actionOptions: { value: AuditAction; label: string }[] = [
     { value: 'LOGIN', label: 'Login' },
@@ -114,6 +191,20 @@ export class AuditComponent {
     { value: 'APPOINTMENT_CANCELLED', label: 'Agendamento cancelado' },
   ];
 
+  private readonly detailFieldLabels: Record<string, string> = {
+    email: 'E-mail',
+    name: 'Nome',
+    service: 'Servico',
+    startAt: 'Inicio',
+    endAt: 'Fim',
+    professional: 'Profissional',
+    client: 'Cliente',
+    status: 'Status',
+    price: 'Preco',
+    durationMinutes: 'Duracao (min)',
+    active: 'Ativo',
+  };
+
   constructor() {
     this.loadLogs();
   }
@@ -121,6 +212,14 @@ export class AuditComponent {
   protected onActionFilterChange(value: string): void {
     this.selectedAction.set(value as AuditAction | '');
     this.loadLogs();
+  }
+
+  protected openDetail(log: AuditLog): void {
+    this.selectedLog.set(log);
+  }
+
+  protected closeDetail(): void {
+    this.selectedLog.set(null);
   }
 
   protected formatDateTime(value: string): string {
@@ -132,6 +231,67 @@ export class AuditComponent {
 
   protected actionLabel(action: AuditAction): string {
     return this.actionOptions.find((item) => item.value === action)?.label ?? action;
+  }
+
+  protected detailRows(log: AuditLog): AuditDetailRow[] {
+    const rows: AuditDetailRow[] = [];
+    const parsed = this.parseMetadata(log.metadata);
+
+    for (const [key, value] of Object.entries(parsed)) {
+      rows.push({
+        label: this.detailFieldLabels[key] ?? key,
+        value: this.formatDetailValue(key, value),
+      });
+    }
+
+    if (rows.length === 0 && log.metadata) {
+      rows.push({ label: 'Informacao', value: log.metadata });
+    }
+
+    return rows;
+  }
+
+  private parseMetadata(metadata: string | null): Record<string, unknown> {
+    if (!metadata) {
+      return {};
+    }
+
+    try {
+      const parsed = JSON.parse(metadata) as Record<string, unknown>;
+      return typeof parsed === 'object' && parsed !== null ? parsed : { informacao: metadata };
+    } catch {
+      return { informacao: metadata };
+    }
+  }
+
+  private formatDetailValue(key: string, value: unknown): string {
+    if (value === null || value === undefined) {
+      return '—';
+    }
+
+    if (typeof value === 'boolean') {
+      return value ? 'Sim' : 'Nao';
+    }
+
+    if (key === 'price' && typeof value === 'number') {
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    }
+
+    if ((key === 'startAt' || key === 'endAt') && typeof value === 'string') {
+      return this.formatDateTime(value);
+    }
+
+    if (key === 'status' && typeof value === 'string') {
+      const labels: Record<string, string> = {
+        SCHEDULED: 'Agendado',
+        CONFIRMED: 'Confirmado',
+        CANCELLED: 'Cancelado',
+        COMPLETED: 'Concluido',
+      };
+      return labels[value] ?? value;
+    }
+
+    return String(value);
   }
 
   private loadLogs(): void {

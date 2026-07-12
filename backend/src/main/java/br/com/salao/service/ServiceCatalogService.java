@@ -64,7 +64,11 @@ public class ServiceCatalogService {
                 AuditAction.SERVICE_CREATED,
                 "Service",
                 saved.getPublicId(),
-                saved.getName());
+                "{\"name\":\"" + escapeJson(saved.getName()) + "\",\"price\":"
+                        + saved.getPrice()
+                        + ",\"durationMinutes\":"
+                        + saved.getDurationMinutes()
+                        + ",\"active\":true}");
         return toResponse(saved);
     }
 
@@ -85,7 +89,7 @@ public class ServiceCatalogService {
                 AuditAction.SERVICE_UPDATED,
                 "Service",
                 saved.getPublicId(),
-                saved.getName());
+                buildServiceAuditMetadata(saved));
         return toResponse(saved);
     }
 
@@ -101,7 +105,23 @@ public class ServiceCatalogService {
                 AuditAction.SERVICE_DEACTIVATED,
                 "Service",
                 service.getPublicId(),
-                service.getName());
+                buildServiceAuditMetadata(service));
+    }
+
+    private String buildServiceAuditMetadata(SalonService service) {
+        return "{\"name\":\""
+                + escapeJson(service.getName())
+                + "\",\"price\":"
+                + service.getPrice()
+                + ",\"durationMinutes\":"
+                + service.getDurationMinutes()
+                + ",\"active\":"
+                + service.isActive()
+                + "}";
+    }
+
+    private String escapeJson(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     private SalonService findServiceForTenant(UUID publicId) {

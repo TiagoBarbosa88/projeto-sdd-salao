@@ -113,7 +113,7 @@ public class AppointmentService {
                 AuditAction.APPOINTMENT_CREATED,
                 "Appointment",
                 saved.getPublicId(),
-                null);
+                buildAppointmentAuditMetadata(saved));
         return toResponse(saved);
     }
 
@@ -142,8 +142,28 @@ public class AppointmentService {
                 AuditAction.APPOINTMENT_CANCELLED,
                 "Appointment",
                 saved.getPublicId(),
-                null);
+                buildAppointmentAuditMetadata(saved));
         return toResponse(saved);
+    }
+
+    private String buildAppointmentAuditMetadata(Appointment appointment) {
+        return "{\"service\":\""
+                + escapeJson(appointment.getService().getName())
+                + "\",\"startAt\":\""
+                + appointment.getStartAt()
+                + "\",\"endAt\":\""
+                + appointment.getEndAt()
+                + "\",\"professional\":\""
+                + escapeJson(appointment.getProfessional().getName())
+                + "\",\"client\":\""
+                + escapeJson(appointment.getClient().getName())
+                + "\",\"status\":\""
+                + appointment.getStatus()
+                + "\"}";
+    }
+
+    private String escapeJson(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     private User resolveClient(CreateAppointmentRequest request, AuthenticatedUser principal, Long tenantId) {

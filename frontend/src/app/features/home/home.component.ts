@@ -26,17 +26,7 @@ type CalendarDay = {
   imports: [ReactiveFormsModule],
   template: `
     <div class="space-y-6">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 class="text-xl font-semibold text-white">Agenda</h2>
-          <p class="mt-1 text-sm text-slate-400">
-            @if (isClient()) {
-              Veja seus horarios e agende quando quiser.
-            } @else {
-              Consulte e crie agendamentos.
-            }
-          </p>
-        </div>
+      <div class="flex flex-wrap items-center justify-end gap-4">
         <button
           type="button"
           (click)="toggleForm()"
@@ -181,153 +171,155 @@ type CalendarDay = {
       }
 
       <div class="space-y-4">
-        <section class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-          <div class="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p class="mb-2 text-xs uppercase tracking-wider text-slate-400">Visualizacao</p>
-              <div class="inline-flex rounded-xl border border-slate-700 bg-slate-950 p-1">
-                @for (mode of viewModes; track mode.value) {
-                  <button
-                    type="button"
-                    (click)="setViewMode(mode.value)"
-                    class="rounded-lg px-3 py-1.5 text-sm font-medium transition"
-                    [class]="
-                      viewMode() === mode.value
-                        ? 'bg-violet-600 text-white shadow-sm'
-                        : 'text-slate-400 hover:text-white'
-                    "
-                  >
-                    {{ mode.label }}
-                  </button>
-                }
+        <div class="grid gap-4 lg:grid-cols-2 lg:items-start">
+          <section class="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+            <div class="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p class="mb-2 text-xs uppercase tracking-wider text-slate-400">Visualizacao</p>
+                <div class="inline-flex rounded-xl border border-slate-700 bg-slate-950 p-1">
+                  @for (mode of viewModes; track mode.value) {
+                    <button
+                      type="button"
+                      (click)="setViewMode(mode.value)"
+                      class="rounded-lg px-3 py-1.5 text-sm font-medium transition"
+                      [class]="
+                        viewMode() === mode.value
+                          ? 'bg-violet-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-white'
+                      "
+                    >
+                      {{ mode.label }}
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  (click)="shiftPeriod(-1)"
+                  class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+                  aria-label="Periodo anterior"
+                >
+                  &lt;
+                </button>
+                <button
+                  type="button"
+                  (click)="goToToday()"
+                  class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+                >
+                  Hoje
+                </button>
+                <button
+                  type="button"
+                  (click)="goToTomorrow()"
+                  class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+                >
+                  Amanha
+                </button>
+                <button
+                  type="button"
+                  (click)="shiftPeriod(1)"
+                  class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+                  aria-label="Proximo periodo"
+                >
+                  &gt;
+                </button>
               </div>
             </div>
 
-            <div class="flex flex-wrap gap-2">
-              <button
-                type="button"
-                (click)="shiftPeriod(-1)"
-                class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
-                aria-label="Periodo anterior"
-              >
-                &lt;
-              </button>
-              <button
-                type="button"
-                (click)="goToToday()"
-                class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
-              >
-                Hoje
-              </button>
-              <button
-                type="button"
-                (click)="goToTomorrow()"
-                class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
-              >
-                Amanha
-              </button>
-              <button
-                type="button"
-                (click)="shiftPeriod(1)"
-                class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
-                aria-label="Proximo periodo"
-              >
-                &gt;
-              </button>
+            <div
+              class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-2.5"
+            >
+              <div>
+                <p class="text-[10px] uppercase tracking-wider text-slate-500">Periodo selecionado</p>
+                <p class="text-sm font-medium capitalize text-violet-300">{{ periodLabel() }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-lg font-semibold text-white">{{ periodSummary().inPeriod }}</p>
+                <p class="text-[10px] text-slate-500">
+                  {{ periodSummary().inPeriod === 1 ? 'agendamento' : 'agendamentos' }}
+                  @if (periodSummary().outOfPeriod > 0) {
+                    <span class="text-amber-400/80">
+                      · {{ periodSummary().outOfPeriod }} fora
+                    </span>
+                  }
+                </p>
+              </div>
             </div>
-          </div>
+          </section>
 
-          <div
-            class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-2.5"
-          >
-            <div>
-              <p class="text-[10px] uppercase tracking-wider text-slate-500">Periodo selecionado</p>
-              <p class="text-sm font-medium text-violet-300">{{ periodLabel() }}</p>
+          <section class="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h3 class="text-sm font-semibold capitalize text-white">{{ calendarMonthLabel() }}</h3>
+              <div class="flex gap-1">
+                <button
+                  type="button"
+                  (click)="shiftCalendarMonth(-1)"
+                  class="rounded-lg border border-slate-700 px-2 py-1 text-xs text-slate-300 transition hover:border-violet-500 hover:text-white"
+                  aria-label="Mes anterior"
+                >
+                  &lt;
+                </button>
+                <button
+                  type="button"
+                  (click)="shiftCalendarMonth(1)"
+                  class="rounded-lg border border-slate-700 px-2 py-1 text-xs text-slate-300 transition hover:border-violet-500 hover:text-white"
+                  aria-label="Proximo mes"
+                >
+                  &gt;
+                </button>
+              </div>
             </div>
-            <div class="text-right">
-              <p class="text-lg font-semibold text-white">{{ periodSummary().inPeriod }}</p>
-              <p class="text-[10px] text-slate-500">
-                {{ periodSummary().inPeriod === 1 ? 'agendamento' : 'agendamentos' }}
-                @if (periodSummary().outOfPeriod > 0) {
-                  <span class="text-amber-400/80">
-                    · {{ periodSummary().outOfPeriod }} fora
-                  </span>
-                }
-              </p>
-            </div>
-          </div>
-        </section>
 
-        <section class="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-4">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <h3 class="text-sm font-semibold capitalize text-white">{{ calendarMonthLabel() }}</h3>
-            <div class="flex gap-1">
-              <button
-                type="button"
-                (click)="shiftCalendarMonth(-1)"
-                class="rounded-lg border border-slate-700 px-2 py-1 text-xs text-slate-300 transition hover:border-violet-500 hover:text-white"
-                aria-label="Mes anterior"
-              >
-                &lt;
-              </button>
-              <button
-                type="button"
-                (click)="shiftCalendarMonth(1)"
-                class="rounded-lg border border-slate-700 px-2 py-1 text-xs text-slate-300 transition hover:border-violet-500 hover:text-white"
-                aria-label="Proximo mes"
-              >
-                &gt;
-              </button>
+            <div
+              class="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-medium uppercase tracking-wider text-slate-500"
+            >
+              @for (label of weekdayLabels; track label) {
+                <span class="py-0.5">{{ label }}</span>
+              }
             </div>
-          </div>
 
-          <div
-            class="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-medium uppercase tracking-wider text-slate-500"
-          >
-            @for (label of weekdayLabels; track label) {
-              <span class="py-0.5">{{ label }}</span>
-            }
-          </div>
+            <div class="mt-1 grid grid-cols-7 gap-1">
+              @for (day of calendarDays(); track day.key) {
+                <button
+                  type="button"
+                  (click)="selectCalendarDay(day.date)"
+                  class="relative flex h-9 flex-col items-center justify-center rounded-lg text-xs transition sm:h-10"
+                  [class]="calendarDayClass(day)"
+                  [attr.aria-label]="calendarDayAriaLabel(day)"
+                >
+                  <span class="font-medium leading-none">{{ day.date.getDate() }}</span>
+                  @if (day.appointmentCount > 0) {
+                    <span
+                      class="mt-0.5 h-1 w-1 rounded-full"
+                      [class]="day.isSelected ? 'bg-white' : 'bg-violet-400'"
+                    ></span>
+                  } @else if (day.inMonth && !isPastDay(day.date)) {
+                    <span class="mt-0.5 h-1 w-1 rounded-full bg-emerald-500/30"></span>
+                  }
+                </button>
+              }
+            </div>
 
-          <div class="mt-1 grid grid-cols-7 gap-1">
-            @for (day of calendarDays(); track day.key) {
-              <button
-                type="button"
-                (click)="selectCalendarDay(day.date)"
-                class="relative flex h-9 flex-col items-center justify-center rounded-lg text-xs transition sm:h-10"
-                [class]="calendarDayClass(day)"
-                [attr.aria-label]="calendarDayAriaLabel(day)"
-              >
-                <span class="font-medium leading-none">{{ day.date.getDate() }}</span>
-                @if (day.appointmentCount > 0) {
-                  <span
-                    class="mt-0.5 h-1 w-1 rounded-full"
-                    [class]="day.isSelected ? 'bg-white' : 'bg-violet-400'"
-                  ></span>
-                } @else if (day.inMonth && !isPastDay(day.date)) {
-                  <span class="mt-0.5 h-1 w-1 rounded-full bg-emerald-500/30"></span>
-                }
-              </button>
-            }
-          </div>
-
-          <div
-            class="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-800 pt-3 text-[10px] text-slate-400"
-          >
-            <div class="flex items-center gap-1.5">
-              <span class="h-1.5 w-1.5 rounded-full bg-violet-400"></span>
-              <span>Ocupado</span>
+            <div
+              class="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-800 pt-3 text-[10px] text-slate-400"
+            >
+              <div class="flex items-center gap-1.5">
+                <span class="h-1.5 w-1.5 rounded-full bg-violet-400"></span>
+                <span>Ocupado</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500/40"></span>
+                <span>Livre</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="h-3 w-3 rounded ring-2 ring-violet-400/60"></span>
+                <span>Hoje</span>
+              </div>
             </div>
-            <div class="flex items-center gap-1.5">
-              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500/40"></span>
-              <span>Livre</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="h-3 w-3 rounded ring-2 ring-violet-400/60"></span>
-              <span>Hoje</span>
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
         @if (loading()) {
             <div class="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center">

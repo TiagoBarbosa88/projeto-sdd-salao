@@ -24,7 +24,7 @@ export const routes: Routes = [
     component: ShellComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', component: HomeComponent, data: { title: 'Agenda' } },
+      { path: '', component: HomeComponent, data: { title: 'Home' } },
       { path: 'services', component: ServicesComponent, data: { title: 'Servicos' } },
       { path: 'financeiro', component: DashboardComponent, data: { title: 'Financeiro' } },
       { path: 'audit', component: AuditComponent, canActivate: [adminGuard], data: { title: 'Auditoria' } },

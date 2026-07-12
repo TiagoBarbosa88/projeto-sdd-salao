@@ -53,6 +53,7 @@ describe('AuditComponent', () => {
     expect(element.textContent).toContain('Auditoria');
     expect(element.textContent).toContain('Marina');
     expect(element.textContent).toContain('Login');
+    expect(element.textContent).toContain('Ver detalhes');
   });
 
   it('should filter by action', () => {

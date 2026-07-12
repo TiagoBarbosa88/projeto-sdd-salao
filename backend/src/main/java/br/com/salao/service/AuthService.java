@@ -108,7 +108,7 @@ public class AuthService {
                 AuditAction.LOGIN,
                 "User",
                 user.getPublicId(),
-                null);
+                "{\"email\":\"" + user.getEmail() + "\"}");
 
         return buildAuthResponse(user, tenantUser.getTenant(), tenantUser.getRole());
     }

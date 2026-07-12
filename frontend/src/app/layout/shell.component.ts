@@ -185,10 +185,10 @@ export class ShellComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  protected readonly pageTitle = signal('Agenda');
+  protected readonly pageTitle = signal('Home');
   protected readonly tenantName = signal<string | null>(null);
   protected readonly navItems = signal<NavItem[]>([
-    { label: 'Agenda', route: '/', exact: true, icon: 'home' },
+    { label: 'Home', route: '/', exact: true, icon: 'home' },
     { label: 'Servicos', route: '/services', icon: 'services' },
     { label: 'Financeiro', route: '/financeiro', icon: 'financeiro' },
     { label: 'Configuracoes', route: '/settings', icon: 'settings' },
@@ -200,7 +200,7 @@ export class ShellComponent implements OnInit {
         this.tenantName.set(profile.tenant.name);
 
         const items: NavItem[] = [
-          { label: 'Agenda', route: '/', exact: true, icon: 'home' },
+          { label: 'Home', route: '/', exact: true, icon: 'home' },
           { label: 'Servicos', route: '/services', icon: 'services' },
           { label: 'Financeiro', route: '/financeiro', icon: 'financeiro' },
         ];
