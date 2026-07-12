@@ -21,8 +21,10 @@ describe('HomeComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should render agenda heading', () => {
+  it('should render agenda view controls', () => {
     const element = fixture.nativeElement as HTMLElement;
-    expect(element.textContent).toContain('Agenda');
+    expect(element.textContent).toContain('Dia');
+    expect(element.textContent).toContain('Semana');
+    expect(element.textContent).toContain('Mes');
   });
 });

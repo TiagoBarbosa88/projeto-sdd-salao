@@ -1,5 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { SalonService, ServiceService } from '../../core/services/service.service';
 import {
@@ -9,10 +10,12 @@ import {
 } from '../../core/services/appointment.service';
 import { TeamMember, TeamService } from '../../core/services/team.service';
 
+type AgendaViewMode = 'day' | 'week' | 'month';
+
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormsModule],
   template: `
     <div class="space-y-6">
       <div class="flex items-center justify-between">
@@ -28,6 +31,71 @@ import { TeamMember, TeamService } from '../../core/services/team.service';
           {{ showForm() ? 'Fechar formulario' : 'Novo agendamento' }}
         </button>
       </div>
+
+      <section class="rounded-xl border border-slate-800 bg-slate-900 p-4">
+        <div class="flex flex-wrap items-end gap-4">
+          <div>
+            <p class="mb-2 text-xs uppercase tracking-wider text-slate-400">Visualizacao</p>
+            <div class="inline-flex rounded-lg border border-slate-700 bg-slate-950 p-1">
+              @for (mode of viewModes; track mode.value) {
+                <button
+                  type="button"
+                  (click)="setViewMode(mode.value)"
+                  class="rounded-md px-3 py-1.5 text-sm font-medium transition"
+                  [class]="
+                    viewMode() === mode.value
+                      ? 'bg-violet-600 text-white'
+                      : 'text-slate-400 hover:text-white'
+                  "
+                >
+                  {{ mode.label }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-end gap-2">
+            <button
+              type="button"
+              (click)="shiftPeriod(-1)"
+              class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+              aria-label="Periodo anterior"
+            >
+              &lt;
+            </button>
+            <div>
+              <label for="referenceDate" class="mb-1 block text-xs text-slate-400">Referencia</label>
+              <input
+                id="referenceDate"
+                type="date"
+                [ngModel]="referenceDateInput()"
+                (ngModelChange)="onReferenceDateChange($event)"
+                class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-violet-500"
+              />
+            </div>
+            <button
+              type="button"
+              (click)="shiftPeriod(1)"
+              class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+              aria-label="Proximo periodo"
+            >
+              &gt;
+            </button>
+            <button
+              type="button"
+              (click)="goToToday()"
+              class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+            >
+              Hoje
+            </button>
+          </div>
+        </div>
+        <p class="mt-3 text-sm text-slate-400">
+          Periodo:
+          <span class="font-medium text-violet-300">{{ periodLabel() }}</span>
+          <span class="text-slate-500"> · {{ filteredAppointments().length }} agendamento(s)</span>
+        </p>
+      </section>
 
       @if (error()) {
         <p class="text-sm text-rose-400">{{ error() }}</p>
@@ -167,6 +235,10 @@ import { TeamMember, TeamService } from '../../core/services/team.service';
         <section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
           <p class="text-slate-400">Nenhum agendamento encontrado.</p>
         </section>
+      } @else if (filteredAppointments().length === 0) {
+        <section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+          <p class="text-slate-400">Nenhum agendamento neste periodo.</p>
+        </section>
       } @else {
         <section class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
           <table class="w-full text-left text-sm">
@@ -182,7 +254,7 @@ import { TeamMember, TeamService } from '../../core/services/team.service';
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800">
-              @for (appointment of appointments(); track appointment.publicId) {
+              @for (appointment of filteredAppointments(); track appointment.publicId) {
                 <tr class="text-slate-200">
                   <td class="px-4 py-3">{{ formatDateTime(appointment.startAt) }}</td>
                   <td class="px-4 py-3">{{ formatDateTime(appointment.endAt) }}</td>
@@ -240,6 +312,41 @@ export class HomeComponent {
   protected readonly currentUserPublicId = signal<string | null>(null);
   protected readonly currentUserName = signal<string | null>(null);
   protected readonly currentRole = signal<string | null>(null);
+  protected readonly viewMode = signal<AgendaViewMode>('week');
+  protected readonly referenceDate = signal(this.startOfDay(new Date()));
+
+  protected readonly viewModes: { value: AgendaViewMode; label: string }[] = [
+    { value: 'day', label: 'Dia' },
+    { value: 'week', label: 'Semana' },
+    { value: 'month', label: 'Mes' },
+  ];
+
+  protected readonly filteredAppointments = computed(() => {
+    const { start, end } = this.getPeriodRange(this.referenceDate(), this.viewMode());
+    return this.appointments()
+      .filter((item) => {
+        const startAt = new Date(item.startAt).getTime();
+        return startAt >= start.getTime() && startAt <= end.getTime();
+      })
+      .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+  });
+
+  protected readonly periodLabel = computed(() => {
+    const { start, end } = this.getPeriodRange(this.referenceDate(), this.viewMode());
+    const formatter = new Intl.DateTimeFormat('pt-BR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+
+    if (this.viewMode() === 'day') {
+      return formatter.format(start);
+    }
+
+    return `${formatter.format(start)} — ${formatter.format(end)}`;
+  });
+
+  protected readonly referenceDateInput = computed(() => this.toDateInputValue(this.referenceDate()));
 
   protected readonly form = this.fb.nonNullable.group({
     servicePublicId: ['', Validators.required],
@@ -299,6 +406,42 @@ export class HomeComponent {
   protected toggleForm(): void {
     this.showForm.update((value) => !value);
     this.formError.set(null);
+  }
+
+  protected setViewMode(mode: AgendaViewMode): void {
+    this.viewMode.set(mode);
+  }
+
+  protected shiftPeriod(direction: -1 | 1): void {
+    const current = this.referenceDate();
+    const next = new Date(current);
+
+    switch (this.viewMode()) {
+      case 'day':
+        next.setDate(next.getDate() + direction);
+        break;
+      case 'week':
+        next.setDate(next.getDate() + direction * 7);
+        break;
+      case 'month':
+        next.setMonth(next.getMonth() + direction);
+        break;
+    }
+
+    this.referenceDate.set(this.startOfDay(next));
+  }
+
+  protected goToToday(): void {
+    this.referenceDate.set(this.startOfDay(new Date()));
+  }
+
+  protected onReferenceDateChange(value: string): void {
+    if (!value) {
+      return;
+    }
+
+    const [year, month, day] = value.split('-').map(Number);
+    this.referenceDate.set(this.startOfDay(new Date(year, month - 1, day)));
   }
 
   protected formatDateTime(value: string): string {
@@ -512,5 +655,48 @@ export class HomeComponent {
     const second = String(date.getSeconds()).padStart(2, '0');
 
     return `${year}-${month}-${day}T${hour}:${minute}:${second}${sign}${hours}:${minutes}`;
+  }
+
+  private getPeriodRange(reference: Date, mode: AgendaViewMode): { start: Date; end: Date } {
+    switch (mode) {
+      case 'day': {
+        const start = this.startOfDay(reference);
+        const end = this.endOfDay(reference);
+        return { start, end };
+      }
+      case 'week': {
+        const start = this.startOfWeek(reference);
+        const end = this.endOfDay(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6));
+        return { start, end };
+      }
+      case 'month': {
+        const start = this.startOfDay(new Date(reference.getFullYear(), reference.getMonth(), 1));
+        const end = this.endOfDay(new Date(reference.getFullYear(), reference.getMonth() + 1, 0));
+        return { start, end };
+      }
+    }
+  }
+
+  private startOfDay(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  private endOfDay(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+  }
+
+  private startOfWeek(date: Date): Date {
+    const start = this.startOfDay(date);
+    const day = start.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    start.setDate(start.getDate() + diff);
+    return start;
+  }
+
+  private toDateInputValue(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
