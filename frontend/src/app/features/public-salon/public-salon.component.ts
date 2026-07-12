@@ -1,5 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -12,6 +12,10 @@ import {
   PublicTenant,
 } from '../../core/services/public-salon.service';
 import { scrollToSection } from '../../core/utils/scroll.util';
+import {
+  formatPhoneInput,
+  isValidBrazilianPhone,
+} from '../../core/utils/phone.util';
 import {
   resolveServiceGenderForService,
   resolveServiceImageUrl,
@@ -143,38 +147,31 @@ type NavSection = { id: string; label: string };
             @if (services().length === 0) {
               <p class="text-slate-400">Nenhum servico disponivel no momento.</p>
             } @else {
-              @if (serviceGroups().length > 1) {
-                <div
-                  class="mb-5 inline-flex rounded-xl border border-slate-800 bg-slate-900/60 p-1"
-                  role="tablist"
-                >
-                  @for (group of serviceGroups(); track group.gender) {
-                    <button
-                      type="button"
-                      role="tab"
-                      [attr.aria-selected]="activeGenderTab() === group.gender"
-                      (click)="setGenderTab(group.gender)"
-                      class="rounded-lg px-4 py-2 text-sm font-semibold uppercase tracking-wide transition"
-                      [class.bg-sky-600]="activeGenderTab() === group.gender && group.gender === 'masculino'"
-                      [class.text-white]="activeGenderTab() === group.gender && group.gender === 'masculino'"
-                      [class.bg-fuchsia-600]="activeGenderTab() === group.gender && group.gender === 'feminino'"
-                      [class.text-slate-400]="activeGenderTab() !== group.gender"
-                      [class.hover:text-white]="activeGenderTab() !== group.gender"
-                    >
-                      {{ group.label }}
-                    </button>
-                  }
-                </div>
-              } @else if (serviceGroups().length === 1) {
-                <p
-                  class="mb-5 text-xs font-semibold uppercase tracking-[0.2em]"
-                  [class.text-sky-300]="serviceGroups()[0].gender === 'masculino'"
-                  [class.text-fuchsia-300]="serviceGroups()[0].gender === 'feminino'"
-                >
-                  {{ serviceGroups()[0].label }}
-                </p>
-              }
+              <div
+                class="mb-5 inline-flex rounded-xl border border-slate-800 bg-slate-900/60 p-1"
+                role="tablist"
+              >
+                @for (gender of genderTabs; track gender) {
+                  <button
+                    type="button"
+                    role="tab"
+                    [attr.aria-selected]="activeGenderTab() === gender"
+                    (click)="setGenderTab(gender)"
+                    class="rounded-lg px-4 py-2 text-sm font-semibold uppercase tracking-wide transition"
+                    [class.bg-sky-600]="activeGenderTab() === gender && gender === 'masculino'"
+                    [class.bg-fuchsia-600]="activeGenderTab() === gender && gender === 'feminino'"
+                    [class.text-white]="activeGenderTab() === gender"
+                    [class.text-slate-400]="activeGenderTab() !== gender"
+                    [class.hover:text-white]="activeGenderTab() !== gender"
+                  >
+                    {{ genderLabel(gender) }}
+                  </button>
+                }
+              </div>
 
+              @if (activeTabServices().length === 0) {
+                <p class="text-slate-400">Nenhum servico disponivel nesta categoria.</p>
+              } @else {
               <div
                 class="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7"
               >
@@ -219,6 +216,7 @@ type NavSection = { id: string; label: string };
                   </button>
                 }
               </div>
+              }
             }
           </section>
 
@@ -490,7 +488,12 @@ type NavSection = { id: string; label: string };
                       <label class="mb-1 block text-sm text-slate-300">WhatsApp</label>
                       <input
                         formControlName="guestPhone"
+                        type="tel"
+                        inputmode="tel"
+                        autocomplete="tel"
+                        maxlength="15"
                         placeholder="(11) 99999-9999"
+                        (input)="onGuestPhoneInput($event)"
                         class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-violet-500"
                       />
                     </div>
@@ -512,101 +515,104 @@ type NavSection = { id: string; label: string };
             }
           </section>
 
-          <section id="contato" class="page-section border-t border-slate-800/60 py-12 md:py-16">
-            <div class="mb-6">
-              <h2 class="text-2xl font-semibold text-white md:text-3xl">Contato</h2>
-              <p class="mt-2 text-sm text-slate-400">Fale conosco pelo WhatsApp ou redes sociais.</p>
-            </div>
+          <footer
+            id="contato"
+            class="page-section border-t border-slate-800/60 py-12 pb-20 md:py-16 md:pb-24"
+          >
+            <div class="grid gap-6 md:grid-cols-2 md:gap-8">
+              <div class="scroll-mt-24">
+                <h2 class="text-xl font-semibold text-white md:text-2xl">Contato</h2>
+                <p class="mt-1 text-sm text-slate-400">Fale conosco pelo WhatsApp ou redes sociais.</p>
 
-            <div class="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-6">
-              @if (tenant()!.whatsapp) {
-                <p class="text-sm text-slate-300">
-                  <span class="font-medium text-white">WhatsApp:</span>
-                  <a
-                    [href]="whatsappLink()"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="ml-1 text-violet-300 transition hover:text-violet-200"
-                  >
-                    {{ tenant()!.whatsapp }}
-                  </a>
-                </p>
-              } @else {
-                <p class="text-sm text-slate-500">WhatsApp nao informado.</p>
-              }
+                <div class="mt-4 rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5 md:p-6">
+                  @if (tenant()!.whatsapp) {
+                    <p class="text-sm text-slate-300">
+                      <span class="font-medium text-white">WhatsApp:</span>
+                      <a
+                        [href]="whatsappLink()"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="ml-1 text-violet-300 transition hover:text-violet-200"
+                      >
+                        {{ formatPhoneInput(tenant()!.whatsapp!) }}
+                      </a>
+                    </p>
+                  } @else {
+                    <p class="text-sm text-slate-500">WhatsApp nao informado.</p>
+                  }
 
-              @if (hasSocialLinks()) {
-                <div class="mt-5 flex flex-wrap gap-3">
-                  @if (tenant()!.instagramUrl) {
-                    <a
-                      [href]="tenant()!.instagramUrl"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white"
-                    >
-                      Instagram
-                    </a>
+                  @if (hasSocialLinks()) {
+                    <div class="mt-4 flex flex-wrap gap-3">
+                      @if (tenant()!.instagramUrl) {
+                        <a
+                          [href]="tenant()!.instagramUrl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white"
+                        >
+                          Instagram
+                        </a>
+                      }
+                      @if (tenant()!.facebookUrl) {
+                        <a
+                          [href]="tenant()!.facebookUrl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white"
+                        >
+                          Facebook
+                        </a>
+                      }
+                      @if (tenant()!.tiktokUrl) {
+                        <a
+                          [href]="tenant()!.tiktokUrl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white"
+                        >
+                          TikTok
+                        </a>
+                      }
+                      @if (tenant()!.websiteUrl) {
+                        <a
+                          [href]="tenant()!.websiteUrl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white"
+                        >
+                          Site
+                        </a>
+                      }
+                    </div>
                   }
-                  @if (tenant()!.facebookUrl) {
-                    <a
-                      [href]="tenant()!.facebookUrl"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white"
-                    >
-                      Facebook
-                    </a>
+                </div>
+              </div>
+
+              <div id="endereco" class="scroll-mt-24">
+                <h2 class="text-xl font-semibold text-white md:text-2xl">Endereco</h2>
+                <p class="mt-1 text-sm text-slate-400">Venha nos visitar.</p>
+
+                <div class="mt-4 rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5 md:p-6">
+                  @if (tenant()!.address) {
+                    <p class="text-base leading-relaxed text-slate-300">{{ tenant()!.address }}</p>
+                  } @else {
+                    <p class="text-sm text-slate-500">Endereco nao informado.</p>
                   }
-                  @if (tenant()!.tiktokUrl) {
+
+                  @if (tenant()!.googleMapsUrl) {
                     <a
-                      [href]="tenant()!.tiktokUrl"
+                      [href]="tenant()!.googleMapsUrl"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white"
+                      class="mt-4 inline-flex rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-violet-500"
                     >
-                      TikTok
-                    </a>
-                  }
-                  @if (tenant()!.websiteUrl) {
-                    <a
-                      [href]="tenant()!.websiteUrl"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:text-white"
-                    >
-                      Site
+                      Como chegar
                     </a>
                   }
                 </div>
-              }
+              </div>
             </div>
-          </section>
-
-          <section id="endereco" class="page-section border-t border-slate-800/60 py-12 pb-20 md:py-16 md:pb-24">
-            <div class="mb-6">
-              <h2 class="text-2xl font-semibold text-white md:text-3xl">Endereco</h2>
-              <p class="mt-2 text-sm text-slate-400">Venha nos visitar.</p>
-            </div>
-
-            <div class="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-6">
-              @if (tenant()!.address) {
-                <p class="text-base leading-relaxed text-slate-300">{{ tenant()!.address }}</p>
-              } @else {
-                <p class="text-sm text-slate-500">Endereco nao informado.</p>
-              }
-
-              @if (tenant()!.googleMapsUrl) {
-                <a
-                  [href]="tenant()!.googleMapsUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="mt-5 inline-flex rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-violet-500"
-                >
-                  Como chegar
-                </a>
-              }
-            </div>
-          </section>
+          </footer>
         }
       </main>
     </div>
@@ -621,12 +627,14 @@ export class PublicSalonComponent implements OnInit {
 
   protected readonly weekdayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
 
+  protected readonly genderTabs: ServiceGender[] = ['feminino', 'masculino'];
+
   protected readonly navSections: NavSection[] = [
     { id: 'inicio', label: 'Quem somos' },
     { id: 'servicos', label: 'Servicos' },
     { id: 'agenda', label: 'Agenda' },
-    { id: 'contato', label: 'Contato' },
     { id: 'endereco', label: 'Endereco' },
+    { id: 'contato', label: 'Contato' },
   ];
 
   protected readonly bookingSteps: StepItem[] = [
@@ -661,7 +669,14 @@ export class PublicSalonComponent implements OnInit {
 
   protected readonly guestForm = this.fb.nonNullable.group({
     guestName: ['', [Validators.required, Validators.minLength(2)]],
-    guestPhone: ['', [Validators.required, Validators.minLength(8)]],
+    guestPhone: [
+      '',
+      [
+        Validators.required,
+        (control: AbstractControl) =>
+          isValidBrazilianPhone(String(control.value ?? '')) ? null : { phone: true },
+      ],
+    ],
   });
 
   private slug = '';
@@ -682,34 +697,12 @@ export class PublicSalonComponent implements OnInit {
     return `Somos o ${tenant?.name ?? 'salao'}, prontos para cuidar do seu visual com atendimento personalizado e agendamento online rapido.`;
   });
 
-  protected readonly serviceGroups = computed(() => {
-    const groups = new Map<ServiceGender, PublicService[]>();
-    for (const service of this.services()) {
-      const gender = resolveServiceGenderForService(
-        service.name,
-        service.description,
-        service.gender
-      );
-      const list = groups.get(gender) ?? [];
-      list.push(service);
-      groups.set(gender, list);
-    }
-
-    const ordered: ServiceGender[] = ['feminino', 'masculino'];
-    return ordered
-      .filter((gender) => (groups.get(gender)?.length ?? 0) > 0)
-      .map((gender) => ({
-        gender,
-        label: serviceGenderLabel(gender),
-        services: groups.get(gender) ?? [],
-      }));
-  });
-
   protected readonly activeTabServices = computed(() => {
-    const groups = this.serviceGroups();
     const tab = this.activeGenderTab();
-    const match = groups.find((group) => group.gender === tab);
-    return match?.services ?? groups[0]?.services ?? [];
+    return this.services().filter(
+      (service) =>
+        resolveServiceGenderForService(service.name, service.description, service.gender) === tab
+    );
   });
 
   ngOnInit(): void {
@@ -736,6 +729,19 @@ export class PublicSalonComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  protected genderLabel(gender: ServiceGender): string {
+    return serviceGenderLabel(gender);
+  }
+
+  protected formatPhoneInput = formatPhoneInput;
+
+  protected onGuestPhoneInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const formatted = formatPhoneInput(input.value);
+    input.value = formatted;
+    this.guestForm.controls.guestPhone.setValue(formatted, { emitEvent: false });
   }
 
   protected scrollTo(sectionId: string): void {
@@ -840,6 +846,7 @@ export class PublicSalonComponent implements OnInit {
     this.booking.set(true);
     this.bookingError.set(null);
     const { guestName, guestPhone } = this.guestForm.getRawValue();
+    const normalizedPhone = formatPhoneInput(guestPhone);
 
     this.publicSalon
       .createGuestAppointment(this.slug, {
@@ -847,7 +854,7 @@ export class PublicSalonComponent implements OnInit {
         professionalPublicId: professional.publicId,
         startAt: slot.startAt,
         guestName,
-        guestPhone,
+        guestPhone: normalizedPhone,
       })
       .subscribe({
         next: (response) => {
