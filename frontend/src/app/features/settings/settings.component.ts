@@ -1,8 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService, MeResponse } from '../../core/services/auth.service';
+import { PhoneMaskDirective } from '../../core/directives/phone-mask.directive';
 import {
   BlockedPeriod,
   BlockType,
@@ -20,6 +21,11 @@ import {
   TeamService,
 } from '../../core/services/team.service';
 import { readImageAsDataUrl } from '../../core/utils/image-file.util';
+import {
+  formatPhoneDisplay,
+  normalizePhoneValue,
+  optionalPhoneValidator,
+} from '../../core/utils/phone.util';
 
 type SettingsTab = 'personalization' | 'social' | 'professionals' | 'agenda' | 'account';
 
@@ -44,7 +50,7 @@ type DayScheduleRow = {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PhoneMaskDirective],
   template: `
     <div class="space-y-6">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-start">
@@ -119,6 +125,12 @@ type DayScheduleRow = {
                       <label class="mb-1 block text-sm text-slate-300">Telefone</label>
                       <input
                         formControlName="phone"
+                        appPhoneMask
+                        type="tel"
+                        inputmode="tel"
+                        autocomplete="tel"
+                        maxlength="15"
+                        placeholder="(11) 3333-4444"
                         class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
                       />
                     </div>
@@ -126,6 +138,12 @@ type DayScheduleRow = {
                       <label class="mb-1 block text-sm text-slate-300">WhatsApp</label>
                       <input
                         formControlName="whatsapp"
+                        appPhoneMask
+                        type="tel"
+                        inputmode="tel"
+                        autocomplete="tel"
+                        maxlength="15"
+                        placeholder="(11) 99999-9999"
                         class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
                       />
                     </div>
@@ -275,7 +293,16 @@ type DayScheduleRow = {
                     </div>
                     <div>
                       <label class="mb-1 block text-sm text-slate-300">Telefone</label>
-                      <input formControlName="phone" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+                      <input
+                        formControlName="phone"
+                        appPhoneMask
+                        type="tel"
+                        inputmode="tel"
+                        autocomplete="tel"
+                        maxlength="15"
+                        placeholder="(11) 99999-9999"
+                        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+                      />
                     </div>
                   </div>
                   <label class="flex items-center gap-2 text-sm text-slate-300">
@@ -299,7 +326,7 @@ type DayScheduleRow = {
                       <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <h3 class="font-medium text-white">{{ pro.name }}</h3>
-                          <p class="text-sm text-slate-400">{{ pro.phone || 'Sem telefone' }}</p>
+                          <p class="text-sm text-slate-400">{{ formatPhoneDisplay(pro.phone) || 'Sem telefone' }}</p>
                         </div>
                         <div class="flex flex-wrap gap-2 text-xs">
                           <span class="rounded-full px-2 py-1" [class.bg-emerald-500/15]="pro.active" [class.text-emerald-300]="pro.active" [class.bg-slate-700]="!pro.active" [class.text-slate-400]="!pro.active">
@@ -550,8 +577,8 @@ export class SettingsComponent {
   protected readonly personalizationForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
     description: [''],
-    phone: [''],
-    whatsapp: [''],
+    phone: ['', (control: AbstractControl) => optionalPhoneValidator(control.value)],
+    whatsapp: ['', (control: AbstractControl) => optionalPhoneValidator(control.value)],
     address: [''],
     logoUrl: [''],
   });
@@ -576,7 +603,7 @@ export class SettingsComponent {
     name: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
-    phone: [''],
+    phone: ['', (control: AbstractControl) => optionalPhoneValidator(control.value)],
     bookable: [true],
   });
 
@@ -620,6 +647,8 @@ export class SettingsComponent {
       error: () => this.profileError.set('Nao foi possivel carregar o perfil.'),
     });
   }
+
+  protected formatPhoneDisplay = formatPhoneDisplay;
 
   protected setTab(tab: SettingsTab): void {
     this.activeTab.set(tab);
@@ -704,6 +733,7 @@ export class SettingsComponent {
     const payload: CreateTeamMember = {
       ...raw,
       email: raw.email.trim().toLowerCase(),
+      phone: normalizePhoneValue(raw.phone),
     };
     this.teamService.createProfessional(payload).subscribe({
       next: () => {
@@ -857,8 +887,8 @@ export class SettingsComponent {
         this.personalizationForm.patchValue({
           name: salon.name,
           description: salon.description ?? '',
-          phone: salon.phone ?? '',
-          whatsapp: salon.whatsapp ?? '',
+          phone: formatPhoneDisplay(salon.phone),
+          whatsapp: formatPhoneDisplay(salon.whatsapp),
           address: salon.address ?? '',
           logoUrl: salon.logoUrl ?? '',
         });
@@ -963,8 +993,8 @@ export class SettingsComponent {
     return {
       name: personalization.name,
       description: personalization.description || undefined,
-      phone: personalization.phone || undefined,
-      whatsapp: personalization.whatsapp || undefined,
+      phone: normalizePhoneValue(personalization.phone),
+      whatsapp: normalizePhoneValue(personalization.whatsapp),
       address: personalization.address || undefined,
       logoUrl: personalization.logoUrl || undefined,
       instagramUrl: social.instagramUrl || undefined,

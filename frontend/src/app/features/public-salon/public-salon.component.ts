@@ -4,6 +4,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { PhoneMaskDirective } from '../../core/directives/phone-mask.directive';
 import {
   AvailabilitySlot,
   PublicProfessional,
@@ -13,8 +14,9 @@ import {
 } from '../../core/services/public-salon.service';
 import { scrollToSection } from '../../core/utils/scroll.util';
 import {
-  formatPhoneInput,
+  formatPhoneDisplay,
   isValidBrazilianPhone,
+  normalizePhoneValue,
 } from '../../core/utils/phone.util';
 import {
   resolveServiceImageUrl,
@@ -41,7 +43,7 @@ type NavSection = { id: string; label: string };
 @Component({
   selector: 'app-public-salon',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, PhoneMaskDirective],
   template: `
     <div class="app-view min-h-screen bg-gradient-to-b from-slate-950 via-slate-950 to-violet-950/20 text-slate-100">
       <header
@@ -488,12 +490,12 @@ type NavSection = { id: string; label: string };
                       <label class="mb-1 block text-sm text-slate-300">WhatsApp</label>
                       <input
                         formControlName="guestPhone"
+                        appPhoneMask
                         type="tel"
                         inputmode="tel"
                         autocomplete="tel"
                         maxlength="15"
                         placeholder="(11) 99999-9999"
-                        (input)="onGuestPhoneInput($event)"
                         class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-violet-500"
                       />
                     </div>
@@ -534,7 +536,7 @@ type NavSection = { id: string; label: string };
                         rel="noopener noreferrer"
                         class="ml-1 text-violet-300 transition hover:text-violet-200"
                       >
-                        {{ formatPhoneInput(tenant()!.whatsapp!) }}
+                        {{ formatPhoneDisplay(tenant()!.whatsapp!) }}
                       </a>
                     </p>
                   } @else {
@@ -732,14 +734,7 @@ export class PublicSalonComponent implements OnInit {
     return serviceGenderLabel(gender);
   }
 
-  protected formatPhoneInput = formatPhoneInput;
-
-  protected onGuestPhoneInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const formatted = formatPhoneInput(input.value);
-    input.value = formatted;
-    this.guestForm.controls.guestPhone.setValue(formatted, { emitEvent: false });
-  }
+  protected formatPhoneDisplay = formatPhoneDisplay;
 
   protected scrollTo(sectionId: string): void {
     scrollToSection(sectionId);
@@ -843,7 +838,7 @@ export class PublicSalonComponent implements OnInit {
     this.booking.set(true);
     this.bookingError.set(null);
     const { guestName, guestPhone } = this.guestForm.getRawValue();
-    const normalizedPhone = formatPhoneInput(guestPhone);
+    const normalizedPhone = normalizePhoneValue(guestPhone) ?? guestPhone;
 
     this.publicSalon
       .createGuestAppointment(this.slug, {
