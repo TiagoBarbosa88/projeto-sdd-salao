@@ -1,0 +1,35 @@
+<div class="space-y-6">
+  <div>
+    <h2 class="text-xl font-semibold text-white">Financeiro</h2>
+    <p class="mt-1 text-sm text-slate-400">Metricas financeiras e operacionais do dia.</p>
+  </div>
+
+  @if (loading()) {
+    <p class="text-slate-400">Carregando metricas...</p>
+  } @else if (error()) {
+    <section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+      <p class="text-rose-400">{{ error() }}</p>
+    </section>
+  } @else if (summary()) {
+    <div class="grid gap-4 sm:grid-cols-3">
+      <article class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+        <p class="text-xs uppercase tracking-wider text-slate-400">Agendamentos hoje</p>
+        <p class="mt-2 text-3xl font-semibold text-white">{{ summary()!.appointmentsToday }}</p>
+      </article>
+
+      <article class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+        <p class="text-xs uppercase tracking-wider text-slate-400">Receita estimada</p>
+        <p class="mt-2 text-3xl font-semibold text-emerald-400">
+          {{ formatCurrency(summary()!.estimatedRevenue) }}
+        </p>
+      </article>
+
+      <article class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+        <p class="text-xs uppercase tracking-wider text-slate-400">Taxa de ocupacao</p>
+        <p class="mt-2 text-3xl font-semibold text-violet-400">
+          {{ formatPercent(summary()!.occupancyRate) }}
+        </p>
+      </article>
+    </div>
+  }
+</div>

@@ -1,0 +1,150 @@
+@if (loading()) {
+  <div class="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center">
+    <p class="text-slate-400">Carregando agendamentos...</p>
+  </div>
+} @else if (!hasAppointments()) {
+  <section
+    class="flex flex-col items-center rounded-2xl border border-dashed border-slate-700 bg-slate-900/50 px-6 py-12 text-center"
+  >
+    <div class="rounded-2xl bg-violet-500/10 p-4">
+      <svg class="h-8 w-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+    </div>
+    <h3 class="mt-4 text-lg font-semibold text-white">Nenhum agendamento ainda</h3>
+    <p class="mt-2 max-w-sm text-sm text-slate-400">
+      @if (isClient()) {
+        Escolha um dia livre no calendario e agende seu proximo horario.
+      } @else {
+        Crie o primeiro agendamento para comecar a usar a agenda.
+      }
+    </p>
+    <button
+      type="button"
+      (click)="requestNew.emit()"
+      class="mt-6 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-violet-500"
+    >
+      Novo agendamento
+    </button>
+  </section>
+} @else if (filteredAppointments().length === 0) {
+  <section
+    class="flex flex-col items-center rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/20 px-6 py-12 text-center"
+  >
+    <div class="rounded-2xl bg-emerald-500/10 p-4 ring-1 ring-emerald-500/20">
+      <svg class="h-8 w-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    </div>
+    <h3 class="mt-4 text-lg font-semibold text-white">
+      @if (isClient()) {
+        Seu dia esta livre
+      } @else {
+        Dia livre neste periodo
+      }
+    </h3>
+    <p class="mt-2 max-w-sm text-sm text-slate-400">
+      Nenhum agendamento em {{ periodLabel() }}.
+      @if (sameDayDifferentYearCount() > 0) {
+        Ha {{ sameDayDifferentYearCount() }} agendamento(s) no mesmo dia e mes em
+        outro ano — veja abaixo.
+      } @else {
+        Os dias com ponto roxo no calendario indicam horarios ocupados.
+      }
+    </p>
+    <button
+      type="button"
+      (click)="requestNew.emit()"
+      class="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-2.5 text-sm font-medium text-emerald-300 transition hover:bg-emerald-500/20"
+    >
+      Agendar neste dia
+    </button>
+
+    @if (outOfPeriodAppointments().length > 0) {
+      <div class="mt-8 w-full max-w-md rounded-xl border border-slate-800 bg-slate-950/50 p-4 text-left">
+        <p class="text-xs uppercase tracking-wider text-slate-500">Outros agendamentos</p>
+        <ul class="mt-3 space-y-2">
+          @for (appointment of outOfPeriodAppointments(); track appointment.publicId) {
+            <li>
+              <button
+                type="button"
+                (click)="goToDate.emit(appointment.startAt)"
+                class="flex w-full flex-col items-start gap-0.5 rounded-lg border border-slate-800 px-3 py-2 text-left text-sm transition hover:border-violet-500/40 hover:bg-slate-900 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <span class="text-slate-300">{{ formatDateTime(appointment.startAt) }}</span>
+                <span class="text-xs text-violet-400">Ir para {{ formatPeriodYear(appointment.startAt) }} &rarr;</span>
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </section>
+} @else {
+  <div [class]="layoutClass()">
+    @for (appointment of filteredAppointments(); track appointment.publicId) {
+      <article
+        class="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/80 p-4 transition hover:border-violet-500/30"
+      >
+        <div
+          class="absolute inset-y-0 left-0 w-0.5"
+          [class]="statusAccentClass(appointment.status)"
+        ></div>
+
+        <div class="pl-2">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-white">
+                {{ formatTime(appointment.startAt) }}
+                <span class="font-normal text-slate-500">–</span>
+                {{ formatTime(appointment.endAt) }}
+              </p>
+              <p class="mt-1 text-sm text-violet-200">
+                {{ appointment.service.name }}
+              </p>
+            </div>
+            <span
+              class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
+              [class]="statusClass(appointment.status)"
+            >
+              {{ statusLabel(appointment.status) }}
+            </span>
+          </div>
+
+          <p class="mt-2 text-xs text-slate-400">
+            <span class="font-medium text-slate-300">{{ appointment.professional.name }}</span>
+            @if (!isClient()) {
+              <span class="text-slate-600"> · </span>
+              <span>{{ clientLabel(appointment) }}</span>
+              @if (appointment.guestPhone) {
+                <span class="text-slate-600"> · </span>
+                <span>{{ appointment.guestPhone }}</span>
+              }
+            }
+          </p>
+
+          @if (canCancel(appointment)) {
+            <button
+              type="button"
+              (click)="cancelRequested.emit(appointment)"
+              [disabled]="cancellingId() === appointment.publicId"
+              class="mt-2 text-[11px] font-medium text-rose-400 transition hover:text-rose-300 disabled:opacity-50"
+            >
+              {{ cancellingId() === appointment.publicId ? 'Cancelando...' : 'Cancelar' }}
+            </button>
+          }
+        </div>
+      </article>
+    }
+  </div>
+}

@@ -1,0 +1,80 @@
+<section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+  <h2 class="text-xl font-semibold text-white">Conta</h2>
+  @if (profile()) {
+    <dl class="mt-4 space-y-2 text-sm">
+      <div class="flex gap-2">
+        <dt class="text-slate-400">Usuario:</dt>
+        <dd class="text-white">{{ profile()!.user.name }} ({{ profile()!.user.email }})</dd>
+      </div>
+      <div class="flex gap-2">
+        <dt class="text-slate-400">Salao:</dt>
+        <dd class="text-white">{{ profile()!.tenant.name }} / {{ profile()!.tenant.slug }}</dd>
+      </div>
+      <div class="flex gap-2">
+        <dt class="text-slate-400">Perfil:</dt>
+        <dd class="text-violet-300">{{ roleLabel(profile()!.role) }}</dd>
+      </div>
+    </dl>
+
+    <div class="mt-8">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Equipe do salao</h3>
+        @if (isAdmin()) {
+          <button
+            type="button"
+            (click)="createRequested.emit()"
+            class="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500"
+          >
+            Novo membro
+          </button>
+        }
+      </div>
+      @if (teamMembersLoading()) {
+        <p class="mt-3 text-sm text-slate-400">Carregando equipe...</p>
+      } @else if (teamMembers().length === 0) {
+        <p class="mt-3 text-sm text-slate-400">Nenhum membro cadastrado.</p>
+      } @else {
+        <div class="mt-3 space-y-2">
+          @for (member of teamMembers(); track member.publicId) {
+            <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-950/40 px-4 py-3">
+              <div>
+                <p class="font-medium text-white">{{ member.name }}</p>
+                <p class="text-xs text-slate-400">{{ member.email }}</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <div class="flex flex-wrap gap-2 text-xs">
+                  <span class="rounded-full bg-slate-800 px-2 py-1 text-slate-300">{{ roleLabel(member.role) }}</span>
+                  <span class="rounded-full px-2 py-1" [class.bg-sky-500/15]="member.loginActive" [class.text-sky-300]="member.loginActive" [class.bg-rose-500/15]="!member.loginActive" [class.text-rose-300]="!member.loginActive">
+                    {{ member.loginActive ? 'Com acesso' : 'Sem acesso' }}
+                  </span>
+                </div>
+                @if (isAdmin() && canEditTeamMember(member)) {
+                  <button
+                    type="button"
+                    (click)="startEdit(member)"
+                    class="rounded-lg border border-slate-700 px-3 py-1 text-xs text-slate-300 transition hover:border-violet-500 hover:text-white"
+                  >
+                    Editar
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <button
+      type="button"
+      (click)="logout()"
+      class="mt-6 rounded-lg border border-rose-500/30 px-4 py-2 text-sm font-medium text-rose-400 transition hover:bg-rose-500/10 md:hidden"
+    >
+      Sair da conta
+    </button>
+  } @else if (profileError()) {
+    <p class="mt-4 text-rose-400">{{ profileError() }}</p>
+    <a routerLink="/login" class="mt-4 inline-block text-sm text-violet-400 hover:text-violet-300">Ir para login</a>
+  } @else {
+    <p class="mt-4 text-slate-400">Carregando perfil...</p>
+  }
+</section>

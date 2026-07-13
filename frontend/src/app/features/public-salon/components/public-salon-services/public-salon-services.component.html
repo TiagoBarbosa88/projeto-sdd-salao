@@ -1,0 +1,81 @@
+<section id="servicos" class="page-section border-t border-slate-800/60 py-12 md:py-16">
+  <div class="mb-6">
+    <h2 class="text-2xl font-semibold text-white md:text-3xl">Nossos servicos</h2>
+    <p class="mt-2 text-sm text-slate-400">Selecione o servico e continue para agendar.</p>
+  </div>
+
+  @if (services().length === 0) {
+    <p class="text-slate-400">Nenhum servico disponivel no momento.</p>
+  } @else {
+    <div
+      class="mb-5 inline-flex rounded-xl border border-slate-800 bg-slate-900/60 p-1"
+      role="tablist"
+    >
+      @for (gender of genderTabs; track gender) {
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="activeGenderTab() === gender"
+          (click)="setGenderTab(gender)"
+          class="rounded-lg px-4 py-2 text-sm font-semibold uppercase tracking-wide transition"
+          [class.bg-sky-600]="activeGenderTab() === gender && gender === 'masculino'"
+          [class.bg-fuchsia-600]="activeGenderTab() === gender && gender === 'feminino'"
+          [class.text-white]="activeGenderTab() === gender"
+          [class.text-slate-400]="activeGenderTab() !== gender"
+          [class.hover:text-white]="activeGenderTab() !== gender"
+        >
+          {{ genderLabel(gender) }}
+        </button>
+      }
+    </div>
+
+    @if (activeTabServices().length === 0) {
+      <p class="text-slate-400">Nenhum servico disponivel nesta categoria.</p>
+    } @else {
+    <div
+      class="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7"
+    >
+      @for (service of activeTabServices(); track service.publicId) {
+        <button
+          type="button"
+          (click)="serviceSelected.emit(service)"
+          class="group flex flex-col overflow-hidden rounded-md border text-left transition duration-300 hover:-translate-y-0.5"
+          [class.border-violet-500]="selectedService()?.publicId === service.publicId"
+          [class.ring-2]="selectedService()?.publicId === service.publicId"
+          [class.ring-violet-500/40]="selectedService()?.publicId === service.publicId"
+          [class.border-slate-800/80]="selectedService()?.publicId !== service.publicId"
+          [class.bg-slate-900/60]="selectedService()?.publicId !== service.publicId"
+          [class.hover:border-violet-500/40]="selectedService()?.publicId !== service.publicId"
+        >
+          <div class="relative aspect-square overflow-hidden bg-slate-950">
+            <img
+              [src]="serviceImage(service)"
+              [alt]="service.name"
+              class="h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.03]"
+            />
+            <div
+              class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/75 to-transparent px-1.5 pb-1 pt-4"
+            >
+              <h3
+                class="truncate text-[8px] font-bold uppercase leading-tight tracking-wide text-white sm:text-[9px]"
+              >
+                {{ service.name }}
+              </h3>
+            </div>
+          </div>
+          <div class="flex items-center justify-between gap-0.5 px-1.5 py-1 text-[8px] sm:text-[9px]">
+            <span class="text-slate-500">{{ service.durationMinutes }}m</span>
+            <span
+              class="font-semibold"
+              [class.text-sky-400]="serviceGender(service) === 'masculino'"
+              [class.text-fuchsia-400]="serviceGender(service) === 'feminino'"
+            >
+              {{ formatCurrency(service.price) }}
+            </span>
+          </div>
+        </button>
+      }
+    </div>
+    }
+  }
+</section>

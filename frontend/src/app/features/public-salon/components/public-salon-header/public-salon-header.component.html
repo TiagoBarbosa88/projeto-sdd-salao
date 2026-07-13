@@ -1,0 +1,45 @@
+<header
+  class="sticky top-0 z-50 border-b border-slate-800/50 bg-slate-950/85 backdrop-blur-xl transition-shadow duration-300"
+>
+  <div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 md:px-6 md:py-4">
+    <button
+      type="button"
+      (click)="navigate.emit('inicio')"
+      class="flex min-w-0 shrink-0 items-center gap-3 text-left transition hover:opacity-90"
+    >
+      @if (tenant()?.logoUrl) {
+        <img
+          [src]="tenant()!.logoUrl"
+          [alt]="tenant()!.name"
+          class="h-11 w-11 rounded-xl border border-slate-700/80 object-cover shadow-lg shadow-violet-950/40 md:h-12 md:w-12 md:rounded-2xl"
+        />
+      } @else {
+        <div
+          class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-700 text-base font-bold text-white shadow-lg shadow-violet-950/40 md:h-12 md:w-12 md:rounded-2xl"
+        >
+          {{ tenant()?.name?.charAt(0) ?? 'S' }}
+        </div>
+      }
+      @if (tenant()) {
+        <span class="truncate text-base font-semibold text-white md:text-lg">{{ tenant()!.name }}</span>
+      }
+    </button>
+
+    @if (tenant()) {
+      <nav
+        class="ml-auto hidden max-w-full items-center gap-1 overflow-x-auto md:flex"
+        aria-label="Navegacao principal"
+      >
+        @for (item of sections(); track item.id) {
+          <button
+            type="button"
+            (click)="navigate.emit(item.id)"
+            class="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-slate-400 transition hover:bg-slate-800/80 hover:text-white"
+          >
+            {{ item.label }}
+          </button>
+        }
+      </nav>
+    }
+  </div>
+</header>

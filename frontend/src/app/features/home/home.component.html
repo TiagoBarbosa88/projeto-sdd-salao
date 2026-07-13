@@ -1,0 +1,59 @@
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-end gap-4">
+    <button
+      type="button"
+      (click)="toggleForm()"
+      class="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-violet-900/30 transition hover:bg-violet-500"
+    >
+      {{ showForm() ? 'Fechar formulario' : 'Novo agendamento' }}
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="text-sm text-rose-400">{{ error() }}</p>
+  }
+
+  @if (showForm()) {
+    <app-appointment-form
+      [activeServices]="activeServices()"
+      [professionals]="professionals()"
+      [clients]="clients()"
+      [isClient]="isClient()"
+      [isStaff]="isStaff()"
+      [currentRole]="currentRole()"
+      [currentUserPublicId]="currentUserPublicId()"
+      [currentUserName]="currentUserName()"
+      [referenceDate]="referenceDate()"
+      (created)="onAppointmentCreated($event)"
+    />
+  }
+
+  <div class="space-y-4">
+    <app-agenda-calendar
+      [referenceDate]="referenceDate()"
+      [viewMode]="viewMode()"
+      [appointments]="appointments()"
+      [periodLabel]="periodLabel()"
+      [periodSummary]="periodSummary()"
+      (viewModeChange)="viewMode.set($event)"
+      (referenceDateChange)="referenceDate.set($event)"
+    />
+
+    <app-appointment-list
+      [loading]="loading()"
+      [hasAppointments]="appointments().length > 0"
+      [filteredAppointments]="filteredAppointments()"
+      [outOfPeriodAppointments]="outOfPeriodAppointments()"
+      [sameDayDifferentYearCount]="sameDayDifferentYearAppointments().length"
+      [isClient]="isClient()"
+      [periodLabel]="periodLabel()"
+      [viewMode]="viewMode()"
+      [cancellingId]="cancellingId()"
+      [currentRole]="currentRole()"
+      [currentUserPublicId]="currentUserPublicId()"
+      (requestNew)="toggleForm()"
+      (cancelRequested)="cancel($event)"
+      (goToDate)="goToAppointmentDate($event)"
+    />
+  </div>
+</div>

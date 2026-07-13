@@ -1,0 +1,74 @@
+<section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+  <h2 class="text-xl font-semibold text-white">Redes e presenca online</h2>
+  <p class="mt-1 text-sm text-slate-400">
+    Links exibidos como icones no rodape da pagina publica. Cores oficiais de cada rede.
+  </p>
+
+  @if (loading()) {
+    <p class="mt-6 text-slate-400">Carregando...</p>
+  } @else {
+    <form class="mt-6 space-y-4" [formGroup]="form" (ngSubmit)="save()">
+      <div class="grid gap-4 md:grid-cols-2">
+        <div>
+          <label class="mb-1 block text-sm text-slate-300">Instagram</label>
+          <input
+            formControlName="instagramUrl"
+            placeholder="https://instagram.com/seusalao"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm text-slate-300">Facebook</label>
+          <input
+            formControlName="facebookUrl"
+            placeholder="https://facebook.com/seusalao"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm text-slate-300">TikTok</label>
+          <input
+            formControlName="tiktokUrl"
+            placeholder="https://tiktok.com/@seusalao"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm text-slate-300">Site</label>
+          <input
+            formControlName="websiteUrl"
+            placeholder="https://seusalao.com.br"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm text-slate-300">YouTube</label>
+          <input
+            formControlName="youtubeUrl"
+            placeholder="https://youtube.com/@seusalao"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+        </div>
+        <div class="md:col-span-2">
+          <label class="mb-1 block text-sm text-slate-300">Google Maps</label>
+          <input
+            formControlName="googleMapsUrl"
+            placeholder="https://maps.google.com/..."
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+          <p class="mt-1 text-xs text-slate-500">
+            Exibe o mapa na pagina publica com o titulo "Onde fica nosso endereco".
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="saving()"
+        class="rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
+      >
+        {{ saving() ? 'Salvando...' : 'Salvar redes' }}
+      </button>
+    </form>
+  }
+</section>

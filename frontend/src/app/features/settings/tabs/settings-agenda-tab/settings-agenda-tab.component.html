@@ -1,0 +1,146 @@
+<section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+  <h2 class="text-xl font-semibold text-white">Agenda do profissional</h2>
+  <p class="mt-1 text-sm text-slate-400">
+    @if (canManageAll()) {
+      Horarios semanais, pausa e bloqueios.
+    } @else {
+      Gerencie seus horarios, pausa e bloqueios.
+    }
+  </p>
+
+  @if (canManageAll()) {
+  <div class="mt-6">
+    <label class="mb-1 block text-sm text-slate-300">Profissional</label>
+    <select
+      [value]="selectedProfessionalId() ?? ''"
+      (change)="onProfessionalChange($event)"
+      class="w-full max-w-md rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+    >
+      <option value="">Selecione...</option>
+      @for (pro of professionals(); track pro.publicId) {
+        <option [value]="pro.publicId">{{ pro.name }}</option>
+      }
+    </select>
+  </div>
+  }
+
+  @if (selectedProfessionalId()) {
+    @if (scheduleLoading()) {
+      <p class="mt-6 text-slate-400">Carregando agenda...</p>
+    } @else {
+      <div class="mt-6 space-y-3">
+        @for (row of dayRows(); track row.dayOfWeek) {
+          <div class="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+            <div class="flex flex-wrap items-center gap-3">
+              <label class="flex w-28 items-center gap-2 text-sm text-slate-300">
+                <input type="checkbox" [checked]="row.enabled" (change)="toggleDay(row.dayOfWeek, $event)" />
+                {{ row.label }}
+              </label>
+              <input
+                type="time"
+                [value]="row.startTime"
+                [disabled]="!row.enabled"
+                (change)="updateDayTime(row.dayOfWeek, 'startTime', $event)"
+                class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white disabled:opacity-40"
+              />
+              <span class="text-slate-500">ate</span>
+              <input
+                type="time"
+                [value]="row.endTime"
+                [disabled]="!row.enabled"
+                (change)="updateDayTime(row.dayOfWeek, 'endTime', $event)"
+                class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white disabled:opacity-40"
+              />
+            </div>
+            @if (row.enabled) {
+              <div class="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-800/80 pt-3 pl-0 sm:pl-[7.5rem]">
+                <label class="flex items-center gap-2 text-sm text-slate-300">
+                  <input
+                    type="checkbox"
+                    [checked]="row.lunchEnabled"
+                    (change)="toggleLunch(row.dayOfWeek, $event)"
+                  />
+                  Almoco
+                </label>
+                @if (row.lunchEnabled) {
+                  <input
+                    type="time"
+                    [value]="row.lunchStart"
+                    (change)="updateDayTime(row.dayOfWeek, 'lunchStart', $event)"
+                    class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                  />
+                  <span class="text-slate-500">ate</span>
+                  <input
+                    type="time"
+                    [value]="row.lunchEnd"
+                    (change)="updateDayTime(row.dayOfWeek, 'lunchEnd', $event)"
+                    class="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                  />
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <button
+        type="button"
+        (click)="saveWorkingHours()"
+        [disabled]="scheduleSaving()"
+        class="mt-4 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
+      >
+        {{ scheduleSaving() ? 'Salvando...' : 'Salvar horarios' }}
+      </button>
+
+      <div class="mt-8 border-t border-slate-800 pt-8">
+        <h3 class="text-lg font-semibold text-white">Ferias e bloqueios</h3>
+        <form class="mt-4 grid gap-4 md:grid-cols-2" [formGroup]="blockForm" (ngSubmit)="createBlock()">
+          <div>
+            <label class="mb-1 block text-sm text-slate-300">Inicio</label>
+            <input type="datetime-local" formControlName="startAt" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm text-slate-300">Fim</label>
+            <input type="datetime-local" formControlName="endAt" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm text-slate-300">Tipo</label>
+            <select formControlName="blockType" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500">
+              <option value="VACATION">Ferias</option>
+              <option value="BREAK">Pausa / Almoco</option>
+              <option value="OTHER">Outro</option>
+            </select>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm text-slate-300">Motivo</label>
+            <input formControlName="reason" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500" />
+          </div>
+          <div class="md:col-span-2">
+            <button type="submit" [disabled]="blockForm.invalid || blockSaving()" class="rounded-lg border border-violet-500/40 px-4 py-2.5 text-sm font-medium text-violet-300 hover:bg-violet-500/10 disabled:opacity-50">
+              {{ blockSaving() ? 'Salvando...' : 'Adicionar bloqueio' }}
+            </button>
+          </div>
+        </form>
+
+        @if (blockedPeriods().length === 0) {
+          <p class="mt-4 text-sm text-slate-400">Nenhum bloqueio cadastrado.</p>
+        } @else {
+          <ul class="mt-4 space-y-2">
+            @for (block of blockedPeriods(); track block.publicId) {
+              <li class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-950/40 px-4 py-3 text-sm">
+                <div>
+                  <p class="font-medium text-white">{{ blockTypeLabel(block.blockType) }}</p>
+                  <p class="text-slate-400">{{ formatBlockRange(block) }}</p>
+                  @if (block.reason) {
+                    <p class="text-slate-500">{{ block.reason }}</p>
+                  }
+                </div>
+                <button type="button" (click)="removeBlock(block)" class="text-rose-400 hover:text-rose-300">Remover</button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+  }
+</section>

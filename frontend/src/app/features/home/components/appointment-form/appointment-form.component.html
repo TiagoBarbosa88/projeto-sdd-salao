@@ -1,0 +1,127 @@
+<section class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+  <h3 class="text-lg font-semibold text-white">Novo agendamento</h3>
+
+  <form class="mt-6 space-y-4" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="servicePublicId" class="mb-1 block text-sm text-slate-300">Servico</label>
+        <select
+          id="servicePublicId"
+          formControlName="servicePublicId"
+          class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+        >
+          <option value="">Selecione...</option>
+          @for (service of activeServices(); track service.publicId) {
+            <option [value]="service.publicId">
+              {{ service.name }} ({{ service.durationMinutes }} min)
+            </option>
+          }
+        </select>
+      </div>
+
+      @if (isClient()) {
+        <div>
+          <label for="professionalPublicId" class="mb-1 block text-sm text-slate-300"
+            >Profissional</label
+          >
+          <select
+            id="professionalPublicId"
+            formControlName="professionalPublicId"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          >
+            <option value="">Selecione...</option>
+            @for (member of professionals(); track member.publicId) {
+              <option [value]="member.publicId">{{ member.name }}</option>
+            }
+          </select>
+        </div>
+      } @else if (!form.controls.selfAsProfessional.value) {
+        <div>
+          <label for="professionalPublicId" class="mb-1 block text-sm text-slate-300"
+            >Profissional</label
+          >
+          <select
+            id="professionalPublicId"
+            formControlName="professionalPublicId"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          >
+            <option value="">Selecione...</option>
+            @for (member of professionals(); track member.publicId) {
+              <option [value]="member.publicId">{{ member.name }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      @if (isStaff()) {
+        <div class="sm:col-span-2">
+          <label class="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              formControlName="selfAsProfessional"
+              class="rounded border-slate-700 bg-slate-950 text-violet-600 focus:ring-violet-500"
+            />
+            Eu sou o profissional
+          </label>
+        </div>
+
+        @if (form.controls.selfAsProfessional.value && currentUserName()) {
+          <div class="sm:col-span-2 text-sm text-slate-300">
+            Profissional: <span class="text-white">{{ currentUserName() }}</span>
+          </div>
+        }
+
+        <div class="sm:col-span-2">
+          <label class="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              formControlName="bookForSelf"
+              class="rounded border-slate-700 bg-slate-950 text-violet-600 focus:ring-violet-500"
+            />
+            Agendar para mim (cliente)
+          </label>
+        </div>
+
+        @if (!form.controls.bookForSelf.value) {
+          <div class="sm:col-span-2">
+            <label for="clientPublicId" class="mb-1 block text-sm text-slate-300">Cliente</label>
+            <select
+              id="clientPublicId"
+              formControlName="clientPublicId"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+            >
+              <option value="">Selecione...</option>
+              @for (member of clients(); track member.publicId) {
+                <option [value]="member.publicId">{{ member.name }}</option>
+              }
+            </select>
+          </div>
+        }
+      }
+
+      <div class="sm:col-span-2">
+        <label for="startAt" class="mb-1 block text-sm text-slate-300">Inicio</label>
+        <input
+          id="startAt"
+          type="datetime-local"
+          formControlName="startAt"
+          [min]="startAtInputMin()"
+          [max]="startAtInputMax()"
+          class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+        />
+      </div>
+    </div>
+
+    @if (formError()) {
+      <p class="text-sm text-rose-400">{{ formError() }}</p>
+    }
+
+    <button
+      type="submit"
+      [disabled]="!canSubmit() || saving()"
+      class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {{ saving() ? 'Agendando...' : 'Agendar' }}
+    </button>
+  </form>
+</section>

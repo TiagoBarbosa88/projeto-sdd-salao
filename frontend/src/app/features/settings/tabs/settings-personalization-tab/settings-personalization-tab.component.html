@@ -1,0 +1,97 @@
+<section class="rounded-xl border border-slate-800 bg-slate-900 p-6">
+  <h2 class="text-xl font-semibold text-white">Personalizacao</h2>
+  <p class="mt-1 text-sm text-slate-400">
+    Como seu salao aparece na pagina publica de agendamento.
+  </p>
+
+  @if (loading()) {
+    <p class="mt-6 text-slate-400">Carregando...</p>
+  } @else {
+    <form class="mt-6 space-y-4" [formGroup]="form" (ngSubmit)="save()">
+      <div class="grid gap-4 md:grid-cols-2">
+        <div>
+          <label class="mb-1 block text-sm text-slate-300">Nome do salao</label>
+          <input
+            formControlName="name"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+        </div>
+        <div class="md:col-span-2">
+          <label class="mb-1 block text-sm text-slate-300">Descricao</label>
+          <textarea
+            formControlName="description"
+            rows="3"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          ></textarea>
+        </div>
+        <div>
+          <label class="mb-1 block text-sm text-slate-300">Telefone</label>
+          <input
+            formControlName="phone"
+            appPhoneMask
+            type="tel"
+            inputmode="tel"
+            autocomplete="tel"
+            maxlength="15"
+            placeholder="(11) 3333-4444"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm text-slate-300">WhatsApp</label>
+          <input
+            formControlName="whatsapp"
+            appPhoneMask
+            type="tel"
+            inputmode="tel"
+            autocomplete="tel"
+            maxlength="15"
+            placeholder="(11) 99999-9999"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+        </div>
+        <div class="md:col-span-2">
+          <label class="mb-1 block text-sm text-slate-300">Endereco</label>
+          <input
+            formControlName="address"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+        </div>
+        <div class="md:col-span-2">
+          <label class="mb-1 block text-sm text-slate-300">Logo do salao</label>
+          <div class="flex flex-wrap items-center gap-4">
+            @if (logoPreview()) {
+              <img
+                [src]="logoPreview()"
+                alt="Logo do salao"
+                class="h-20 w-20 rounded-2xl border border-slate-700 object-cover"
+              />
+            }
+            <label
+              class="cursor-pointer rounded-xl border border-dashed border-slate-600 px-4 py-3 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+            >
+              Escolher da galeria ou documentos
+              <input
+                type="file"
+                accept="image/*"
+                class="hidden"
+                (change)="onLogoSelected($event)"
+              />
+            </label>
+          </div>
+          @if (logoUploadError()) {
+            <p class="mt-2 text-sm text-rose-400">{{ logoUploadError() }}</p>
+          }
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="form.invalid || saving()"
+        class="rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
+      >
+        {{ saving() ? 'Salvando...' : 'Salvar personalizacao' }}
+      </button>
+    </form>
+  }
+</section>

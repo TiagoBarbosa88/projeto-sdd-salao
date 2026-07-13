@@ -1,0 +1,102 @@
+<div class="space-y-6">
+  <div class="flex flex-col gap-4 lg:flex-row lg:items-start">
+    <nav
+      class="flex gap-2 overflow-x-auto rounded-xl border border-slate-800 bg-slate-900 p-2 lg:w-56 lg:flex-col lg:overflow-visible"
+      aria-label="Abas de configuracao"
+    >
+      @for (tab of visibleTabs(); track tab.id) {
+        <button
+          type="button"
+          (click)="setTab(tab.id)"
+          class="shrink-0 rounded-lg px-4 py-2.5 text-left text-sm font-medium transition"
+          [class.bg-violet-600]="activeTab() === tab.id"
+          [class.text-white]="activeTab() === tab.id"
+          [class.text-slate-400]="activeTab() !== tab.id"
+          [class.hover:bg-slate-800]="activeTab() !== tab.id"
+        >
+          {{ tab.label }}
+        </button>
+      }
+    </nav>
+
+    <div class="min-w-0 flex-1 space-y-4">
+      @if (banner()) {
+        <p
+          class="rounded-lg px-4 py-3 text-sm"
+          [class.bg-emerald-500/10]="banner()!.type === 'success'"
+          [class.text-emerald-300]="banner()!.type === 'success'"
+          [class.bg-rose-500/10]="banner()!.type === 'error'"
+          [class.text-rose-300]="banner()!.type === 'error'"
+        >
+          {{ banner()!.message }}
+        </p>
+      }
+
+      @if (activeTab() === 'personalization' && isAdmin()) {
+        <app-settings-personalization-tab
+          [settings]="salonSettings()"
+          [loading]="salonLoading()"
+          (settingsChange)="salonSettings.set($event)"
+          (notify)="showBanner($event)"
+        />
+      }
+
+      @if (activeTab() === 'social' && isAdmin()) {
+        <app-settings-social-tab
+          [settings]="salonSettings()"
+          [loading]="salonLoading()"
+          (settingsChange)="salonSettings.set($event)"
+          (notify)="showBanner($event)"
+        />
+      }
+
+      @if (activeTab() === 'funcionamento' && canManageScheduling()) {
+        <app-settings-funcionamento-tab
+          [settings]="schedulingSettings()"
+          [loading]="salonLoading()"
+          (settingsChange)="schedulingSettings.set($event)"
+          (notify)="showBanner($event)"
+        />
+      }
+
+      @if (activeTab() === 'professionals' && isAdmin()) {
+        <app-settings-professionals-tab
+          [professionals]="professionals()"
+          [loading]="professionalsLoading()"
+          (createRequested)="openCreateMemberModal()"
+          (editRequested)="startEditMember($event)"
+        />
+      }
+
+      @if (activeTab() === 'agenda' && canAccessAgenda()) {
+        <app-settings-agenda-tab
+          [professionals]="professionals()"
+          [canManageAll]="canManageAllAgenda()"
+          [initialProfessionalId]="staffProfessionalId()"
+          (notify)="showBanner($event)"
+        />
+      }
+
+      @if (activeTab() === 'account') {
+        <app-settings-account-tab
+          [profile]="profile()"
+          [profileError]="profileError()"
+          [teamMembers]="teamMembers()"
+          [teamMembersLoading]="teamMembersLoading()"
+          [professionals]="professionals()"
+          [isAdmin]="isAdmin()"
+          (createRequested)="openCreateMemberModal()"
+          (editRequested)="startEditMember($event)"
+        />
+      }
+    </div>
+  </div>
+
+  @if (memberModalOpen()) {
+    <app-member-form-modal
+      [member]="editingMember()"
+      (saved)="onMemberSaved()"
+      (cancelled)="closeMemberModal()"
+    />
+  }
+</div>

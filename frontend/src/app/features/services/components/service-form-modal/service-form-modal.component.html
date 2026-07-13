@@ -1,0 +1,166 @@
+<div
+  class="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-4 backdrop-blur-sm sm:items-center"
+  (click)="cancel()"
+  role="presentation"
+>
+  <div
+    class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl shadow-black/40"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="isEditing ? 'edit-service-title' : 'new-service-title'"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex items-start justify-between gap-4 border-b border-slate-800 px-5 py-4">
+      <h3
+        [id]="isEditing ? 'edit-service-title' : 'new-service-title'"
+        class="text-lg font-semibold text-white"
+      >
+        {{ isEditing ? 'Editar servico' : 'Novo servico' }}
+      </h3>
+      <button
+        type="button"
+        (click)="cancel()"
+        class="rounded-lg border border-slate-700 px-2 py-1 text-sm text-slate-400 transition hover:text-white"
+        aria-label="Fechar"
+      >
+        &times;
+      </button>
+    </div>
+
+    <form class="space-y-4 px-5 py-4" [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="sm:col-span-2">
+          <label for="name" class="mb-1 block text-sm text-slate-300">Nome</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label for="description" class="mb-1 block text-sm text-slate-300">Descricao</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            rows="2"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          ></textarea>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label for="gender" class="mb-1 block text-sm text-slate-300">Grupo</label>
+          <select
+            id="gender"
+            formControlName="gender"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          >
+            <option value="feminino">Feminino</option>
+            <option value="masculino">Masculino</option>
+          </select>
+          <p class="mt-1 text-xs text-slate-500">
+            Define em qual aba o servico aparece na pagina publica de agendamento.
+          </p>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="mb-1 block text-sm text-slate-300">Imagem do servico</label>
+          <div class="flex flex-wrap items-center gap-4">
+            @if (imagePreview()) {
+              <img
+                [src]="imagePreview()"
+                alt="Imagem do servico"
+                class="h-20 w-32 rounded-xl border border-slate-700 object-cover"
+              />
+            }
+            <label
+              class="cursor-pointer rounded-xl border border-dashed border-slate-600 px-4 py-3 text-sm text-slate-300 transition hover:border-violet-500 hover:text-white"
+            >
+              Escolher da galeria ou documentos
+              <input
+                type="file"
+                accept="image/*"
+                class="hidden"
+                (change)="onImageSelected($event)"
+              />
+            </label>
+            @if (imagePreview()) {
+              <button
+                type="button"
+                (click)="clearImage()"
+                class="text-sm text-rose-400 transition hover:text-rose-300"
+              >
+                Remover imagem
+              </button>
+            }
+          </div>
+          @if (imageUploadError()) {
+            <p class="mt-2 text-sm text-rose-400">{{ imageUploadError() }}</p>
+          }
+          <p class="mt-2 text-xs text-slate-500">
+            Se nao escolher, usamos uma ilustracao padrao na pagina publica.
+          </p>
+        </div>
+
+        <div>
+          <label for="durationMinutes" class="mb-1 block text-sm text-slate-300"
+            >Duracao (min)</label
+          >
+          <input
+            id="durationMinutes"
+            type="number"
+            min="1"
+            formControlName="durationMinutes"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+        </div>
+
+        <div>
+          <label for="price" class="mb-1 block text-sm text-slate-300">Preco (R$)</label>
+          <input
+            id="price"
+            type="number"
+            min="0"
+            step="0.01"
+            formControlName="price"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-violet-500"
+          />
+        </div>
+
+        @if (isEditing) {
+          <div class="flex items-center gap-2 sm:col-span-2">
+            <input
+              id="active"
+              type="checkbox"
+              formControlName="active"
+              class="rounded border-slate-700 bg-slate-950 text-violet-600 focus:ring-violet-500"
+            />
+            <label for="active" class="text-sm text-slate-300">Servico ativo</label>
+          </div>
+        }
+      </div>
+
+      @if (formError()) {
+        <p class="text-sm text-rose-400">{{ formError() }}</p>
+      }
+
+      <div class="flex gap-3 border-t border-slate-800 pt-4">
+        <button
+          type="submit"
+          [disabled]="form.invalid || saving()"
+          class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {{ saving() ? 'Salvando...' : 'Salvar' }}
+        </button>
+        <button
+          type="button"
+          (click)="cancel()"
+          class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

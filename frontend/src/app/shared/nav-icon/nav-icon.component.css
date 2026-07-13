@@ -1,0 +1,10 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-icon {
+  height: 1.25rem;
+  width: 1.25rem;
+}
