@@ -20,3 +20,9 @@ Nunca implemente funcionalidades fora da task atual.
 - Backend: `bash scripts/mvn-java21.sh spring-boot:run`
 - Frontend: `cd frontend && npm start`
 - Testes: `bash scripts/test-all.sh`
+
+## Deploy (producao)
+
+- Documentacao: `docs/deploy.md`
+- Validar compose: `docker compose -f docker/docker-compose.prod.yml config`
+- Subir stack: `bash scripts/deploy-prod.sh`

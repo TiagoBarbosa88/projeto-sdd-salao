@@ -24,10 +24,10 @@ TASK_017
 
 ## Critérios de aceite
 
-- [ ] Dockerfile backend e frontend
-- [ ] docker-compose.prod.yml
-- [ ] .env.example com variáveis documentadas
-- [ ] Script ou doc de deploy em docs/
+- [x] Dockerfile backend e frontend
+- [x] docker-compose.prod.yml
+- [x] .env.example com variáveis documentadas
+- [x] Script ou doc de deploy em docs/
 
 ## Testes obrigatórios
 
@@ -42,4 +42,4 @@ chore(infra): adiciona deploy docker de producao
 
 ## Status
 
-TODO
+DONE

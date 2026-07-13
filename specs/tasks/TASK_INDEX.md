@@ -18,7 +18,7 @@
 | 015 | 4 | Auditoria UI | DONE |
 | 016 | 4 | SEO + pagina publica | DONE |
 | 017 | 4 | WhatsApp | DONE |
-| 018 | 4 | Deploy | TODO |
+| 018 | 4 | Deploy | DONE |
 | 019 | 5 | Configuracao e disponibilidade backend | DONE |
 | 020 | 5 | Configuracoes com abas UI | DONE |
 | 021 | 5 | Agenda publica e rotas | DONE |
