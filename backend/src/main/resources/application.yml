@@ -38,3 +38,8 @@ logging:
 jwt:
   secret: ${JWT_SECRET:change-me-in-production-use-at-least-32-characters}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+salao:
+  whatsapp:
+    enabled: ${SALAO_WHATSAPP_ENABLED:true}
+    provider: ${SALAO_WHATSAPP_PROVIDER:mock}

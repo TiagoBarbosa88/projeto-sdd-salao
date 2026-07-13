@@ -21,10 +21,10 @@ TASK_016
 
 ## Critérios de aceite
 
-- [ ] Interface WhatsAppNotifier + MockWhatsAppNotifier
-- [ ] Disparo ao criar/confirmar agendamento (dev log)
-- [ ] Config por tenant (placeholder em tenant ou properties)
-- [ ] Testes do adapter e integração mínima
+- [x] Interface WhatsAppNotifier + MockWhatsAppNotifier
+- [x] Disparo ao criar/confirmar agendamento (dev log)
+- [x] Config por tenant (placeholder em tenant ou properties)
+- [x] Testes do adapter e integração mínima
 
 ## Testes obrigatórios
 
