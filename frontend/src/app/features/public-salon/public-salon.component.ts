@@ -193,7 +193,6 @@ export class PublicSalonComponent implements OnInit, OnDestroy {
             serviceDurationMinutes: service.durationMinutes,
             servicePrice: service.price,
             professionalName: professional.name,
-            professionalPhone: professional.phone,
             salonName: this.tenant()?.name ?? 'Salao',
           });
           this.step.set('done');

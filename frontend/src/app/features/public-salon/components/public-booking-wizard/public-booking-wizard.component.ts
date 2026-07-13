@@ -6,7 +6,7 @@ import {
   PublicProfessional,
   PublicService,
 } from '../../../../core/services/public-salon.service';
-import { buildWhatsAppUrl, isValidBrazilianPhone } from '../../../../core/utils/phone.util';
+import { isValidBrazilianPhone } from '../../../../core/utils/phone.util';
 
 export type BookingStep = 'service' | 'professional' | 'datetime' | 'confirm' | 'done';
 
@@ -19,7 +19,6 @@ export type BookingConfirmation = {
   serviceDurationMinutes: number;
   servicePrice: number;
   professionalName: string;
-  professionalPhone?: string;
   salonName: string;
 };
 
@@ -137,25 +136,6 @@ export class PublicBookingWizardComponent {
     this.restartRequested.emit();
   }
 
-  protected confirmationClientWhatsAppUrl(): string {
-    const confirmation = this.confirmation();
-    if (!confirmation) {
-      return '#';
-    }
-    return buildWhatsAppUrl(confirmation.guestPhone, this.buildConfirmationMessage(confirmation));
-  }
-
-  protected confirmationProfessionalWhatsAppUrl(): string {
-    const confirmation = this.confirmation();
-    if (!confirmation?.professionalPhone) {
-      return '#';
-    }
-    return buildWhatsAppUrl(
-      confirmation.professionalPhone,
-      this.buildProfessionalNotificationMessage(confirmation)
-    );
-  }
-
   protected formatCurrency(value: number): string {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   }
@@ -238,26 +218,5 @@ export class PublicBookingWizardComponent {
   private backendDayOfWeek(date: Date): number {
     const jsDay = date.getDay();
     return jsDay === 0 ? 7 : jsDay;
-  }
-
-  private buildConfirmationMessage(confirmation: BookingConfirmation): string {
-    return (
-      `Ola! Meu agendamento no ${confirmation.salonName} foi confirmado.\n\n` +
-      `Servico: ${confirmation.serviceName}\n` +
-      `Profissional: ${confirmation.professionalName}\n` +
-      `Horario: ${this.formatSlotLabel(confirmation.startAt)} (${this.formatTimeRange(confirmation.startAt, confirmation.endAt)})\n` +
-      `Duracao: ${confirmation.serviceDurationMinutes} min\n` +
-      `Valor: ${this.formatCurrency(confirmation.servicePrice)}`
-    );
-  }
-
-  private buildProfessionalNotificationMessage(confirmation: BookingConfirmation): string {
-    return (
-      `Ola ${confirmation.professionalName}! Novo agendamento no ${confirmation.salonName}.\n\n` +
-      `Cliente: ${confirmation.guestName}\n` +
-      `WhatsApp: ${confirmation.guestPhone}\n` +
-      `Servico: ${confirmation.serviceName}\n` +
-      `Horario: ${this.formatSlotLabel(confirmation.startAt)} (${this.formatTimeRange(confirmation.startAt, confirmation.endAt)})`
-    );
   }
 }

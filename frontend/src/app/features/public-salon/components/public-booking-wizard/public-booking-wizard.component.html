@@ -55,26 +55,6 @@
       <p class="mt-4 text-sm text-emerald-300">
         Enviamos a confirmacao por WhatsApp para voce e para o profissional.
       </p>
-      <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <a
-          [href]="confirmationClientWhatsAppUrl()"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-sm font-medium text-white transition hover:opacity-90"
-        >
-          Abrir confirmacao no WhatsApp
-        </a>
-        @if (confirmation()!.professionalPhone) {
-          <a
-            [href]="confirmationProfessionalWhatsAppUrl()"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center justify-center gap-2 rounded-xl border border-[#25D366]/40 bg-[#25D366]/10 px-5 py-3 text-sm font-medium text-[#25D366] transition hover:bg-[#25D366]/20"
-          >
-            WhatsApp do profissional
-          </a>
-        }
-      </div>
       <button
         type="button"
         (click)="restart()"
